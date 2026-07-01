@@ -19,14 +19,14 @@ namespace KcetasAboneApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Ilce>>> GetIlceler()
         {
-            return await _context.Ilceler.ToListAsync();
+            return await _context.Ilces.ToListAsync();
         }
 
         // Id'ye göre ilçe getir
         [HttpGet("{id}")]
         public async Task<ActionResult<Ilce>> GetIlce(int id)
         {
-            var ilce = await _context.Ilceler.FindAsync(id);
+            var ilce = await _context.Ilces.FindAsync(id);
 
             if (ilce == null)
                 return NotFound();
@@ -38,7 +38,7 @@ namespace KcetasAboneApi.Controllers
         [HttpGet("il/{ilId}")]
         public async Task<ActionResult<IEnumerable<Ilce>>> GetIlcelerByIl(short ilId)
         {
-            return await _context.Ilceler
+            return await _context.Ilces
                 .Where(x => x.IlId == ilId)
                 .ToListAsync();
         }

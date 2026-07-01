@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using KcetasAboneApi.Data;
 using KcetasAboneApi.Models;
 
 [Route("api/[controller]")]
@@ -17,6 +16,6 @@ public class IlController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Il>>> GetIller()
     {
-        return await _context.Iller.ToListAsync();
+        return await _context.Ils.ToListAsync();
     }
 }

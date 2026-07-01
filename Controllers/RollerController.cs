@@ -1,5 +1,5 @@
+using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Mvc;
-using DenemeProje.Data;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
@@ -16,7 +16,7 @@ public class RollerController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var roller = await _context.Roller.ToListAsync();
+        var roller = await _context.Rollers.ToListAsync();
         return Ok(roller);
     }
 }

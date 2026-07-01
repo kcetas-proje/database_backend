@@ -9,7 +9,21 @@ public partial class TuketimNoktasi
 
     public string TekilKod { get; set; } = null!;
 
-    public string? TesisatNo { get; set; }
+    public string MusteriAd { get; set; } = null!;
+
+    public string? MusteriSoyad { get; set; }
+
+    public string? MusteriUnvan { get; set; }
+
+    public string? Tckn { get; set; }
+
+    public string? Vkn { get; set; }
+
+    public string? Telefon { get; set; }
+
+    public string? EPosta { get; set; }
+
+    public string? IletisimTercihi { get; set; }
 
     public int IlceId { get; set; }
 
@@ -49,7 +63,7 @@ public partial class TuketimNoktasi
 
     public virtual ICollection<Sayaclar> Sayaclars { get; set; } = new List<Sayaclar>();
 
-    public virtual Sozlesmeler? Sozlesmeler { get; set; }
+    public virtual ICollection<Sozlesmeler> Sozlesmelers { get; set; } = new List<Sozlesmeler>();
 
     public virtual Kullanicilar? UpdatedByNavigation { get; set; }
 }

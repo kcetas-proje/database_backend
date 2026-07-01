@@ -1,3 +1,12 @@
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.csproj.AssemblyReference.cache
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.AssemblyInfoInputs.cache
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.AssemblyInfo.cs
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.csproj.CoreCompileInputs.cache
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.sourcelink.json
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\appsettings.json
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\KcetasAboneApi.staticwebassets.endpoints.json
@@ -26,6 +35,9 @@ C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Mono.TextTemplating.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Newtonsoft.Json.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Npgsql.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.CodeDom.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.Composition.AttributedModel.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.Composition.Convention.dll
@@ -97,14 +109,6 @@ C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\ru\Microsoft.CodeAnalysis.Worksp
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.csproj.AssemblyReference.cache
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\rpswa.dswa.cache.json
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.AssemblyInfoInputs.cache
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.AssemblyInfo.cs
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.csproj.CoreCompileInputs.cache
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
@@ -120,6 +124,3 @@ C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\refint\KcetasAboneApi.dll
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.pdb
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.genruntimeconfig.cache
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\ref\KcetasAboneApi.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll

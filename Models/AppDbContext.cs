@@ -15,8 +15,6 @@ public partial class AppDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Abone> Abones { get; set; }
-
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     public virtual DbSet<EndeksOkuma> EndeksOkumas { get; set; }
@@ -49,73 +47,9 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Abone>(entity =>
-        {
-            entity.HasKey(e => e.AboneId).HasName("abone_pkey");
-
-            entity.ToTable("abone");
-
-            entity.HasIndex(e => e.AboneNo, "uq_abone_abone_no").IsUnique();
-
-            entity.Property(e => e.AboneId).HasColumnName("abone_id");
-            entity.Property(e => e.AboneNo)
-                .HasMaxLength(30)
-                .HasColumnName("abone_no");
-            entity.Property(e => e.AboneTipi)
-                .HasMaxLength(20)
-                .HasColumnName("abone_tipi");
-            entity.Property(e => e.Ad)
-                .HasMaxLength(100)
-                .HasColumnName("ad");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-            entity.Property(e => e.EPosta)
-                .HasMaxLength(150)
-                .HasColumnName("e_posta");
-            entity.Property(e => e.IletisimTercihi)
-                .HasMaxLength(20)
-                .HasColumnName("iletisim_tercihi");
-            entity.Property(e => e.KullaniciId).HasColumnName("kullanici_id");
-            entity.Property(e => e.Soyad)
-                .HasMaxLength(100)
-                .HasColumnName("soyad");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasDefaultValueSql("'AKTIF'::character varying")
-                .HasColumnName("status");
-            entity.Property(e => e.Tckn)
-                .HasMaxLength(11)
-                .HasColumnName("tckn");
-            entity.Property(e => e.Telefon)
-                .HasMaxLength(20)
-                .HasColumnName("telefon");
-            entity.Property(e => e.Unvan)
-                .HasMaxLength(255)
-                .HasColumnName("unvan");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
-            entity.Property(e => e.Vkn)
-                .HasMaxLength(10)
-                .HasColumnName("vkn");
-
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.AboneCreatedByNavigations)
-                .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("abone_created_by_fkey");
-
-            entity.HasOne(d => d.Kullanici).WithMany(p => p.AboneKullanicis)
-                .HasForeignKey(d => d.KullaniciId)
-                .HasConstraintName("abone_kullanici_id_fkey");
-
-            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.AboneUpdatedByNavigations)
-                .HasForeignKey(d => d.UpdatedBy)
-                .HasConstraintName("abone_updated_by_fkey");
-        });
-
         modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.HasKey(e => e.AuditId).HasName("audit_log_pkey");
+            entity.HasKey(e => e.AuditId).HasName("pk_audit_log");
 
             entity.ToTable("audit_log");
 
@@ -145,12 +79,12 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.Kullanici).WithMany(p => p.AuditLogs)
                 .HasForeignKey(d => d.KullaniciId)
-                .HasConstraintName("audit_log_kullanici_id_fkey");
+                .HasConstraintName("fk_audit_log_kullanici");
         });
 
         modelBuilder.Entity<EndeksOkuma>(entity =>
         {
-            entity.HasKey(e => e.OkumaId).HasName("endeks_okuma_pkey");
+            entity.HasKey(e => e.OkumaId).HasName("pk_endeks_okuma");
 
             entity.ToTable("endeks_okuma");
 
@@ -174,6 +108,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Donem)
                 .HasMaxLength(7)
                 .HasColumnName("donem");
+            entity.Property(e => e.IsEmriId).HasColumnName("is_emri_id");
             entity.Property(e => e.KullaniciId).HasColumnName("kullanici_id");
             entity.Property(e => e.OkumaKaynagi)
                 .HasMaxLength(20)
@@ -198,23 +133,27 @@ public partial class AppDbContext : DbContext
                 .HasPrecision(14, 3)
                 .HasColumnName("yeni_endeks");
 
+            entity.HasOne(d => d.IsEmri).WithMany(p => p.EndeksOkumas)
+                .HasForeignKey(d => d.IsEmriId)
+                .HasConstraintName("fk_endeks_okuma_is_emri");
+
             entity.HasOne(d => d.Kullanici).WithMany(p => p.EndeksOkumas)
                 .HasForeignKey(d => d.KullaniciId)
-                .HasConstraintName("endeks_okuma_kullanici_id_fkey");
+                .HasConstraintName("fk_endeks_okuma_kullanici");
 
             entity.HasOne(d => d.Sayac).WithMany(p => p.EndeksOkumas)
                 .HasForeignKey(d => d.SayacId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("endeks_okuma_sayac_id_fkey");
+                .HasConstraintName("fk_endeks_okuma_sayac");
 
             entity.HasOne(d => d.Sozlesme).WithMany(p => p.EndeksOkumas)
                 .HasForeignKey(d => d.SozlesmeId)
-                .HasConstraintName("endeks_okuma_sozlesme_id_fkey");
+                .HasConstraintName("fk_endeks_okuma_sozlesme");
         });
 
         modelBuilder.Entity<EntegrasyonOutbox>(entity =>
         {
-            entity.HasKey(e => e.OutboxId).HasName("entegrasyon_outbox_pkey");
+            entity.HasKey(e => e.OutboxId).HasName("pk_entegrasyon_outbox");
 
             entity.ToTable("entegrasyon_outbox");
 
@@ -256,12 +195,12 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Fatura).WithMany(p => p.EntegrasyonOutboxes)
                 .HasForeignKey(d => d.FaturaId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("entegrasyon_outbox_fatura_id_fkey");
+                .HasConstraintName("fk_entegrasyon_outbox_fatura");
         });
 
         modelBuilder.Entity<Fatura>(entity =>
         {
-            entity.HasKey(e => e.FaturaId).HasName("fatura_pkey");
+            entity.HasKey(e => e.FaturaId).HasName("pk_fatura");
 
             entity.ToTable("fatura");
 
@@ -278,7 +217,6 @@ public partial class AppDbContext : DbContext
                 .HasFilter("(((status)::text = 'AKTIF'::text) AND ((durum)::text <> 'IPTAL'::text))");
 
             entity.Property(e => e.FaturaId).HasColumnName("fatura_id");
-            entity.Property(e => e.AboneId).HasColumnName("abone_id");
             entity.Property(e => e.Carpan)
                 .HasPrecision(10, 3)
                 .HasColumnName("carpan");
@@ -345,24 +283,19 @@ public partial class AppDbContext : DbContext
                 .HasPrecision(14, 2)
                 .HasColumnName("vergi_fon_toplam");
 
-            entity.HasOne(d => d.Abone).WithMany(p => p.Faturas)
-                .HasForeignKey(d => d.AboneId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fatura_abone_id_fkey");
-
             entity.HasOne(d => d.Okuma).WithMany(p => p.Faturas)
                 .HasForeignKey(d => d.OkumaId)
-                .HasConstraintName("fatura_okuma_id_fkey");
+                .HasConstraintName("fk_fatura_okuma");
 
             entity.HasOne(d => d.Sozlesme).WithMany(p => p.Faturas)
                 .HasForeignKey(d => d.SozlesmeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fatura_sozlesme_id_fkey");
+                .HasConstraintName("fk_fatura_sozlesme");
         });
 
         modelBuilder.Entity<FaturaKalemi>(entity =>
         {
-            entity.HasKey(e => e.FaturaKalemId).HasName("fatura_kalemi_pkey");
+            entity.HasKey(e => e.FaturaKalemId).HasName("pk_fatura_kalemi");
 
             entity.ToTable("fatura_kalemi");
 
@@ -389,12 +322,12 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.Fatura).WithMany(p => p.FaturaKalemis)
                 .HasForeignKey(d => d.FaturaId)
-                .HasConstraintName("fatura_kalemi_fatura_id_fkey");
+                .HasConstraintName("fk_fatura_kalemi_fatura");
         });
 
         modelBuilder.Entity<Il>(entity =>
         {
-            entity.HasKey(e => e.IlId).HasName("il_pkey");
+            entity.HasKey(e => e.IlId).HasName("pk_il");
 
             entity.ToTable("il");
 
@@ -409,13 +342,13 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Ilce>(entity =>
         {
-            entity.HasKey(e => e.IlceId).HasName("ilce_pkey");
+            entity.HasKey(e => e.IlceId).HasName("pk_ilce");
 
             entity.ToTable("ilce");
 
             entity.HasIndex(e => e.IlId, "idx_ilce_il_id");
 
-            entity.HasIndex(e => new { e.IlId, e.IlceAdi }, "uq_ilce_il_ad").IsUnique();
+            entity.HasIndex(e => new { e.IlId, e.IlceAdi }, "uq_ilce_il_adi").IsUnique();
 
             entity.Property(e => e.IlceId).HasColumnName("ilce_id");
             entity.Property(e => e.IlId).HasColumnName("il_id");
@@ -426,12 +359,12 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Il).WithMany(p => p.Ilces)
                 .HasForeignKey(d => d.IlId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("ilce_il_id_fkey");
+                .HasConstraintName("fk_ilce_il");
         });
 
         modelBuilder.Entity<IsEmirleri>(entity =>
         {
-            entity.HasKey(e => e.IsEmriId).HasName("is_emirleri_pkey");
+            entity.HasKey(e => e.IsEmriId).HasName("pk_is_emirleri");
 
             entity.ToTable("is_emirleri");
 
@@ -450,9 +383,6 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'ACIK'::character varying")
                 .HasColumnName("durum");
-            entity.Property(e => e.EskiSayacNo)
-                .HasMaxLength(50)
-                .HasColumnName("eski_sayac_no");
             entity.Property(e => e.Gerekce)
                 .HasMaxLength(255)
                 .HasColumnName("gerekce");
@@ -483,27 +413,24 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(40)
                 .HasColumnName("tutanak_no");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            entity.Property(e => e.YeniSayacNo)
-                .HasMaxLength(50)
-                .HasColumnName("yeni_sayac_no");
 
             entity.HasOne(d => d.AtananKullanici).WithMany(p => p.IsEmirleris)
                 .HasForeignKey(d => d.AtananKullaniciId)
-                .HasConstraintName("is_emirleri_atanan_kullanici_id_fkey");
+                .HasConstraintName("fk_is_emirleri_kullanici");
 
             entity.HasOne(d => d.Sayac).WithMany(p => p.IsEmirleris)
                 .HasForeignKey(d => d.SayacId)
-                .HasConstraintName("is_emirleri_sayac_id_fkey");
+                .HasConstraintName("fk_is_emirleri_sayac");
 
             entity.HasOne(d => d.TuketimNoktasi).WithMany(p => p.IsEmirleris)
                 .HasForeignKey(d => d.TuketimNoktasiId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("is_emirleri_tuketim_noktasi_id_fkey");
+                .HasConstraintName("fk_is_emirleri_tuketim_noktasi");
         });
 
         modelBuilder.Entity<Kullanicilar>(entity =>
         {
-            entity.HasKey(e => e.KullaniciId).HasName("kullanicilar_pkey");
+            entity.HasKey(e => e.KullaniciId).HasName("pk_kullanicilar");
 
             entity.ToTable("kullanicilar");
 
@@ -539,12 +466,12 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Rol).WithMany(p => p.Kullanicilars)
                 .HasForeignKey(d => d.RolId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("kullanicilar_rol_id_fkey");
+                .HasConstraintName("fk_kullanicilar_roller");
         });
 
         modelBuilder.Entity<Roller>(entity =>
         {
-            entity.HasKey(e => e.RolId).HasName("roller_pkey");
+            entity.HasKey(e => e.RolId).HasName("pk_roller");
 
             entity.ToTable("roller");
 
@@ -564,7 +491,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Sayaclar>(entity =>
         {
-            entity.HasKey(e => e.SayacId).HasName("sayaclar_pkey");
+            entity.HasKey(e => e.SayacId).HasName("pk_sayaclar");
 
             entity.ToTable("sayaclar");
 
@@ -612,24 +539,22 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.SayaclarCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("sayaclar_created_by_fkey");
+                .HasConstraintName("fk_sayaclar_created_by");
 
             entity.HasOne(d => d.TuketimNoktasi).WithMany(p => p.Sayaclars)
                 .HasForeignKey(d => d.TuketimNoktasiId)
-                .HasConstraintName("sayaclar_tuketim_noktasi_id_fkey");
+                .HasConstraintName("fk_sayaclar_tuketim_noktasi");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.SayaclarUpdatedByNavigations)
                 .HasForeignKey(d => d.UpdatedBy)
-                .HasConstraintName("sayaclar_updated_by_fkey");
+                .HasConstraintName("fk_sayaclar_updated_by");
         });
 
         modelBuilder.Entity<Sozlesmeler>(entity =>
         {
-            entity.HasKey(e => e.SozlesmeId).HasName("sozlesmeler_pkey");
+            entity.HasKey(e => e.SozlesmeId).HasName("pk_sozlesmeler");
 
             entity.ToTable("sozlesmeler");
-
-            entity.HasIndex(e => e.AboneId, "idx_sozlesmeler_abone_id");
 
             entity.HasIndex(e => e.TuketimNoktasiId, "idx_sozlesmeler_tuketim_noktasi_id");
 
@@ -640,16 +565,27 @@ public partial class AppDbContext : DbContext
                 .HasFilter("((statu)::text = 'AKTIF'::text)");
 
             entity.Property(e => e.SozlesmeId).HasColumnName("sozlesme_id");
-            entity.Property(e => e.AboneId).HasColumnName("abone_id");
+            entity.Property(e => e.Ad)
+                .HasMaxLength(100)
+                .HasColumnName("ad");
             entity.Property(e => e.BaslangicTarihi).HasColumnName("baslangic_tarihi");
             entity.Property(e => e.BitisTarihi).HasColumnName("bitis_tarihi");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.EPosta)
+                .HasMaxLength(150)
+                .HasColumnName("e_posta");
             entity.Property(e => e.GuvenceBedeli)
                 .HasPrecision(14, 2)
                 .HasColumnName("guvence_bedeli");
+            entity.Property(e => e.IletisimTercihi)
+                .HasMaxLength(20)
+                .HasColumnName("iletisim_tercihi");
+            entity.Property(e => e.Soyad)
+                .HasMaxLength(100)
+                .HasColumnName("soyad");
             entity.Property(e => e.SozlesmeNo)
                 .HasMaxLength(40)
                 .HasColumnName("sozlesme_no");
@@ -667,32 +603,39 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.TarifeGrubu)
                 .HasMaxLength(30)
                 .HasColumnName("tarife_grubu");
+            entity.Property(e => e.Tckn)
+                .HasMaxLength(11)
+                .HasColumnName("tckn");
+            entity.Property(e => e.Telefon)
+                .HasMaxLength(20)
+                .HasColumnName("telefon");
             entity.Property(e => e.TuketimNoktasiId).HasColumnName("tuketim_noktasi_id");
+            entity.Property(e => e.Unvan)
+                .HasMaxLength(255)
+                .HasColumnName("unvan");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
-
-            entity.HasOne(d => d.Abone).WithMany(p => p.Sozlesmelers)
-                .HasForeignKey(d => d.AboneId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("sozlesmeler_abone_id_fkey");
+            entity.Property(e => e.Vkn)
+                .HasMaxLength(10)
+                .HasColumnName("vkn");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.SozlesmelerCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("sozlesmeler_created_by_fkey");
+                .HasConstraintName("fk_sozlesmeler_created_by");
 
-            entity.HasOne(d => d.TuketimNoktasi).WithOne(p => p.Sozlesmeler)
-                .HasForeignKey<Sozlesmeler>(d => d.TuketimNoktasiId)
+            entity.HasOne(d => d.TuketimNoktasi).WithMany(p => p.Sozlesmelers)
+                .HasForeignKey(d => d.TuketimNoktasiId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("sozlesmeler_tuketim_noktasi_id_fkey");
+                .HasConstraintName("fk_sozlesmeler_tuketim_noktasi");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.SozlesmelerUpdatedByNavigations)
                 .HasForeignKey(d => d.UpdatedBy)
-                .HasConstraintName("sozlesmeler_updated_by_fkey");
+                .HasConstraintName("fk_sozlesmeler_updated_by");
         });
 
         modelBuilder.Entity<TuketimNoktasi>(entity =>
         {
-            entity.HasKey(e => e.TuketimNoktasiId).HasName("tuketim_noktasi_pkey");
+            entity.HasKey(e => e.TuketimNoktasiId).HasName("pk_tuketim_noktasi");
 
             entity.ToTable("tuketim_noktasi");
 
@@ -721,7 +664,13 @@ public partial class AppDbContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.EPosta)
+                .HasMaxLength(150)
+                .HasColumnName("e_posta");
             entity.Property(e => e.IlceId).HasColumnName("ilce_id");
+            entity.Property(e => e.IletisimTercihi)
+                .HasMaxLength(20)
+                .HasColumnName("iletisim_tercihi");
             entity.Property(e => e.KoordinatLat)
                 .HasPrecision(10, 6)
                 .HasColumnName("koordinat_lat");
@@ -731,34 +680,49 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Mahalle)
                 .HasMaxLength(100)
                 .HasColumnName("mahalle");
+            entity.Property(e => e.MusteriAd)
+                .HasMaxLength(100)
+                .HasColumnName("musteri_ad");
+            entity.Property(e => e.MusteriSoyad)
+                .HasMaxLength(100)
+                .HasColumnName("musteri_soyad");
+            entity.Property(e => e.MusteriUnvan)
+                .HasMaxLength(255)
+                .HasColumnName("musteri_unvan");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'AKTIF'::character varying")
                 .HasColumnName("status");
+            entity.Property(e => e.Tckn)
+                .HasMaxLength(11)
+                .HasColumnName("tckn");
             entity.Property(e => e.TekilKod)
                 .HasMaxLength(40)
                 .HasColumnName("tekil_kod");
-            entity.Property(e => e.TesisatNo)
-                .HasMaxLength(40)
-                .HasColumnName("tesisat_no");
+            entity.Property(e => e.Telefon)
+                .HasMaxLength(20)
+                .HasColumnName("telefon");
             entity.Property(e => e.TuketiciGrubu)
                 .HasMaxLength(30)
                 .HasColumnName("tuketici_grubu");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.Vkn)
+                .HasMaxLength(10)
+                .HasColumnName("vkn");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TuketimNoktasiCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("tuketim_noktasi_created_by_fkey");
+                .HasConstraintName("fk_tuketim_noktasi_created_by");
 
             entity.HasOne(d => d.Ilce).WithMany(p => p.TuketimNoktasis)
                 .HasForeignKey(d => d.IlceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("tuketim_noktasi_ilce_id_fkey");
+                .HasConstraintName("fk_tuketim_noktasi_ilce");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.TuketimNoktasiUpdatedByNavigations)
                 .HasForeignKey(d => d.UpdatedBy)
-                .HasConstraintName("tuketim_noktasi_updated_by_fkey");
+                .HasConstraintName("fk_tuketim_noktasi_updated_by");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -9,9 +9,23 @@ public partial class Sozlesmeler
 
     public string SozlesmeNo { get; set; } = null!;
 
-    public long AboneId { get; set; }
-
     public long TuketimNoktasiId { get; set; }
+
+    public string? Ad { get; set; }
+
+    public string? Soyad { get; set; }
+
+    public string? Unvan { get; set; }
+
+    public string? Tckn { get; set; }
+
+    public string? Vkn { get; set; }
+
+    public string? Telefon { get; set; }
+
+    public string? EPosta { get; set; }
+
+    public string? IletisimTercihi { get; set; }
 
     public string SozlesmeTipi { get; set; } = null!;
 
@@ -34,8 +48,6 @@ public partial class Sozlesmeler
     public DateTime? UpdatedAt { get; set; }
 
     public long? UpdatedBy { get; set; }
-
-    public virtual Abone Abone { get; set; } = null!;
 
     public virtual Kullanicilar? CreatedByNavigation { get; set; }
 

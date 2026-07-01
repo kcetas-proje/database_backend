@@ -13,7 +13,7 @@ public partial class FaturaKalemi
 
     public string? Aciklama { get; set; }
 
-    public decimal? Miktar { get; set; }
+    public decimal Miktar { get; set; }
 
     public decimal? BirimFiyat { get; set; }
 

@@ -9,6 +9,8 @@ public partial class EndeksOkuma
 
     public long SayacId { get; set; }
 
+    public long? IsEmriId { get; set; }
+
     public long? SozlesmeId { get; set; }
 
     public string OkumaTipi { get; set; } = null!;
@@ -36,6 +38,8 @@ public partial class EndeksOkuma
     public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<Fatura> Faturas { get; set; } = new List<Fatura>();
+
+    public virtual IsEmirleri? IsEmri { get; set; }
 
     public virtual Kullanicilar? Kullanici { get; set; }
 

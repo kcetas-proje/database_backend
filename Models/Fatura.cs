@@ -13,8 +13,6 @@ public partial class Fatura
 
     public string TekilKod { get; set; } = null!;
 
-    public long AboneId { get; set; }
-
     public string FaturaTipi { get; set; } = null!;
 
     public string Donem { get; set; } = null!;
@@ -56,8 +54,6 @@ public partial class Fatura
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
-
-    public virtual Abone Abone { get; set; } = null!;
 
     public virtual ICollection<EntegrasyonOutbox> EntegrasyonOutboxes { get; set; } = new List<EntegrasyonOutbox>();
 

@@ -19,7 +19,7 @@ namespace KcetasAboneApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetKullanicilar()
         {
-            var kullanicilar = await _context.Kullanicilar
+            var kullanicilar = await _context.Kullanicilars
                 .Where(k => k.Durum == "AKTIF")
                 .ToListAsync();
 
@@ -33,12 +33,12 @@ namespace KcetasAboneApi.Controllers
 
         
         [HttpPost]
-        public async Task<IActionResult> YeniKullaniciEkle([FromBody] Kullanici yeniKullanici)
+        public async Task<IActionResult> YeniKullaniciEkle([FromBody] Kullanicilar yeniKullanici)
         {
             yeniKullanici.Durum = "AKTIF";
             yeniKullanici.CreatedAt = DateTime.UtcNow;
 
-            _context.Kullanicilar.Add(yeniKullanici);
+            _context.Kullanicilars.Add(yeniKullanici);
             await _context.SaveChangesAsync();
 
             return Ok(yeniKullanici);
@@ -46,9 +46,9 @@ namespace KcetasAboneApi.Controllers
 
         
         [HttpPut("{id}")]
-        public async Task<IActionResult> KullaniciGuncelle(long id, [FromBody] Kullanici guncelKullanici)
+        public async Task<IActionResult> KullaniciGuncelle(long id, [FromBody] Kullanicilar guncelKullanici)
         {
-            var dbKullanici = await _context.Kullanicilar.FindAsync(id);
+            var dbKullanici = await _context.Kullanicilars.FindAsync(id);
 
             if (dbKullanici == null)
             {
@@ -71,7 +71,7 @@ namespace KcetasAboneApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> KullaniciSil(long id)
         {
-            var dbKullanici = await _context.Kullanicilar.FindAsync(id);
+            var dbKullanici = await _context.Kullanicilars.FindAsync(id);
 
             if (dbKullanici == null)
             {
@@ -90,3 +90,4 @@ namespace KcetasAboneApi.Controllers
         }
     }
 }
+

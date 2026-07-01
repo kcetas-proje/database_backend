@@ -19,7 +19,7 @@ namespace KcetasAboneApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetFaturalar()
         {
-            var faturalar = await _context.Faturalar
+            var faturalar = await _context.Faturas
                 .Where(f => f.Status == "AKTIF")
                 .ToListAsync();
 
@@ -37,7 +37,7 @@ namespace KcetasAboneApi.Controllers
             yeniFatura.Status = "AKTIF";
             yeniFatura.CreatedAt = DateTime.UtcNow;
 
-            _context.Faturalar.Add(yeniFatura);
+            _context.Faturas.Add(yeniFatura);
             await _context.SaveChangesAsync();
 
             return Ok(yeniFatura);
@@ -47,7 +47,7 @@ namespace KcetasAboneApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> FaturaGuncelle(long id, [FromBody] Fatura guncelFatura)
         {
-            var dbFatura = await _context.Faturalar.FindAsync(id);
+            var dbFatura = await _context.Faturas.FindAsync(id);
 
             if (dbFatura == null)
             {
@@ -57,7 +57,6 @@ namespace KcetasAboneApi.Controllers
             dbFatura.FaturaNo = guncelFatura.FaturaNo;
             dbFatura.SozlesmeId = guncelFatura.SozlesmeId;
             dbFatura.TekilKod = guncelFatura.TekilKod;
-            dbFatura.AboneId = guncelFatura.AboneId;
             dbFatura.FaturaTipi = guncelFatura.FaturaTipi;
             dbFatura.Donem = guncelFatura.Donem;
             dbFatura.FaturaTarihi = guncelFatura.FaturaTarihi;
@@ -87,7 +86,7 @@ namespace KcetasAboneApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> FaturaSil(long id)
         {
-            var dbFatura = await _context.Faturalar.FindAsync(id);
+            var dbFatura = await _context.Faturas.FindAsync(id);
 
             if (dbFatura == null)
             {

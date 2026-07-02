@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace KcetasAboneApi.Controllers
 {
@@ -15,7 +19,6 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
-        // Tüm iş emirlerini getir
         [HttpGet]
         public async Task<IActionResult> GetIsEmirleri()
         {
@@ -31,7 +34,6 @@ namespace KcetasAboneApi.Controllers
             return Ok(isEmirleri);
         }
 
-        // Id'ye göre iş emri getir
         [HttpGet("{id}")]
         public async Task<IActionResult> GetIsEmri(long id)
         {
@@ -45,7 +47,6 @@ namespace KcetasAboneApi.Controllers
             return Ok(isEmri);
         }
 
-        // Duruma göre iş emirlerini getir
         [HttpGet("durum/{durum}")]
         public async Task<IActionResult> GetDurumaGoreIsEmirleri(string durum)
         {
@@ -61,12 +62,25 @@ namespace KcetasAboneApi.Controllers
             return Ok(isEmirleri);
         }
 
-        // Yeni iş emri ekle
         [HttpPost]
-        public async Task<IActionResult> YeniIsEmriEkle([FromBody] IsEmirleri yeniIsEmri)
+        public async Task<IActionResult> YeniIsEmriEkle([FromBody] IsEmriCreateDto dto)
         {
-            yeniIsEmri.Status = "AKTIF";
-            yeniIsEmri.CreatedAt = DateTime.UtcNow;
+            string rasgeleIsEmriNo = "IE" + DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            var yeniIsEmri = new IsEmirleri
+            {
+                IsEmriNo = rasgeleIsEmriNo,
+                TuketimNoktasiId = dto.TuketimNoktasiId,
+                SayacId = dto.SayacId,
+                Tip = dto.Tip, 
+                Oncelik = dto.Oncelik ?? "NORMAL",
+                PlanlananTarih = dto.PlanlananTarih ?? DateTime.UtcNow.AddDays(1), 
+                AtananKullaniciId = dto.AtananKullaniciId,
+                
+                Durum = "ACIK", 
+                Status = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
 
             _context.IsEmirleris.Add(yeniIsEmri);
             await _context.SaveChangesAsync();
@@ -74,7 +88,6 @@ namespace KcetasAboneApi.Controllers
             return Ok(yeniIsEmri);
         }
 
-        // İş emrini güncelle
         [HttpPut("{id}")]
         public async Task<IActionResult> IsEmriGuncelle(long id, [FromBody] IsEmirleri guncelIsEmri)
         {
@@ -104,7 +117,6 @@ namespace KcetasAboneApi.Controllers
             return Ok(dbIsEmri);
         }
 
-        // Soft Delete
         [HttpDelete("{id}")]
         public async Task<IActionResult> IsEmriSil(long id)
         {

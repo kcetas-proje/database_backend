@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -37,14 +40,32 @@ public class EndeksOkumaController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<EndeksOkuma>> Post(EndeksOkuma model)
+    public async Task<ActionResult<EndeksOkuma>> Post([FromBody] EndeksOkumaCreateDto dto)
     {
-        _context.EndeksOkumas.Add(model);
+        var yeniEndeks = new EndeksOkuma
+        {
+            SayacId = dto.SayacId,
+            IsEmriId = dto.IsEmriId,
+            SozlesmeId = dto.SozlesmeId,
+            YeniEndeks = dto.YeniEndeks,
+            OncekiEndeks = dto.OncekiEndeks,
+            
+            OkumaTipi = string.IsNullOrEmpty(dto.OkumaTipi) ? "RUTIN_DONEM" : dto.OkumaTipi,
+            OkumaKaynagi = string.IsNullOrEmpty(dto.OkumaKaynagi) ? "MANUEL" : dto.OkumaKaynagi,
+            Donem = string.IsNullOrEmpty(dto.Donem) ? DateTime.Now.ToString("yyyy-MM") : dto.Donem,
+            OkumaZamani = dto.OkumaZamani ?? DateTime.UtcNow,
+            KullaniciId = dto.KullaniciId,
 
+            DogrulamaDurumu = "DOGRULAMA_BEKLIYOR", 
+            AnomaliMi = false, 
+            Status = "AKTIF",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.EndeksOkumas.Add(yeniEndeks);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Get),
-            new { id = model.OkumaId }, model);
+        return CreatedAtAction(nameof(Get), new { id = yeniEndeks.OkumaId }, yeniEndeks);
     }
 
     [HttpPut("{id}")]
@@ -54,7 +75,6 @@ public class EndeksOkumaController : ControllerBase
             return BadRequest();
 
         _context.Entry(model).State = EntityState.Modified;
-
         await _context.SaveChangesAsync();
 
         return NoContent();
@@ -64,12 +84,10 @@ public class EndeksOkumaController : ControllerBase
     public async Task<IActionResult> Delete(long id)
     {
         var okuma = await _context.EndeksOkumas.FindAsync(id);
-
         if (okuma == null)
             return NotFound();
 
         _context.EndeksOkumas.Remove(okuma);
-
         await _context.SaveChangesAsync();
 
         return NoContent();

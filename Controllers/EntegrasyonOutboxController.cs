@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace KcetasAboneApi.Controllers
 {
@@ -15,7 +19,6 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
-       
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EntegrasyonOutbox>>> GetEntegrasyonOutboxes()
         {
@@ -25,7 +28,6 @@ namespace KcetasAboneApi.Controllers
                 .ToListAsync();
         }
 
-        
         [HttpGet("{id}")]
         public async Task<ActionResult<EntegrasyonOutbox>> GetEntegrasyonOutbox(long id)
         {
@@ -41,20 +43,29 @@ namespace KcetasAboneApi.Controllers
             return outbox;
         }
 
-       
         [HttpPost]
-        public async Task<ActionResult<EntegrasyonOutbox>> PostEntegrasyonOutbox(EntegrasyonOutbox outbox)
+        public async Task<ActionResult<EntegrasyonOutbox>> PostEntegrasyonOutbox([FromBody] EntegrasyonOutboxCreateDto dto)
         {
-            outbox.CreatedAt = DateTime.UtcNow;
+            var yeniMesaj = new EntegrasyonOutbox
+            {
+                FaturaId = dto.FaturaId,
+                HedefSistem = dto.HedefSistem,
+                Payload = dto.Payload,
 
-            _context.EntegrasyonOutboxes.Add(outbox);
+                IdempotencyKey = Guid.NewGuid().ToString(),
+                CorrelationId = Guid.NewGuid().ToString(),
+                
+                Durum = "BEKLIYOR",
+                RetryCount = 0,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.EntegrasyonOutboxes.Add(yeniMesaj);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetEntegrasyonOutbox),
-                new { id = outbox.OutboxId }, outbox);
+            return CreatedAtAction(nameof(GetEntegrasyonOutbox), new { id = yeniMesaj.OutboxId }, yeniMesaj);
         }
 
-        
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEntegrasyonOutbox(long id, EntegrasyonOutbox outbox)
         {
@@ -75,14 +86,12 @@ namespace KcetasAboneApi.Controllers
                 {
                     return NotFound();
                 }
-
                 throw;
             }
 
             return NoContent();
         }
 
-        
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEntegrasyonOutbox(long id)
         {

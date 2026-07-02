@@ -1,6 +1,8 @@
 using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
 
 namespace KcetasAboneApi.Controllers
 {
@@ -15,7 +17,6 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
-      
         [HttpGet]
         public async Task<IActionResult> GetFaturalar()
         {
@@ -32,10 +33,37 @@ namespace KcetasAboneApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> YeniFaturaEkle([FromBody] Fatura yeniFatura)
+        public async Task<IActionResult> YeniFaturaEkle([FromBody] FaturaCreateDto dto)
         {
-            yeniFatura.Status = "AKTIF";
-            yeniFatura.CreatedAt = DateTime.UtcNow;
+            string rasgeleFaturaNo = "FAT" + DateTime.Now.ToString("yyyyMMddHHmmss");
+            string rasgeleTekilKod = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+
+            var yeniFatura = new Fatura
+            {
+                SozlesmeId = dto.SozlesmeId,
+                OkumaId = dto.OkumaId,
+                FaturaNo = rasgeleFaturaNo,
+                TekilKod = rasgeleTekilKod,
+                FaturaTipi = "DONEM",
+                Donem = DateTime.Now.ToString("yyyy-MM"),
+
+                FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
+                SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                
+                TuketimKwh = dto.TuketimKwh,
+                ToplamTutar = dto.ToplamTutar,
+
+                EnerjiBedeli = dto.ToplamTutar * 0.50m,
+                DagitimBedeli = dto.ToplamTutar * 0.30m,
+                VergiFonToplam = dto.ToplamTutar * 0.20m,
+                HizmetBedeli = 0m,
+                KesmeBaglamaBedeli = 0m,
+                Carpan = 1m,
+                
+                Durum = "HESAPLANDI",
+                Status = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
 
             _context.Faturas.Add(yeniFatura);
             await _context.SaveChangesAsync();
@@ -43,7 +71,6 @@ namespace KcetasAboneApi.Controllers
             return Ok(yeniFatura);
         }
 
-        
         [HttpPut("{id}")]
         public async Task<IActionResult> FaturaGuncelle(long id, [FromBody] Fatura guncelFatura)
         {
@@ -82,7 +109,6 @@ namespace KcetasAboneApi.Controllers
             return Ok(dbFatura);
         }
 
-        
         [HttpDelete("{id}")]
         public async Task<IActionResult> FaturaSil(long id)
         {

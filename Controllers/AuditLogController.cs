@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace KcetasAboneApi.Controllers
 {
@@ -15,7 +18,6 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
-        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AuditLog>>> GetAuditLogs()
         {
@@ -24,8 +26,27 @@ namespace KcetasAboneApi.Controllers
                 .OrderByDescending(a => a.IslemZamani)
                 .ToListAsync();
         }
+        [HttpPost]
+        public async Task<ActionResult<AuditLog>> PostAuditLog([FromBody] AuditLogCreateDto dto)
+        {
+            var auditLog = new AuditLog
+            {
+                VarlikTipi = dto.VarlikTipi, 
+                VarlikId = dto.VarlikId,
+                IslemTipi = dto.IslemTipi,
+                EskiDeger = dto.EskiDeger,
+                YeniDeger = dto.YeniDeger,
+                KullaniciId = dto.KullaniciId,
+                IslemGerekcesi = dto.IslemGerekcesi,
+                IslemZamani = DateTime.UtcNow
+            };
 
-        
+            _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetAuditLog), new { id = auditLog.AuditId }, auditLog);
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<AuditLog>> GetAuditLog(long id)
         {
@@ -33,26 +54,11 @@ namespace KcetasAboneApi.Controllers
                 .Include(a => a.Kullanici)
                 .FirstOrDefaultAsync(a => a.AuditId == id);
 
-            if (auditLog == null)
-            {
-                return NotFound();
-            }
-
+            if (auditLog == null) return NotFound();
             return auditLog;
-        }
-
         
-        [HttpPost]
-        public async Task<ActionResult<AuditLog>> PostAuditLog(AuditLog auditLog)
-        {
-            auditLog.IslemZamani = DateTime.UtcNow;
+    }
 
-            _context.AuditLogs.Add(auditLog);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetAuditLog),
-                new { id = auditLog.AuditId }, auditLog);
-        }
 
         
         [HttpPut("{id}")]

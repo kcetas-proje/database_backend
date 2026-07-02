@@ -1,6 +1,6 @@
-using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using KcetasAboneApi.Models;
 
 namespace KcetasAboneApi.Controllers
 {
@@ -15,7 +15,6 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
-        
         [HttpGet]
         public async Task<IActionResult> GetKullanicilar()
         {
@@ -23,20 +22,22 @@ namespace KcetasAboneApi.Controllers
                 .Where(k => k.Durum == "AKTIF")
                 .ToListAsync();
 
-            if (!kullanicilar.Any())
-            {
-                return NotFound("Sistemde aktif kullanıcı bulunamadı.");
-            }
-
             return Ok(kullanicilar);
         }
 
-        
         [HttpPost]
-        public async Task<IActionResult> YeniKullaniciEkle([FromBody] Kullanicilar yeniKullanici)
+        public async Task<IActionResult> YeniKullaniciEkle([FromBody] KullaniciCreateDto dto)
         {
-            yeniKullanici.Durum = "AKTIF";
-            yeniKullanici.CreatedAt = DateTime.UtcNow;
+            var yeniKullanici = new Kullanicilar
+            {
+                AdSoyad = dto.AdSoyad,
+                KullaniciAdi = dto.KullaniciAdi,
+                EPosta = dto.EPosta,
+                SifreHash = BCrypt.Net.BCrypt.HashPassword(dto.Sifre), 
+                RolId = dto.RolId,
+                Durum = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
 
             _context.Kullanicilars.Add(yeniKullanici);
             await _context.SaveChangesAsync();

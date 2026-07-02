@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -37,14 +40,23 @@ public class FaturaKalemiController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<FaturaKalemi>> Post(FaturaKalemi model)
+    public async Task<ActionResult<FaturaKalemi>> Post([FromBody] FaturaKalemiCreateDto dto)
     {
-        _context.FaturaKalemis.Add(model);
+        var yeniKalem = new FaturaKalemi
+        {
+            FaturaId = dto.FaturaId,
+            KalemTipi = dto.KalemTipi,
+            Aciklama = dto.Aciklama ?? "Sistem tarafından otomatik oluşturuldu",
+            Miktar = dto.Miktar,
+            BirimFiyat = dto.BirimFiyat,
+            Tutar = dto.Tutar,
+            CreatedAt = DateTime.UtcNow
+        };
 
+        _context.FaturaKalemis.Add(yeniKalem);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Get),
-            new { id = model.FaturaKalemId }, model);
+        return CreatedAtAction(nameof(Get), new { id = yeniKalem.FaturaKalemId }, yeniKalem);
     }
 
     [HttpPut("{id}")]
@@ -54,7 +66,6 @@ public class FaturaKalemiController : ControllerBase
             return BadRequest();
 
         _context.Entry(model).State = EntityState.Modified;
-
         await _context.SaveChangesAsync();
 
         return NoContent();
@@ -69,7 +80,6 @@ public class FaturaKalemiController : ControllerBase
             return NotFound();
 
         _context.FaturaKalemis.Remove(kalem);
-
         await _context.SaveChangesAsync();
 
         return NoContent();

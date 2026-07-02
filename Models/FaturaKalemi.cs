@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Text.Json.Serialization;
 namespace KcetasAboneApi.Models;
 
 public partial class FaturaKalemi
@@ -21,5 +21,6 @@ public partial class FaturaKalemi
 
     public DateTime CreatedAt { get; set; }
 
+    [JsonIgnore]
     public virtual Fatura Fatura { get; set; } = null!;
 }

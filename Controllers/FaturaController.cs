@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace KcetasAboneApi.Controllers
 {
@@ -46,50 +47,69 @@ namespace KcetasAboneApi.Controllers
                 TekilKod = rasgeleTekilKod,
                 FaturaTipi = "DONEM",
                 Donem = DateTime.Now.ToString("yyyy-MM"),
-
                 FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
                 SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                
                 TuketimKwh = dto.TuketimKwh,
                 ToplamTutar = dto.ToplamTutar,
-
                 EnerjiBedeli = dto.ToplamTutar * 0.50m,
                 DagitimBedeli = dto.ToplamTutar * 0.30m,
                 VergiFonToplam = dto.ToplamTutar * 0.20m,
                 HizmetBedeli = 0m,
                 KesmeBaglamaBedeli = 0m,
                 Carpan = 1m,
-                
-                Durum = "HESAPLANDI",
+                Durum = "HESAPLANDI", 
                 Status = "AKTIF",
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Faturas.Add(yeniFatura);
+
+
+            var payloadData = new 
+            {
+                FaturaNo = yeniFatura.FaturaNo,
+                Tarih = yeniFatura.FaturaTarihi,
+                Tutar = yeniFatura.ToplamTutar,
+                AboneSözlesme = yeniFatura.SozlesmeId
+            };
+
+            var outboxKaydi = new EntegrasyonOutbox
+            {
+                Fatura = yeniFatura, 
+                HedefSistem = "GIB_EFATURA",
+                IdempotencyKey = Guid.NewGuid().ToString(), 
+                Payload = JsonSerializer.Serialize(payloadData),
+                Durum = "BEKLIYOR",
+                RetryCount = 0,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.EntegrasyonOutboxes.Add(outboxKaydi); 
+
             await _context.SaveChangesAsync();
 
             return Ok(yeniFatura);
         }
 
         [HttpPut("{id}")]
-public async Task<IActionResult> Update(long id, [FromBody] FaturaUpdateDto dto)
-{
-    // ID kontrolü
-    if (id != dto.FaturaId) return BadRequest("ID uyuşmazlığı!");
+        public async Task<IActionResult> Update(long id, [FromBody] FaturaUpdateDto dto)
+        {
+            // ID kontrolü
+            if (id != dto.FaturaId) return BadRequest("ID uyuşmazlığı!");
 
-    var fatura = await _context.Faturas.FindAsync(id);
-    if (fatura == null) return NotFound();
+            var fatura = await _context.Faturas.FindAsync(id);
+            if (fatura == null) return NotFound();
 
-    // Sadece DTO ile gelen verileri ata
-    fatura.FaturaNo = dto.FaturaNo;
-    fatura.ToplamTutar = dto.ToplamTutar;
-    fatura.Durum = dto.Durum;
-    fatura.SonOdemeTarihi = dto.SonOdemeTarihi;
-    fatura.UpdatedAt = DateTime.UtcNow;
+            // Sadece DTO ile gelen verileri ata
+            fatura.FaturaNo = dto.FaturaNo;
+            fatura.ToplamTutar = dto.ToplamTutar;
+            fatura.Durum = dto.Durum;
+            fatura.SonOdemeTarihi = dto.SonOdemeTarihi;
+            fatura.UpdatedAt = DateTime.UtcNow;
 
-    await _context.SaveChangesAsync();
-    return NoContent();
-}
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> FaturaSil(long id)

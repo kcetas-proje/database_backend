@@ -69,27 +69,27 @@ public class EndeksOkumaController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Put(long id, EndeksOkuma model)
-    {
-        if (id != model.OkumaId)
-            return BadRequest();
+public async Task<IActionResult> Update(long id, [FromBody] EndeksOkumaUpdateDto dto)
+{
+    var endeks = await _context.EndeksOkumas.FindAsync(id);
+    if (endeks == null) return NotFound();
 
-        _context.Entry(model).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
+    endeks.YeniEndeks = dto.Deger; 
+    endeks.OkumaTipi = dto.OkumaTipi;
 
-        return NoContent();
-    }
+    await _context.SaveChangesAsync();
+    return NoContent();
+}
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(long id)
-    {
-        var okuma = await _context.EndeksOkumas.FindAsync(id);
-        if (okuma == null)
-            return NotFound();
+public async Task<IActionResult> Delete(long id)
+{
+    var endeks = await _context.EndeksOkumas.FindAsync(id);
+    if (endeks == null) return NotFound();
 
-        _context.EndeksOkumas.Remove(okuma);
-        await _context.SaveChangesAsync();
+    endeks.Status = "PASIF";
 
-        return NoContent();
-    }
+    await _context.SaveChangesAsync();
+    return NoContent(); 
+}
 }

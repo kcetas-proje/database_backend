@@ -72,42 +72,24 @@ namespace KcetasAboneApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> FaturaGuncelle(long id, [FromBody] Fatura guncelFatura)
-        {
-            var dbFatura = await _context.Faturas.FindAsync(id);
+public async Task<IActionResult> Update(long id, [FromBody] FaturaUpdateDto dto)
+{
+    // ID kontrolü
+    if (id != dto.FaturaId) return BadRequest("ID uyuşmazlığı!");
 
-            if (dbFatura == null)
-            {
-                return NotFound("Böyle bir fatura bulunamadı.");
-            }
+    var fatura = await _context.Faturas.FindAsync(id);
+    if (fatura == null) return NotFound();
 
-            dbFatura.FaturaNo = guncelFatura.FaturaNo;
-            dbFatura.SozlesmeId = guncelFatura.SozlesmeId;
-            dbFatura.TekilKod = guncelFatura.TekilKod;
-            dbFatura.FaturaTipi = guncelFatura.FaturaTipi;
-            dbFatura.Donem = guncelFatura.Donem;
-            dbFatura.FaturaTarihi = guncelFatura.FaturaTarihi;
-            dbFatura.SonOdemeTarihi = guncelFatura.SonOdemeTarihi;
-            dbFatura.OkumaId = guncelFatura.OkumaId;
-            dbFatura.IlkEndeks = guncelFatura.IlkEndeks;
-            dbFatura.SonEndeks = guncelFatura.SonEndeks;
-            dbFatura.TuketimKwh = guncelFatura.TuketimKwh;
-            dbFatura.ReaktifEnduktif = guncelFatura.ReaktifEnduktif;
-            dbFatura.ReaktifKapasitif = guncelFatura.ReaktifKapasitif;
-            dbFatura.Carpan = guncelFatura.Carpan;
-            dbFatura.EnerjiBedeli = guncelFatura.EnerjiBedeli;
-            dbFatura.DagitimBedeli = guncelFatura.DagitimBedeli;
-            dbFatura.HizmetBedeli = guncelFatura.HizmetBedeli;
-            dbFatura.KesmeBaglamaBedeli = guncelFatura.KesmeBaglamaBedeli;
-            dbFatura.VergiFonToplam = guncelFatura.VergiFonToplam;
-            dbFatura.ToplamTutar = guncelFatura.ToplamTutar;
-            dbFatura.Durum = guncelFatura.Durum;
-            dbFatura.UpdatedAt = DateTime.UtcNow;
+    // Sadece DTO ile gelen verileri ata
+    fatura.FaturaNo = dto.FaturaNo;
+    fatura.ToplamTutar = dto.ToplamTutar;
+    fatura.Durum = dto.Durum;
+    fatura.SonOdemeTarihi = dto.SonOdemeTarihi;
+    fatura.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
-
-            return Ok(dbFatura);
-        }
+    await _context.SaveChangesAsync();
+    return NoContent();
+}
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> FaturaSil(long id)

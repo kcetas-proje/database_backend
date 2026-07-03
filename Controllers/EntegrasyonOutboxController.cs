@@ -67,28 +67,17 @@ namespace KcetasAboneApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEntegrasyonOutbox(long id, EntegrasyonOutbox outbox)
+        public async Task<IActionResult> Update(long id, [FromBody] EntegrasyonOutboxUpdateDto dto)
         {
-            if (id != outbox.OutboxId)
-            {
-                return BadRequest();
-            }
+            var log = await _context.EntegrasyonOutboxes.FindAsync(id);
+            if (log == null) return NotFound();
 
-            _context.Entry(outbox).State = EntityState.Modified;
+            log.Durum = dto.Durum;
+            log.RetryCount = dto.RetryCount;
+            log.HataMesaji = dto.HataMesaji;
+            log.SonDenemeTarihi = DateTime.UtcNow;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.EntegrasyonOutboxes.Any(e => e.OutboxId == id))
-                {
-                    return NotFound();
-                }
-                throw;
-            }
-
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 

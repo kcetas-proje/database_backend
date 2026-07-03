@@ -87,21 +87,5 @@ namespace KcetasAboneApi.Controllers
 
             return NoContent();
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAuditLog(long id)
-        {
-            var auditLog = await _context.AuditLogs.FindAsync(id);
-
-            if (auditLog == null)
-            {
-                return NotFound();
-            }
-
-            _context.AuditLogs.Remove(auditLog);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
     }
 }

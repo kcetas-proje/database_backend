@@ -60,16 +60,19 @@ public class FaturaKalemiController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Put(long id, FaturaKalemi model)
-    {
-        if (id != model.FaturaKalemId)
-            return BadRequest();
+public async Task<IActionResult> Update(long id, [FromBody] FaturaKalemiUpdateDto dto)
+{
+    var kalem = await _context.FaturaKalemis.FindAsync(id);
+    if (kalem == null) return NotFound();
 
-        _context.Entry(model).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
+    kalem.Aciklama = dto.Aciklama;
+    kalem.Miktar = dto.Miktar;
+    kalem.BirimFiyat = dto.BirimFiyat;
+    kalem.Tutar = dto.Miktar * dto.BirimFiyat;
 
-        return NoContent();
-    }
+    await _context.SaveChangesAsync();
+    return NoContent();
+}
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(long id)

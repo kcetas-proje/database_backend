@@ -89,32 +89,16 @@ namespace KcetasAboneApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> IsEmriGuncelle(long id, [FromBody] IsEmirleri guncelIsEmri)
+        public async Task<IActionResult> Update(long id, [FromBody] IsEmriUpdateDto dto)
         {
-            var dbIsEmri = await _context.IsEmirleris.FindAsync(id);
+            var existingEmir = await _context.IsEmirleris.FindAsync(id);
+            if (existingEmir == null) return NotFound();
 
-            if (dbIsEmri == null)
-            {
-                return NotFound("İş emri bulunamadı.");
-            }
-
-            dbIsEmri.IsEmriNo = guncelIsEmri.IsEmriNo;
-            dbIsEmri.TuketimNoktasiId = guncelIsEmri.TuketimNoktasiId;
-            dbIsEmri.SayacId = guncelIsEmri.SayacId;
-            dbIsEmri.Tip = guncelIsEmri.Tip;
-            dbIsEmri.Oncelik = guncelIsEmri.Oncelik;
-            dbIsEmri.PlanlananTarih = guncelIsEmri.PlanlananTarih;
-            dbIsEmri.AtananKullaniciId = guncelIsEmri.AtananKullaniciId;
-            dbIsEmri.Durum = guncelIsEmri.Durum;
-            dbIsEmri.SahaSonucu = guncelIsEmri.SahaSonucu;
-            dbIsEmri.Gerekce = guncelIsEmri.Gerekce;
-            dbIsEmri.MuhurNo = guncelIsEmri.MuhurNo;
-            dbIsEmri.TutanakNo = guncelIsEmri.TutanakNo;
-            dbIsEmri.UpdatedAt = DateTime.UtcNow;
-
+            existingEmir.Durum = dto.Durum;
+            existingEmir.SahaSonucu = dto.SahaSonucu;
+            
             await _context.SaveChangesAsync();
-
-            return Ok(dbIsEmri);
+            return NoContent();
         }
 
         [HttpDelete("{id}")]

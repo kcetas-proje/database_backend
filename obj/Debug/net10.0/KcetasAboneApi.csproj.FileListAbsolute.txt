@@ -8,7 +8,9 @@ C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\KcetasAboneApi.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\KcetasAboneApi.pdb
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\BCrypt-Net-Next.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Humanizer.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.Bcl.Cryptography.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.Build.Framework.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.CodeAnalysis.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.CodeAnalysis.CSharp.dll
@@ -21,6 +23,12 @@ C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Ab
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Design.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.Extensions.DependencyModel.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.OpenApi.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.VisualStudio.SolutionPersistence.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Mono.TextTemplating.dll
@@ -36,6 +44,7 @@ C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.Composition.Convention.dl
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.Composition.Hosting.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.Composition.Runtime.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.Composition.TypedParts.dll
+C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\cs\Microsoft.CodeAnalysis.resources.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\de\Microsoft.CodeAnalysis.resources.dll
 C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\es\Microsoft.CodeAnalysis.resources.dll
@@ -125,12 +134,3 @@ C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\refint\KcetasAboneApi.dll
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.pdb
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\KcetasAboneApi.genruntimeconfig.cache
 C:\Users\Caner\KcetasAboneApi\obj\Debug\net10.0\ref\KcetasAboneApi.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.Bcl.Cryptography.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll
-C:\Users\Caner\KcetasAboneApi\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll

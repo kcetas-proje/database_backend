@@ -26,7 +26,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"] ?? ""))
         };
     });
 builder.Services.AddAuthorization();
@@ -42,14 +42,22 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Kcetas Sistem API", Version = "v1" });
-    
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
-        In = ParameterLocation.Header, Description = "Lütfen 'Bearer' yazıp boşluk bırakıp Token'ı gir.",
-        Name = "Authorization", Type = SecuritySchemeType.ApiKey
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
-        { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, new string[] { } }
-    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+{
+    Type = SecuritySchemeType.Http,
+    Scheme = "bearer",
+    BearerFormat = "JWT",
+    Name = "Authorization",
+    In = ParameterLocation.Header,
+    Description = "JWT Authorization header using the Bearer scheme."
+});
+
+c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+{
+    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+});
+
 });
 
 builder.Services.AddCors(options =>

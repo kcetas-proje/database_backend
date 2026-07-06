@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
+[Authorize(Roles = "1, 2")]
 [ApiController]
 [Route("api/[controller]")]
 public class TuketimNoktasiController : ControllerBase

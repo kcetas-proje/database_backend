@@ -2,11 +2,14 @@ using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers
-{
+{   
+    [Authorize(Roles = "1, 6")]
     [Route("api/[controller]")]
     [ApiController]
     public class FaturaController : ControllerBase
@@ -46,7 +49,9 @@ namespace KcetasAboneApi.Controllers
                 FaturaNo = rasgeleFaturaNo,
                 TekilKod = rasgeleTekilKod,
                 FaturaTipi = "DONEM",
-                Donem = DateTime.Now.ToString("yyyy-MM"),
+
+                Donem = string.IsNullOrEmpty(dto.Donem) ? DateTime.Now.ToString("yyyy-MM") : dto.Donem,
+                
                 FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
                 SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
                 TuketimKwh = dto.TuketimKwh,
@@ -64,7 +69,7 @@ namespace KcetasAboneApi.Controllers
 
             _context.Faturas.Add(yeniFatura);
 
-
+            // Outbox (Kargo) Payload hazırlığı
             var payloadData = new 
             {
                 FaturaNo = yeniFatura.FaturaNo,
@@ -86,6 +91,7 @@ namespace KcetasAboneApi.Controllers
 
             _context.EntegrasyonOutboxes.Add(outboxKaydi); 
 
+            // Transaction: İkisi aynı anda veritabanına basılır
             await _context.SaveChangesAsync();
 
             return Ok(yeniFatura);
@@ -94,13 +100,11 @@ namespace KcetasAboneApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, [FromBody] FaturaUpdateDto dto)
         {
-            // ID kontrolü
             if (id != dto.FaturaId) return BadRequest("ID uyuşmazlığı!");
 
             var fatura = await _context.Faturas.FindAsync(id);
             if (fatura == null) return NotFound();
 
-            // Sadece DTO ile gelen verileri ata
             fatura.FaturaNo = dto.FaturaNo;
             fatura.ToplamTutar = dto.ToplamTutar;
             fatura.Durum = dto.Durum;

@@ -4,9 +4,11 @@ using KcetasAboneApi.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers
 {
+    [Authorize(Roles = "1, 7")]
     [ApiController]
     [Route("api/[controller]")]
     public class AuditLogController : ControllerBase

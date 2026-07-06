@@ -16,16 +16,15 @@ namespace KcetasAboneApi.Services
             _config = config;
         }
 
-        public string GenerateToken(string kullaniciAdi, string rol)
+        public string GenerateToken(string kullaniciAdi, short rolId)
         {
-
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:SecretKey"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, kullaniciAdi),
-                new Claim(ClaimTypes.Role, rol) 
+                new Claim(ClaimTypes.Role, rolId.ToString()) 
             };
 
             var token = new JwtSecurityToken(

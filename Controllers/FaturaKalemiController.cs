@@ -4,9 +4,11 @@ using KcetasAboneApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
+[Authorize(Roles = "1, 6")]
 [ApiController]
 [Route("api/[controller]")]
 public class FaturaKalemiController : ControllerBase

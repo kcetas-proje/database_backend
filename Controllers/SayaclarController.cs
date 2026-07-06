@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers
-{
+{   
+    [Authorize(Roles = "1, 5")]
     [Route("api/[controller]")]
     [ApiController]
     public class SayaclarController : ControllerBase

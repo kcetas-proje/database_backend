@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using KcetasAboneApi.Models.Dtos;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -18,11 +19,13 @@ public class TuketimNoktasiController : ControllerBase
     }
 
     // GET
-    [HttpGet]
+   [HttpGet]
     public async Task<ActionResult<IEnumerable<TuketimNoktasi>>> GetTuketimNoktalari()
     {
         return await _context.TuketimNoktasis
             .Include(x => x.Ilce)
+            .Include(x => x.Sozlesmelers)
+                .ThenInclude(s => s.Abone)
             .OrderBy(x => x.TuketimNoktasiId)
             .ToListAsync();
     }
@@ -43,22 +46,38 @@ public class TuketimNoktasiController : ControllerBase
 
     // POST
     [HttpPost]
-    public async Task<ActionResult<TuketimNoktasi>> PostTuketimNoktasi(TuketimNoktasi nokta)
+public async Task<ActionResult<TuketimNoktasi>> PostTuketimNoktasi(TuketimNoktasiCreateDto dto)
+{
+    // 1. İş Mantığı Kontrolü
+    if (await _context.TuketimNoktasis.AnyAsync(x => x.TekilKod == dto.TekilKod))
+        return BadRequest(new { message = "Tekil kod zaten kayıtlı." });
+
+    if (!await _context.Ilces.AnyAsync(x => x.IlceId == dto.IlceId))
+        return BadRequest(new { message = "İlçe bulunamadı." });
+
+    // 2. DTO'dan Entity'ye Dönüşüm (Map)
+    var yeniNokta = new TuketimNoktasi
     {
-        if (await _context.TuketimNoktasis.AnyAsync(x => x.TekilKod == nokta.TekilKod))
-            return BadRequest(new { message = "Tekil kod zaten kayıtlı." });
+        TekilKod = dto.TekilKod,
+        IlceId = dto.IlceId,
+        Mahalle = dto.Mahalle,
+        BinaNo = dto.BinaNo,
+        BagimsizBolumNo = dto.BagimsizBolumNo,
+        AcikAdres = dto.AcikAdres,
+        KoordinatLat = dto.KoordinatLat,
+        KoordinatLon = dto.KoordinatLon,
+        BaglantiGucuKw = dto.BaglantiGucuKw,
+        TuketiciGrubu = dto.TuketiciGrubu,
+        BaglantiDurumu = dto.BaglantiDurumu,
+        Status = "AKTIF",
+        CreatedAt = DateTime.UtcNow
+    };
 
-        if (!await _context.Ilces.AnyAsync(x => x.IlceId == nokta.IlceId))
-            return BadRequest(new { message = "İlçe bulunamadı." });
+    _context.TuketimNoktasis.Add(yeniNokta);
+    await _context.SaveChangesAsync();
 
-        nokta.CreatedAt = DateTime.UtcNow;
-
-        _context.TuketimNoktasis.Add(nokta);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetTuketimNoktasi),
-            new { id = nokta.TuketimNoktasiId }, nokta);
-    }
+    return CreatedAtAction(nameof(GetTuketimNoktasi), new { id = yeniNokta.TuketimNoktasiId }, yeniNokta);
+}
 
     // PUT
     [HttpPut("{id}")]

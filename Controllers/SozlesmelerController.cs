@@ -44,52 +44,41 @@ public class SozlesmelerController : ControllerBase
 
     // POST: api/Sozlesmeler
     [HttpPost]
-    public async Task<ActionResult<Sozlesmeler>> PostSozlesme(Sozlesmeler sozlesme)
+public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
+{
+
+    if (!await _context.Abonelers.AnyAsync(x => x.AboneId == dto.AboneId))
+        return BadRequest(new { message = "Abone bulunamadı." });
+
+    if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == dto.TuketimNoktasiId))
+        return BadRequest(new { message = "Tüketim noktası bulunamadı." });
+
+    if (!await _context.Tarifelers.AnyAsync(x => x.TarifeId == dto.TarifeId))
+        return BadRequest(new { message = "Tarife bulunamadı." });
+
+    var count = await _context.Sozlesmelers.CountAsync();
+    string yeniSozlesmeNo = $"SOZ-{DateTime.UtcNow:yyyy-MM}-{ (count + 1).ToString("D4") }";
+
+    var yeniSozlesme = new Sozlesmeler
     {
-        // Aynı sözleşme numarası var mı?
-        if (await _context.Sozlesmelers.AnyAsync(x => x.SozlesmeNo == sozlesme.SozlesmeNo))
-        {
-            return BadRequest(new
-            {
-                message = "Bu sözleşme numarası zaten kayıtlı."
-            });
-        }
+        SozlesmeNo = yeniSozlesmeNo,
+        AboneId = dto.AboneId,
+        TuketimNoktasiId = dto.TuketimNoktasiId,
+        TarifeId = dto.TarifeId,
+        SozlesmeTipi = dto.SozlesmeTipi,
+        GuvenceBedeli = dto.GuvenceBedeli,
+        BaslangicTarihi = dto.BaslangicTarihi != default 
+            ? DateOnly.FromDateTime(dto.BaslangicTarihi) 
+            : DateOnly.FromDateTime(DateTime.UtcNow),
+        Durum = "AKTIF",
+        CreatedAt = DateTime.UtcNow
+    };
 
-        // Abone kontrolü
-        if (!await _context.Abonelers.AnyAsync(x => x.AboneId == sozlesme.AboneId))
-        {
-            return BadRequest(new
-            {
-                message = "Abone bulunamadı."
-            });
-        }
+    _context.Sozlesmelers.Add(yeniSozlesme);
+    await _context.SaveChangesAsync();
 
-        // Tüketim noktası kontrolü
-        if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == sozlesme.TuketimNoktasiId))
-        {
-            return BadRequest(new
-            {
-                message = "Tüketim noktası bulunamadı."
-            });
-        }
-
-        // Tarife kontrolü
-        if (!await _context.Tarifelers.AnyAsync(x => x.TarifeId == sozlesme.TarifeId))
-        {
-            return BadRequest(new
-            {
-                message = "Tarife bulunamadı."
-            });
-        }
-
-        sozlesme.CreatedAt = DateTime.UtcNow;
-
-        _context.Sozlesmelers.Add(sozlesme);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetSozlesme),
-            new { id = sozlesme.SozlesmeId }, sozlesme);
-    }
+    return Ok(new { message = "Sözleşme başarıyla kuruldu!", no = yeniSozlesmeNo });
+}
 
     // PUT: api/Sozlesmeler/5
     [HttpPut("{id}")]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KcetasAboneApi.Models;
 
@@ -10,6 +11,12 @@ public partial class Sozlesmeler
     public string SozlesmeNo { get; set; } = null!;
 
     public long TuketimNoktasiId { get; set; }
+
+    [Column("abone_id")]
+    public long AboneId { get; set; }
+
+    [Column("tarife_id")]
+    public long TarifeId { get; set; }
 
     public string? Ad { get; set; }
 

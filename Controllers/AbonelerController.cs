@@ -45,55 +45,35 @@ public class AbonelerController : ControllerBase
 
     // POST: api/Aboneler
     [HttpPost]
-    public async Task<ActionResult<Aboneler>> PostAbone(Aboneler abone)
+    public async Task<ActionResult<Aboneler>> PostAbone(AboneCreateDto dto)
     {
-        // Abone numarası kontrolü
-        if (await _context.Abonelers.AnyAsync(a => a.AboneNo == abone.AboneNo))
+        string yeniAboneNo = $"ABN-{DateTime.Now:yyyyMMddHHmmss}";
+
+        var yeniAbone = new Aboneler
         {
-            return BadRequest(new
-            {
-                message = "Bu abone numarası zaten kayıtlı."
-            });
-        }
+            AboneNo = yeniAboneNo, 
+            AboneTipi = dto.AboneTipi,
+            Ad = dto.Ad,
+            Soyad = dto.Soyad,
+            Tckn = dto.Tckn,
+            Vkn = dto.Vkn,
+            Unvan = dto.Unvan,
+            Telefon = dto.Telefon,
+            CreatedAt = DateTime.UtcNow
+        };
 
-        // TCKN kontrolü
-        if (!string.IsNullOrWhiteSpace(abone.Tckn))
-        {
-            bool tcknVar = await _context.Abonelers.AnyAsync(a => a.Tckn == abone.Tckn);
+        if (!string.IsNullOrWhiteSpace(yeniAbone.Tckn) && await _context.Abonelers.AnyAsync(a => a.Tckn == yeniAbone.Tckn))
+            return BadRequest(new { message = "Bu TCKN sistemde kayıtlı." });
 
-            if (tcknVar)
-            {
-                return BadRequest(new
-                {
-                    message = "Bu TCKN sistemde kayıtlı."
-                });
-            }
-        }
+        if (!string.IsNullOrWhiteSpace(yeniAbone.Vkn) && await _context.Abonelers.AnyAsync(a => a.Vkn == yeniAbone.Vkn))
+            return BadRequest(new { message = "Bu VKN sistemde kayıtlı." });
 
-        // VKN kontrolü
-        if (!string.IsNullOrWhiteSpace(abone.Vkn))
-        {
-            bool vknVar = await _context.Abonelers.AnyAsync(a => a.Vkn == abone.Vkn);
-
-            if (vknVar)
-            {
-                return BadRequest(new
-                {
-                    message = "Bu VKN sistemde kayıtlı."
-                });
-            }
-        }
-
-        abone.CreatedAt = DateTime.UtcNow;
-
-        _context.Abonelers.Add(abone);
-
+        // 4. Kayıt
+        _context.Abonelers.Add(yeniAbone);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetAbone),
-            new { id = abone.AboneId }, abone);
+        return Ok(new { message = "Abone başarıyla oluşturuldu!", aboneNo = yeniAboneNo });
     }
-
     // PUT: api/Aboneler/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutAbone(long id, Aboneler abone)

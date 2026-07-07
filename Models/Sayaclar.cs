@@ -1,40 +1,56 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KcetasAboneApi.Models;
 
+[Table("sayaclar")]
 public partial class Sayaclar
 {
+    [Key]
+    [Column("sayac_id")]
     public long SayacId { get; set; }
 
+    [Column("seri_no")]
     public string SeriNo { get; set; } = null!;
 
+    [Column("tuketim_noktasi_id")]
     public long? TuketimNoktasiId { get; set; }
 
+    [Column("marka")]
     public string? Marka { get; set; }
 
+    [Column("model")]
     public string? Model { get; set; }
 
+    [Column("faz")]
     public string? Faz { get; set; }
 
-    public decimal Carpan { get; set; }
+    [Column("carpan")]
+    public decimal Carpan { get; set; } = 1;
 
+    [Column("muhur_no")]
     public string? MuhurNo { get; set; }
 
-    public string Durum { get; set; } = null!;
+    [Column("durum")]
+    public string Durum { get; set; } = "DEPODA";
 
     [Column("son_okuma_tarihi")]
     public DateTime? SonOkumaTarihi { get; set; }
 
-    public string Status { get; set; } = null!;
+    [Column("status")]
+    public string Status { get; set; } = "AKTIF";
 
+    [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
+    [Column("created_by")]
     public long? CreatedBy { get; set; }
 
+    [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 
+    [Column("updated_by")]
     public long? UpdatedBy { get; set; }
 
     public virtual Kullanicilar? CreatedByNavigation { get; set; }

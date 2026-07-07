@@ -1,49 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization; 
 
 namespace KcetasAboneApi.Models;
 
+[Table("endeks_okuma")]
 public partial class EndeksOkuma
 {
+    [Key]
+    [Column("okuma_id")]
     public long OkumaId { get; set; }
 
+    [Column("sayac_id")]
     public long SayacId { get; set; }
 
+    [Column("is_emri_id")]
     public long? IsEmriId { get; set; }
 
+    [Column("sozlesme_id")]
     public long? SozlesmeId { get; set; }
 
+    [Column("okuma_tipi")]
     public string OkumaTipi { get; set; } = null!;
 
+    [Column("okuma_kaynagi")]
     public string OkumaKaynagi { get; set; } = null!;
 
+    [Column("onceki_endeks")]
     public decimal? OncekiEndeks { get; set; }
 
+    [Column("yeni_endeks")]
     public decimal YeniEndeks { get; set; }
 
+    [Column("donem")]
     public string? Donem { get; set; }
 
+    [Column("okuma_zamani")]
     public DateTime OkumaZamani { get; set; }
 
+    [Column("kullanici_id")]
     public long? KullaniciId { get; set; }
 
+    [Column("okunamama_nedeni")]
     public string? OkunamamaNedeni { get; set; }
 
-    public string DogrulamaDurumu { get; set; } = null!;
+    [Column("dogrulama_durumu")]
+    public string DogrulamaDurumu { get; set; } = "ONAYLANDI"; 
 
+    [Column("anomali_mi")]
     public bool AnomaliMi { get; set; }
 
-    public string Status { get; set; } = null!;
+    [Column("status")]
+    public string Status { get; set; } = "AKTIF";
 
+    [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
+    [JsonIgnore]
     public virtual ICollection<Fatura> Faturas { get; set; } = new List<Fatura>();
 
+    [JsonIgnore]
     public virtual IsEmirleri? IsEmri { get; set; }
 
+    [JsonIgnore]
     public virtual Kullanicilar? Kullanici { get; set; }
 
-    public virtual Sayaclar Sayac { get; set; } = null!;
+    [JsonIgnore]
+    public virtual Sayaclar? Sayac { get; set; }
 
+    [JsonIgnore]
     public virtual Sozlesmeler? Sozlesme { get; set; }
 }

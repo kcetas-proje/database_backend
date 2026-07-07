@@ -568,59 +568,28 @@ public partial class AppDbContext : DbContext
                 .HasFilter("((statu)::text = 'AKTIF'::text)");
 
             entity.Property(e => e.SozlesmeId).HasColumnName("sozlesme_id");
-            entity.Property(e => e.Ad)
-                .HasMaxLength(100)
-                .HasColumnName("ad");
             entity.Property(e => e.BaslangicTarihi).HasColumnName("baslangic_tarihi");
             entity.Property(e => e.BitisTarihi).HasColumnName("bitis_tarihi");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-            entity.Property(e => e.EPosta)
-                .HasMaxLength(150)
-                .HasColumnName("e_posta");
             entity.Property(e => e.GuvenceBedeli)
                 .HasPrecision(14, 2)
                 .HasColumnName("guvence_bedeli");
-            entity.Property(e => e.IletisimTercihi)
-                .HasMaxLength(20)
-                .HasColumnName("iletisim_tercihi");
-            entity.Property(e => e.Soyad)
-                .HasMaxLength(100)
-                .HasColumnName("soyad");
             entity.Property(e => e.SozlesmeNo)
                 .HasMaxLength(40)
                 .HasColumnName("sozlesme_no");
             entity.Property(e => e.SozlesmeTipi)
                 .HasMaxLength(30)
                 .HasColumnName("sozlesme_tipi");
-            entity.Property(e => e.Statu)
-                .HasMaxLength(20)
-                .HasDefaultValueSql("'TASLAK'::character varying")
-                .HasColumnName("statu");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'AKTIF'::character varying")
                 .HasColumnName("status");
-            entity.Property(e => e.TarifeGrubu)
-                .HasMaxLength(30)
-                .HasColumnName("tarife_grubu");
-            entity.Property(e => e.Tckn)
-                .HasMaxLength(11)
-                .HasColumnName("tckn");
-            entity.Property(e => e.Telefon)
-                .HasMaxLength(20)
-                .HasColumnName("telefon");
             entity.Property(e => e.TuketimNoktasiId).HasColumnName("tuketim_noktasi_id");
-            entity.Property(e => e.Unvan)
-                .HasMaxLength(255)
-                .HasColumnName("unvan");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
-            entity.Property(e => e.Vkn)
-                .HasMaxLength(10)
-                .HasColumnName("vkn");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.SozlesmelerCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
@@ -667,13 +636,7 @@ public partial class AppDbContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-            entity.Property(e => e.EPosta)
-                .HasMaxLength(150)
-                .HasColumnName("e_posta");
             entity.Property(e => e.IlceId).HasColumnName("ilce_id");
-            entity.Property(e => e.IletisimTercihi)
-                .HasMaxLength(20)
-                .HasColumnName("iletisim_tercihi");
             entity.Property(e => e.KoordinatLat)
                 .HasPrecision(10, 6)
                 .HasColumnName("koordinat_lat");
@@ -683,36 +646,19 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Mahalle)
                 .HasMaxLength(100)
                 .HasColumnName("mahalle");
-            entity.Property(e => e.MusteriAd)
-                .HasMaxLength(100)
-                .HasColumnName("musteri_ad");
-            entity.Property(e => e.MusteriSoyad)
-                .HasMaxLength(100)
-                .HasColumnName("musteri_soyad");
-            entity.Property(e => e.MusteriUnvan)
-                .HasMaxLength(255)
-                .HasColumnName("musteri_unvan");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'AKTIF'::character varying")
                 .HasColumnName("status");
-            entity.Property(e => e.Tckn)
-                .HasMaxLength(11)
-                .HasColumnName("tckn");
             entity.Property(e => e.TekilKod)
                 .HasMaxLength(40)
                 .HasColumnName("tekil_kod");
-            entity.Property(e => e.Telefon)
-                .HasMaxLength(20)
-                .HasColumnName("telefon");
             entity.Property(e => e.TuketiciGrubu)
                 .HasMaxLength(30)
                 .HasColumnName("tuketici_grubu");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
-            entity.Property(e => e.Vkn)
-                .HasMaxLength(10)
-                .HasColumnName("vkn");
+
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TuketimNoktasiCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)

@@ -36,6 +36,9 @@ public partial class Sozlesmeler
 
     public string SozlesmeTipi { get; set; } = null!;
 
+    [Column("durum")]
+    public string Durum { get; set; } = null!;
+
     public DateOnly BaslangicTarihi { get; set; }
 
     public DateOnly? BitisTarihi { get; set; }

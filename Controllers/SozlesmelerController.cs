@@ -4,13 +4,14 @@ using KcetasAboneApi.Models;
 
 namespace KcetasAboneApi.Controllers;
 
+//[Authorize(Roles = "1")]
 [Route("api/[controller]")]
 [ApiController]
 public class SozlesmelerController : ControllerBase
 {
-    private readonly KcetasAboneContext _context;
+    private readonly AppDbContext _context; // KcetasAboneContext yerine bizimkini yazdık
 
-    public SozlesmelerController(KcetasAboneContext context)
+    public SozlesmelerController(AppDbContext context) // Burayı da güncelledik
     {
         _context = context;
     }

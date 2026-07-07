@@ -1,19 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
+//[Authorize(Roles = "1")]
 [Route("api/[controller]")]
 [ApiController]
 public class TarifelerController : ControllerBase
 {
-    private readonly KcetasAboneContext _context;
+    private readonly AppDbContext _context; // KcetasAboneContext yerine bunu yazdık
 
-    public TarifelerController(KcetasAboneContext context)
+    public TarifelerController(AppDbContext context)
     {
         _context = context;
     }
+    
+    // ... (Arkadaşının yazdığı diğer GET, POST, PUT, DELETE metodları kusursuz, aşağısı aynı kalacak)
 
     // GET: api/Tarifeler
     [HttpGet]

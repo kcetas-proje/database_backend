@@ -15,7 +15,7 @@ public partial class Sozlesmeler
 
     [Column("sozlesme_no")]
     public string SozlesmeNo { get; set; } = null!;
-
+    
     [Column("tuketim_noktasi_id")]
     public long TuketimNoktasiId { get; set; }
 
@@ -40,33 +40,27 @@ public partial class Sozlesmeler
     [Column("guvence_bedeli")]
     public decimal GuvenceBedeli { get; set; }
 
-    [Column("status")]
-    public string Status { get; set; } = "AKTIF";
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
-
-    [Column("created_by")]
-    public long? CreatedBy { get; set; }
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 
-    [Column("updated_by")]
-    public long? UpdatedBy { get; set; }
-    
     [JsonIgnore]
-    public virtual Kullanicilar? CreatedByNavigation { get; set; }
+    [ForeignKey("TuketimNoktasiId")]
+    public virtual TuketimNoktasi? TuketimNoktasi { get; set; }
+
+    [JsonIgnore]
+    [ForeignKey("AboneId")]
+    public virtual Aboneler? Abone { get; set; }
+
+    [JsonIgnore]
+    [ForeignKey("TarifeId")] 
+    public virtual Tarifeler? Tarife { get; set; }
     
     [JsonIgnore]
     public virtual ICollection<EndeksOkuma> EndeksOkumas { get; set; } = new List<EndeksOkuma>();
     
     [JsonIgnore]
     public virtual ICollection<Fatura> Faturas { get; set; } = new List<Fatura>();
-    
-    [JsonIgnore]
-    public virtual TuketimNoktasi? TuketimNoktasi { get; set; }
-    
-    [JsonIgnore]
-    public virtual Kullanicilar? UpdatedByNavigation { get; set; }
 }

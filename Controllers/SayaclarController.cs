@@ -96,8 +96,6 @@ public class SayaclarController : ControllerBase
         mevcut.Carpan = sayac.Carpan;
         mevcut.MuhurNo = sayac.MuhurNo;
         mevcut.Durum = sayac.Durum;
-        mevcut.SonOkumaTarihi = sayac.SonOkumaTarihi;
-        mevcut.Status = sayac.Status;
         mevcut.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

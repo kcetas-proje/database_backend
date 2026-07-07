@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace KcetasAboneApi.Models;
 
@@ -35,12 +36,6 @@ public partial class Sayaclar
     [Column("durum")]
     public string Durum { get; set; } = "DEPODA";
 
-    [Column("son_okuma_tarihi")]
-    public DateTime? SonOkumaTarihi { get; set; }
-
-    [Column("status")]
-    public string Status { get; set; } = "AKTIF";
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
@@ -53,7 +48,13 @@ public partial class Sayaclar
     [Column("updated_by")]
     public long? UpdatedBy { get; set; }
 
+    [JsonIgnore]
+    [ForeignKey("CreatedBy")]
     public virtual Kullanicilar? CreatedByNavigation { get; set; }
+
+    [JsonIgnore]
+    [ForeignKey("UpdatedBy")]
+    public virtual Kullanicilar? UpdatedByNavigation { get; set; }
 
     public virtual ICollection<EndeksOkuma> EndeksOkumas { get; set; } = new List<EndeksOkuma>();
 
@@ -61,5 +62,4 @@ public partial class Sayaclar
 
     public virtual TuketimNoktasi? TuketimNoktasi { get; set; }
 
-    public virtual Kullanicilar? UpdatedByNavigation { get; set; }
 }

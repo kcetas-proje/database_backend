@@ -61,11 +61,16 @@ public partial class TuketimNoktasi
     [Column("updated_by")]
     public long? UpdatedBy { get; set; }
 
-    
     [JsonIgnore]
+    [ForeignKey("CreatedBy")]
     public virtual Kullanicilar? CreatedByNavigation { get; set; }
 
     [JsonIgnore]
+    [ForeignKey("UpdatedBy")] 
+    public virtual Kullanicilar? UpdatedByNavigation { get; set; }
+
+    [JsonIgnore]
+    [ForeignKey("IlceId")] 
     public virtual Ilce? Ilce { get; set; }
 
     [JsonIgnore]
@@ -77,6 +82,4 @@ public partial class TuketimNoktasi
     [JsonIgnore]
     public virtual ICollection<Sozlesmeler> Sozlesmelers { get; set; } = new List<Sozlesmeler>();
 
-    [JsonIgnore]
-    public virtual Kullanicilar? UpdatedByNavigation { get; set; }
 }

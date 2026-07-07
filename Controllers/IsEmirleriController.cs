@@ -127,11 +127,6 @@ public class IsEmirleriController : ControllerBase
         mevcut.Gerekce = isEmri.Gerekce;
         mevcut.MuhurNo = isEmri.MuhurNo;
         mevcut.TutanakNo = isEmri.TutanakNo;
-        mevcut.AdKodu = isEmri.AdKodu;
-        mevcut.SdKodu = isEmri.SdKodu;
-        mevcut.OkumaSirasi = isEmri.OkumaSirasi;
-        mevcut.TamamlanmaOrani = isEmri.TamamlanmaOrani;
-        mevcut.Status = isEmri.Status;
         mevcut.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

@@ -47,21 +47,6 @@ public partial class IsEmirleri
     [Column("tutanak_no")]
     public string? TutanakNo { get; set; }
 
-    [Column("ad_kodu")]
-    public string? AdKodu { get; set; }
-
-    [Column("sd_kodu")]
-    public string? SdKodu { get; set; }
-
-    [Column("okuma_sirasi")]
-    public int? OkumaSirasi { get; set; }
-
-    [Column("tamamlanma_orani")]
-    public decimal? TamamlanmaOrani { get; set; }
-
-    [Column("status")]
-    public string Status { get; set; } = "AKTIF";
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 

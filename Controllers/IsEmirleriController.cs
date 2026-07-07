@@ -1,127 +1,172 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Authorization;
 
-namespace KcetasAboneApi.Controllers
+namespace KcetasAboneApi.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class IsEmirleriController : ControllerBase
 {
-    //[Authorize(Roles = "1, 5")]
-    [Route("api/[controller]")]
-    [ApiController]
-    public class IsEmirleriController : ControllerBase
+    private readonly KcetasAboneContext _context;
+
+    public IsEmirleriController(KcetasAboneContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public IsEmirleriController(AppDbContext context)
+    // GET: api/IsEmirleri
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetIsEmirleri()
+    {
+        return await _context.IsEmirleris
+            .OrderBy(i => i.IsEmriId)
+            .ToListAsync();
+    }
+
+    // GET: api/IsEmirleri/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<IsEmirleri>> GetIsEmri(long id)
+    {
+        var isEmri = await _context.IsEmirleris.FindAsync(id);
+
+        if (isEmri == null)
         {
-            _context = context;
+            return NotFound(new { message = "İş emri bulunamadı." });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetIsEmirleri()
+        return isEmri;
+    }
+
+    // POST: api/IsEmirleri
+    [HttpPost]
+    public async Task<ActionResult<IsEmirleri>> PostIsEmri(IsEmirleri isEmri)
+    {
+        if (await _context.IsEmirleris.AnyAsync(x => x.IsEmriNo == isEmri.IsEmriNo))
         {
-            var isEmirleri = await _context.IsEmirleris
-                .Where(x => x.Status == "AKTIF")
-                .ToListAsync();
-
-            if (!isEmirleri.Any())
+            return BadRequest(new
             {
-                return NotFound("Sistemde aktif iş emri bulunamadı.");
-            }
-
-            return Ok(isEmirleri);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetIsEmri(long id)
-        {
-            var isEmri = await _context.IsEmirleris.FindAsync(id);
-
-            if (isEmri == null)
-            {
-                return NotFound("İş emri bulunamadı.");
-            }
-
-            return Ok(isEmri);
-        }
-
-        [HttpGet("durum/{durum}")]
-        public async Task<IActionResult> GetDurumaGoreIsEmirleri(string durum)
-        {
-            var isEmirleri = await _context.IsEmirleris
-                .Where(x => x.Durum == durum && x.Status == "AKTIF")
-                .ToListAsync();
-
-            if (!isEmirleri.Any())
-            {
-                return NotFound("Bu duruma ait iş emri bulunamadı.");
-            }
-
-            return Ok(isEmirleri);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> YeniIsEmriEkle([FromBody] IsEmriCreateDto dto)
-        {
-            string rasgeleIsEmriNo = "IE" + DateTime.Now.ToString("yyyyMMddHHmmss");
-
-            var yeniIsEmri = new IsEmirleri
-            {
-                IsEmriNo = rasgeleIsEmriNo,
-                TuketimNoktasiId = dto.TuketimNoktasiId,
-                SayacId = dto.SayacId,
-                Tip = dto.Tip, 
-                Oncelik = dto.Oncelik ?? "NORMAL",
-                PlanlananTarih = dto.PlanlananTarih ?? DateTime.UtcNow.AddDays(1), 
-                AtananKullaniciId = dto.AtananKullaniciId,
-                
-                Durum = "ACIK", 
-                Status = "AKTIF",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.IsEmirleris.Add(yeniIsEmri);
-            await _context.SaveChangesAsync();
-
-            return Ok(yeniIsEmri);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, [FromBody] IsEmriUpdateDto dto)
-        {
-            var existingEmir = await _context.IsEmirleris.FindAsync(id);
-            if (existingEmir == null) return NotFound();
-
-            existingEmir.Durum = dto.Durum;
-            existingEmir.SahaSonucu = dto.SahaSonucu;
-            
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> IsEmriSil(long id)
-        {
-            var dbIsEmri = await _context.IsEmirleris.FindAsync(id);
-
-            if (dbIsEmri == null)
-            {
-                return NotFound("İş emri bulunamadı.");
-            }
-
-            dbIsEmri.Status = "PASIF";
-            dbIsEmri.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                mesaj = $"{dbIsEmri.IsEmriNo} numaralı iş emri pasif duruma alındı."
+                message = "Bu iş emri numarası zaten kayıtlı."
             });
         }
+
+        // Tüketim Noktası kontrolü
+        if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == isEmri.TuketimNoktasiId))
+        {
+            return BadRequest(new
+            {
+                message = "Geçersiz tüketim noktası."
+            });
+        }
+
+        // Sayaç kontrolü
+        if (isEmri.SayacId != null)
+        {
+            if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == isEmri.SayacId))
+            {
+                return BadRequest(new
+                {
+                    message = "Sayaç bulunamadı."
+                });
+            }
+        }
+
+        // Kullanıcı kontrolü
+        if (isEmri.AtananKullaniciId != null)
+        {
+            if (!await _context.Kullanicilars.AnyAsync(x => x.KullaniciId == isEmri.AtananKullaniciId))
+            {
+                return BadRequest(new
+                {
+                    message = "Kullanıcı bulunamadı."
+                });
+            }
+        }
+
+        isEmri.CreatedAt = DateTime.UtcNow;
+
+        _context.IsEmirleris.Add(isEmri);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetIsEmri),
+            new { id = isEmri.IsEmriId }, isEmri);
+    }
+
+    // PUT: api/IsEmirleri/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutIsEmri(long id, IsEmirleri isEmri)
+    {
+        if (id != isEmri.IsEmriId)
+        {
+            return BadRequest(new
+            {
+                message = "İş Emri Id uyuşmuyor."
+            });
+        }
+
+        var mevcut = await _context.IsEmirleris.FindAsync(id);
+
+        if (mevcut == null)
+        {
+            return NotFound(new
+            {
+                message = "İş emri bulunamadı."
+            });
+        }
+
+        mevcut.TuketimNoktasiId = isEmri.TuketimNoktasiId;
+        mevcut.SayacId = isEmri.SayacId;
+        mevcut.Tip = isEmri.Tip;
+        mevcut.Oncelik = isEmri.Oncelik;
+        mevcut.PlanlananTarih = isEmri.PlanlananTarih;
+        mevcut.AtananKullaniciId = isEmri.AtananKullaniciId;
+        mevcut.Durum = isEmri.Durum;
+        mevcut.SahaSonucu = isEmri.SahaSonucu;
+        mevcut.Gerekce = isEmri.Gerekce;
+        mevcut.MuhurNo = isEmri.MuhurNo;
+        mevcut.TutanakNo = isEmri.TutanakNo;
+        mevcut.AdKodu = isEmri.AdKodu;
+        mevcut.SdKodu = isEmri.SdKodu;
+        mevcut.OkumaSirasi = isEmri.OkumaSirasi;
+        mevcut.TamamlanmaOrani = isEmri.TamamlanmaOrani;
+        mevcut.Status = isEmri.Status;
+        mevcut.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // DELETE: api/IsEmirleri/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteIsEmri(long id)
+    {
+        var isEmri = await _context.IsEmirleris.FindAsync(id);
+
+        if (isEmri == null)
+        {
+            return NotFound(new
+            {
+                message = "İş emri bulunamadı."
+            });
+        }
+
+        // Endeks okuma kontrolü
+        bool kullaniliyor = await _context.EndeksOkumas
+            .AnyAsync(x => x.IsEmriId == id);
+
+        if (kullaniliyor)
+        {
+            return BadRequest(new
+            {
+                message = "Bu iş emrine bağlı endeks okuma bulunduğu için silinemez."
+            });
+        }
+
+        _context.IsEmirleris.Remove(isEmri);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }

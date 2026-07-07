@@ -1,16 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
+//[Authorize(Roles = "1, 2")]
 [Route("api/[controller]")]
 [ApiController]
 public class TuketimNoktasiController : ControllerBase
 {
-    private readonly KcetasAboneContext _context;
+    private readonly AppDbContext _context;
 
-    public TuketimNoktasiController(KcetasAboneContext context)
+    public TuketimNoktasiController(AppDbContext context)
     {
         _context = context;
     }

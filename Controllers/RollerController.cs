@@ -1,7 +1,9 @@
 using KcetasAboneApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+//[Authorize(Roles = "1")]
 [ApiController]
 [Route("api/[controller]")]
 public class RollerController : ControllerBase

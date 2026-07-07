@@ -10,14 +10,13 @@ namespace KcetasAboneApi.Controllers;
 [ApiController]
 public class TarifelerController : ControllerBase
 {
-    private readonly AppDbContext _context; // KcetasAboneContext yerine bunu yazdık
+    private readonly AppDbContext _context; 
 
     public TarifelerController(AppDbContext context)
     {
         _context = context;
     }
     
-    // ... (Arkadaşının yazdığı diğer GET, POST, PUT, DELETE metodları kusursuz, aşağısı aynı kalacak)
 
     // GET: api/Tarifeler
     [HttpGet]

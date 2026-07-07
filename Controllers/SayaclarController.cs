@@ -1,16 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
+//[Authorize(Roles = "1, 5")]
 [Route("api/[controller]")]
 [ApiController]
 public class SayaclarController : ControllerBase
 {
-    private readonly KcetasAboneContext _context;
+    private readonly AppDbContext _context;
 
-    public SayaclarController(KcetasAboneContext context)
+    public SayaclarController(AppDbContext context)
     {
         _context = context;
     }

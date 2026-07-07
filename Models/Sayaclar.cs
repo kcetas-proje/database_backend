@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KcetasAboneApi.Models;
 
@@ -22,6 +23,9 @@ public partial class Sayaclar
     public string? MuhurNo { get; set; }
 
     public string Durum { get; set; } = null!;
+
+    [Column("son_okuma_tarihi")]
+    public DateTime? SonOkumaTarihi { get; set; }
 
     public string Status { get; set; } = null!;
 

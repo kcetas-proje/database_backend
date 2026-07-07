@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KcetasAboneApi.Models;
 
@@ -20,6 +21,18 @@ public partial class IsEmirleri
     public DateTime? PlanlananTarih { get; set; }
 
     public long? AtananKullaniciId { get; set; }
+
+    [Column("ad_kodu")]
+public string? AdKodu { get; set; }
+
+    [Column("sd_kodu")]
+    public string? SdKodu { get; set; }
+
+    [Column("okuma_sirasi")]
+    public int? OkumaSirasi { get; set; }
+
+    [Column("tamamlanma_orani")]
+    public decimal? TamamlanmaOrani { get; set; }
 
     public string Durum { get; set; } = null!;
 

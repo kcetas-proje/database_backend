@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers
 {   
-    [Authorize(Roles = "1")]
+    //[Authorize(Roles = "1")]
     [Route("api/[controller]")]
     [ApiController]
     public class KullaniciController : ControllerBase

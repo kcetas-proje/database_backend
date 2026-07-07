@@ -4,7 +4,7 @@ using System;
 
 namespace KcetasAboneApi.Controllers
 {
-    [Authorize(Roles = "1, 7")]
+    //[Authorize(Roles = "1, 7")]
     [ApiController]
     [Route("api/entegrator")]
     public class EntegratorController : ControllerBase

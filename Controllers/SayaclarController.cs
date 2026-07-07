@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers
 {   
-    [Authorize(Roles = "1, 5")]
+    //[Authorize(Roles = "1, 5")]
     [Route("api/[controller]")]
     [ApiController]
     public class SayaclarController : ControllerBase
@@ -52,14 +52,13 @@ namespace KcetasAboneApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSayac([FromBody] SayacCreateDto dto)
         {
-            // 1. Validasyon: Bu seri no zaten var mı?
+
             var mevcutSayac = await _context.Sayaclars
                 .FirstOrDefaultAsync(s => s.SeriNo == dto.SeriNo);
 
             if (mevcutSayac != null)
                 return BadRequest("Aga bu seri numarasına sahip bir sayaç zaten depoda veya sahada var!");
 
-            // 2. Yeni Sayacı Oluştur
             var yeniSayac = new Sayaclar
             {
                 SeriNo = dto.SeriNo,
@@ -67,13 +66,12 @@ namespace KcetasAboneApi.Controllers
                 Marka = dto.Marka,
                 Model = dto.Model,
                 Faz = dto.Faz,
-                // Eğer çarpan 0 gönderilirse patlamaması için varsayılan 1 alıyoruz (Çarpan 0 olmaz)
+
                 Carpan = dto.Carpan == 0 ? 1M : dto.Carpan, 
                 MuhurNo = dto.MuhurNo,
                 Durum = dto.Durum,
-                Status = "AKTIF", // Silinmemiş, geçerli kayıt
-                CreatedAt = DateTime.UtcNow // Oluşturulma zamanı şuan
-                // CreatedBy = 1 // Eğer admin logu tutuyorsan burayı açabilirsin
+                Status = "AKTIF", 
+                CreatedAt = DateTime.UtcNow 
             };
 
             _context.Sayaclars.Add(yeniSayac);

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
-[Authorize(Roles = "1, 6")]
+//[Authorize(Roles = "1, 6")]
 [ApiController]
 [Route("api/[controller]")]
 public class FaturaKalemiController : ControllerBase

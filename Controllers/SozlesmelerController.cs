@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
-[Authorize(Roles = "1, 3")]
+//[Authorize(Roles = "1, 3")]
 [ApiController]
 [Route("api/[controller]")]
 

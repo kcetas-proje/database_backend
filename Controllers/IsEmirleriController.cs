@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers
 {
-    [Authorize(Roles = "1, 5")]
+    //[Authorize(Roles = "1, 5")]
     [Route("api/[controller]")]
     [ApiController]
     public class IsEmirleriController : ControllerBase

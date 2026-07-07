@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace KcetasAboneApi.Controllers;
 
-[Authorize(Roles = "1, 4")]
+//[Authorize(Roles = "1, 4")]
 [ApiController]
 [Route("api/[controller]")]
 public class EndeksOkumaController : ControllerBase

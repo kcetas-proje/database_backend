@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using KcetasAboneApi.Models.Dtos;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -27,6 +28,37 @@ public class EndeksOkumaController : ControllerBase
             .Include(x => x.Sayac)
             .ToListAsync();
     }
+    [HttpGet("GetWithDetails")]
+public async Task<ActionResult<IEnumerable<EndeksOkumaDetailDto>>> GetWithDetails()
+{
+
+    var list = await _context.EndeksOkumas
+        .Include(e => e.Sayac)
+            .ThenInclude(s => s.TuketimNoktasi)
+        .Select(e => new EndeksOkumaDetailDto
+        {
+            OkumaId = e.OkumaId, 
+            SayacId = e.SayacId,
+            IsEmriId = e.IsEmriId,
+            SozlesmeId = e.SozlesmeId,
+            OkumaTipi = e.OkumaTipi,
+            OkumaKaynagi = e.OkumaKaynagi,
+            OncekiEndeks = e.OncekiEndeks,
+            YeniEndeks = e.YeniEndeks,
+            Donem = e.Donem,
+            OkumaZamani = e.OkumaZamani,
+            KullaniciId = e.KullaniciId,
+
+            SeriNo = e.Sayac != null ? e.Sayac.SeriNo : "-",
+            MarkaModel = e.Sayac != null ? $"{e.Sayac.Marka} {e.Sayac.Model}" : "-",
+            Mahalle = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.Mahalle : "-",
+            AcikAdres = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.AcikAdres : "Adres Tanımsız",
+            TuketiciGrubu = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.TuketiciGrubu : "MESKEN"
+        })
+        .ToListAsync();
+
+    return Ok(list);
+}
 
     [HttpGet("{id}")]
     public async Task<ActionResult<EndeksOkuma>> Get(long id)

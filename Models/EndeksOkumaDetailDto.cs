@@ -6,6 +6,7 @@ public class EndeksOkumaDetailDto
     public long SayacId { get; set; }
     public long? IsEmriId { get; set; }
     public long? SozlesmeId { get; set; }
+    public long? AboneId { get; set; }
     public string? OkumaTipi { get; set; }
     public string? OkumaKaynagi { get; set; }
     public decimal? OncekiEndeks { get; set; }
@@ -13,7 +14,7 @@ public class EndeksOkumaDetailDto
     public string? Donem { get; set; }
     public DateTime? OkumaZamani { get; set; }
     public long? KullaniciId { get; set; }
-    
+
     public string SeriNo { get; set; } = null!;
     public string MarkaModel { get; set; } = null!;
     public string Mahalle { get; set; } = null!;

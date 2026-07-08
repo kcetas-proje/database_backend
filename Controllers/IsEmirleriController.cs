@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using KcetasAboneApi.Models.Dtos;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -42,57 +43,47 @@ public class IsEmirleriController : ControllerBase
 
     // POST: api/IsEmirleri
     [HttpPost]
-    public async Task<ActionResult<IsEmirleri>> PostIsEmri(IsEmirleri isEmri)
+public async Task<ActionResult<IsEmirleri>> PostIsEmri(IsEmriCreateDto dto)
+{
+    if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == dto.TuketimNoktasiId))
     {
-        if (await _context.IsEmirleris.AnyAsync(x => x.IsEmriNo == isEmri.IsEmriNo))
-        {
-            return BadRequest(new
-            {
-                message = "Bu iş emri numarası zaten kayıtlı."
-            });
-        }
-
-        // Tüketim Noktası kontrolü
-        if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == isEmri.TuketimNoktasiId))
-        {
-            return BadRequest(new
-            {
-                message = "Geçersiz tüketim noktası."
-            });
-        }
-
-        // Sayaç kontrolü
-        if (isEmri.SayacId != null)
-        {
-            if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == isEmri.SayacId))
-            {
-                return BadRequest(new
-                {
-                    message = "Sayaç bulunamadı."
-                });
-            }
-        }
-
-        // Kullanıcı kontrolü
-        if (isEmri.AtananKullaniciId != null)
-        {
-            if (!await _context.Kullanicilars.AnyAsync(x => x.KullaniciId == isEmri.AtananKullaniciId))
-            {
-                return BadRequest(new
-                {
-                    message = "Kullanıcı bulunamadı."
-                });
-            }
-        }
-
-        isEmri.CreatedAt = DateTime.UtcNow;
-
-        _context.IsEmirleris.Add(isEmri);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetIsEmri),
-            new { id = isEmri.IsEmriId }, isEmri);
+        return BadRequest(new { message = "Geçersiz tüketim noktası." });
     }
+
+    if (dto.SayacId != null)
+    {
+        if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == dto.SayacId))
+            return BadRequest(new { message = "Sayaç bulunamadı." });
+    }
+
+    if (dto.AtananKullaniciId != null)
+    {
+        if (!await _context.Kullanicilars.AnyAsync(x => x.KullaniciId == dto.AtananKullaniciId))
+            return BadRequest(new { message = "Kullanıcı bulunamadı." });
+    }
+
+    var buAykiSayi = await _context.IsEmirleris
+        .CountAsync(x => x.CreatedAt.Year == DateTime.UtcNow.Year && x.CreatedAt.Month == DateTime.UtcNow.Month);
+
+    string yeniIsEmriNo = $"IE-{DateTime.UtcNow:yyyyMM}-{(buAykiSayi + 1).ToString("D4")}";
+
+    var yeniIsEmri = new IsEmirleri
+    {
+        IsEmriNo = yeniIsEmriNo,
+        TuketimNoktasiId = dto.TuketimNoktasiId,
+        SayacId = dto.SayacId,
+        AtananKullaniciId = dto.AtananKullaniciId,
+        Tip = dto.Tip,
+        Oncelik = dto.Oncelik,
+        Durum = dto.Durum,
+        CreatedAt = DateTime.UtcNow
+    };
+
+    _context.IsEmirleris.Add(yeniIsEmri);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { message = "İş emri oluşturuldu!", data = yeniIsEmri });
+}
 
     // PUT: api/IsEmirleri/5
     [HttpPut("{id}")]

@@ -91,7 +91,6 @@ namespace KcetasAboneApi.Controllers
 
             _context.EntegrasyonOutboxes.Add(outboxKaydi); 
 
-            // Transaction: İkisi aynı anda veritabanına basılır
             await _context.SaveChangesAsync();
 
             return Ok(yeniFatura);
@@ -134,6 +133,77 @@ namespace KcetasAboneApi.Controllers
             {
                 mesaj = $"{dbFatura.FaturaNo} numaralı fatura başarıyla pasif duruma alındı."
             });
+        }
+
+        [HttpPost("hesapla/{endeksOkumaId}")]
+        public async Task<ActionResult> FaturaKes(long endeksOkumaId)
+        {
+            var okuma = await _context.EndeksOkumas.FindAsync(endeksOkumaId);
+            if (okuma == null) 
+                return NotFound(new { message = "Okuma kaydı bulunamadı." });
+
+            var sozlesme = await _context.Sozlesmelers
+                .Include(s => s.Tarife) 
+                .FirstOrDefaultAsync(s => s.SozlesmeId == okuma.SozlesmeId);
+
+            if (sozlesme == null || sozlesme.Tarife == null)
+                return BadRequest(new { message = "Sözleşme veya Tarife bulunamadı." });
+
+            decimal tuketimMiktari = Convert.ToDecimal(okuma.YeniEndeks - (okuma.OncekiEndeks ?? 0));
+            
+            if (tuketimMiktari < 0) 
+                return BadRequest(new { message = "Tüketim miktarı negatif olamaz." });
+
+            decimal aktifEnerjiTutari = tuketimMiktari * Convert.ToDecimal(sozlesme.Tarife.GunduzBirimFiyat); 
+            decimal dagitimTutari = tuketimMiktari * Convert.ToDecimal(sozlesme.Tarife.DagitimBedeli);
+            decimal vergisizToplam = aktifEnerjiTutari + dagitimTutari;
+
+            decimal kdvCarpani = Convert.ToDecimal(sozlesme.Tarife.KdvOrani >= 1 ? (sozlesme.Tarife.KdvOrani / 100m) : sozlesme.Tarife.KdvOrani);
+            decimal kdvTutari = vergisizToplam * kdvCarpani;
+            decimal genelToplam = Math.Round(vergisizToplam + kdvTutari, 2);
+
+            // 3. FATURA NUMARASI VE DÖNEM ÜRETİMİ
+            var buAykiSayi = await _context.Faturas.CountAsync(f => f.FaturaTarihi.Year == DateTime.UtcNow.Year && f.FaturaTarihi.Month == DateTime.UtcNow.Month);
+            string faturaNumarasi = $"FAT-{DateTime.UtcNow:yyyyMM}-{(buAykiSayi + 1).ToString("D5")}"; 
+            string donemBilgisi = DateTime.UtcNow.ToString("yyyyMM"); 
+            string benzersizTekilKod = Guid.NewGuid().ToString("N")[..10].ToUpper(); 
+
+            // 4. FATURAYI VERİTABANINA BASMA
+            var yeniFatura = new Fatura
+            {
+                FaturaNo = faturaNumarasi,
+                SozlesmeId = sozlesme.SozlesmeId,
+                TekilKod = benzersizTekilKod,
+                FaturaTipi = "DONEM",
+                Donem = donemBilgisi,
+                
+                FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
+                SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                
+                OkumaId = okuma.OkumaId,
+                IlkEndeks = okuma.OncekiEndeks ?? 0,
+                SonEndeks = okuma.YeniEndeks,
+                TuketimKwh = tuketimMiktari,
+                Carpan = 1.0m, 
+                ReaktifEnduktif = 0, 
+                ReaktifKapasitif = 0,
+
+                EnerjiBedeli = aktifEnerjiTutari,
+                DagitimBedeli = dagitimTutari,
+                HizmetBedeli = 0, 
+                KesmeBaglamaBedeli = 0,
+                VergiFonToplam = kdvTutari, 
+                ToplamTutar = genelToplam,
+                
+                Durum = "HESAPLANDI",
+                Status = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Faturas.Add(yeniFatura);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Fatura zımba gibi kesildi!", fatura = yeniFatura });
         }
     }
 }

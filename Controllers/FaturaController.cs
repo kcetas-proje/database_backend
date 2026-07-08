@@ -203,7 +203,7 @@ namespace KcetasAboneApi.Controllers
             _context.Faturas.Add(yeniFatura);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Fatura zımba gibi kesildi!", fatura = yeniFatura });
+            return Ok(new { message = "Fatura oluşturuldu!", fatura = yeniFatura });
         }
     }
 }

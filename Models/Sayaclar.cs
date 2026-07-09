@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -25,7 +25,7 @@ public partial class Sayaclar
     public string? Model { get; set; }
 
     [Column("uretim_yili")]
-    public int UretimYili { get; set; } = 2026;
+    public int UretimYili { get; set; } = DateTime.UtcNow.Year;
 
     [Column("faz")]
     public string? Faz { get; set; }
@@ -38,6 +38,8 @@ public partial class Sayaclar
 
     [Column("durum")]
     public string Durum { get; set; } = "DEPODA";
+
+
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }

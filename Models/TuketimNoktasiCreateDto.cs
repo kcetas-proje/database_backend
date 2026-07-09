@@ -4,8 +4,6 @@ namespace KcetasAboneApi.Models.Dtos;
 
 public class TuketimNoktasiCreateDto
 {
-    [Required]
-    public string TekilKod { get; set; } = null!;
 
     [Required]
     public int IlceId { get; set; }

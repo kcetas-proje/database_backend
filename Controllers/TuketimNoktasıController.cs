@@ -89,17 +89,26 @@ public class TuketimNoktasiController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TuketimNoktasi>> PostTuketimNoktasi(TuketimNoktasiCreateDto dto)
     {
-        // 1. İş Mantığı Kontrolü
-        if (await _context.TuketimNoktasis.AnyAsync(x => x.TekilKod == dto.TekilKod))
-            return BadRequest(new { message = "Tekil kod zaten kayıtlı." });
-
         if (!await _context.Ilces.AnyAsync(x => x.IlceId == dto.IlceId))
-            return BadRequest(new { message = "İlçe bulunamadı." });
+            return BadRequest(new { message = "Böyle bir ilçe bulunamadı." });
 
-        // 2. DTO'dan Entity'ye Dönüşüm (Map)
+        // Format: TK-202607-0001
+        string prefix = $"TK-{DateTime.UtcNow:yyyyMM}-";
+        var sonNokta = await _context.TuketimNoktasis
+            .Where(x => x.TekilKod.StartsWith(prefix))
+            .OrderByDescending(x => x.TekilKod)
+            .FirstOrDefaultAsync();
+
+        int sira = 1;
+        if (sonNokta != null && int.TryParse(sonNokta.TekilKod.Substring(sonNokta.TekilKod.Length - 4), out int sonSira))
+        {
+            sira = sonSira + 1;
+        }
+        string uretilenTekilKod = $"{prefix}{sira:D4}";
+
         var yeniNokta = new TuketimNoktasi
         {
-            TekilKod = dto.TekilKod,
+            TekilKod = uretilenTekilKod, 
             IlceId = dto.IlceId,
             Mahalle = dto.Mahalle,
             BinaNo = dto.BinaNo,
@@ -109,7 +118,7 @@ public class TuketimNoktasiController : ControllerBase
             KoordinatLon = dto.KoordinatLon,
             BaglantiGucuKw = dto.BaglantiGucuKw,
             TuketiciGrubu = dto.TuketiciGrubu,
-            BaglantiDurumu = dto.BaglantiDurumu,
+            BaglantiDurumu = string.IsNullOrEmpty(dto.BaglantiDurumu) ? "PASIF" : dto.BaglantiDurumu,
             Status = "AKTIF",
             CreatedAt = DateTime.UtcNow
         };

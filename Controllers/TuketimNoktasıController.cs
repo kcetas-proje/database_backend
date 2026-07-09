@@ -171,6 +171,6 @@ public class TuketimNoktasiController : ControllerBase
         _context.TuketimNoktasis.Remove(nokta);
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new { message = "Tüketim noktası başarıyla silindi." });
     }
 }

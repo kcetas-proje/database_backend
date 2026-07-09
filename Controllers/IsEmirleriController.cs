@@ -43,47 +43,62 @@ public class IsEmirleriController : ControllerBase
 
     // POST: api/IsEmirleri
     [HttpPost]
-public async Task<ActionResult<IsEmirleri>> PostIsEmri(IsEmriCreateDto dto)
-{
-    if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == dto.TuketimNoktasiId))
+    public async Task<ActionResult<IsEmirleri>> PostIsEmri(IsEmriCreateDto dto)
     {
-        return BadRequest(new { message = "Geçersiz tüketim noktası." });
+        if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == dto.TuketimNoktasiId))
+        {
+            return BadRequest(new { message = "Geçersiz tüketim noktası." });
+        }
+
+        if (dto.SayacId != null)
+        {
+            if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == dto.SayacId))
+                return BadRequest(new { message = "Sayaç bulunamadı." });
+        }
+
+        if (dto.AtananKullaniciId != null)
+        {
+            if (!await _context.Kullanicilars.AnyAsync(x => x.KullaniciId == dto.AtananKullaniciId))
+                return BadRequest(new { message = "Kullanıcı bulunamadı." });
+        }
+
+        string prefix = $"IE-{DateTime.UtcNow:yyyyMM}-";
+
+        var sonIsEmri = await _context.IsEmirleris
+        .Where(x => x.IsEmriNo.StartsWith(prefix))
+        .OrderByDescending(x => x.IsEmriNo)
+        .FirstOrDefaultAsync();
+
+        int yeniSira = 1;
+        if (sonIsEmri != null)
+        {
+            string sonSiraStr = sonIsEmri.IsEmriNo.Substring(sonIsEmri.IsEmriNo.Length - 4);
+            if (int.TryParse(sonSiraStr, out int sonSiraInt))
+            {
+                yeniSira = sonSiraInt + 1;
+            }
+        }
+
+        string yeniIsEmriNo = $"{prefix}{yeniSira:D4}";
+
+        var yeniIsEmri = new IsEmirleri
+        {
+            IsEmriNo = yeniIsEmriNo,
+            TuketimNoktasiId = dto.TuketimNoktasiId,
+            SayacId = dto.SayacId,
+            AtananKullaniciId = dto.AtananKullaniciId,
+            Tip = dto.Tip,
+            Oncelik = dto.Oncelik,
+            Durum = dto.Durum,
+            CreatedAt = DateTime.UtcNow
+            
+        };
+
+        _context.IsEmirleris.Add(yeniIsEmri);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "İş emri oluşturuldu!", data = yeniIsEmri });
     }
-
-    if (dto.SayacId != null)
-    {
-        if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == dto.SayacId))
-            return BadRequest(new { message = "Sayaç bulunamadı." });
-    }
-
-    if (dto.AtananKullaniciId != null)
-    {
-        if (!await _context.Kullanicilars.AnyAsync(x => x.KullaniciId == dto.AtananKullaniciId))
-            return BadRequest(new { message = "Kullanıcı bulunamadı." });
-    }
-
-    var buAykiSayi = await _context.IsEmirleris
-        .CountAsync(x => x.CreatedAt.Year == DateTime.UtcNow.Year && x.CreatedAt.Month == DateTime.UtcNow.Month);
-
-    string yeniIsEmriNo = $"IE-{DateTime.UtcNow:yyyyMM}-{(buAykiSayi + 1).ToString("D4")}";
-
-    var yeniIsEmri = new IsEmirleri
-    {
-        IsEmriNo = yeniIsEmriNo,
-        TuketimNoktasiId = dto.TuketimNoktasiId,
-        SayacId = dto.SayacId,
-        AtananKullaniciId = dto.AtananKullaniciId,
-        Tip = dto.Tip,
-        Oncelik = dto.Oncelik,
-        Durum = dto.Durum,
-        CreatedAt = DateTime.UtcNow
-    };
-
-    _context.IsEmirleris.Add(yeniIsEmri);
-    await _context.SaveChangesAsync();
-
-    return Ok(new { message = "İş emri oluşturuldu!", data = yeniIsEmri });
-}
 
     // PUT: api/IsEmirleri/5
     [HttpPut("{id}")]

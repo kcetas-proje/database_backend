@@ -168,6 +168,20 @@ namespace KcetasAboneApi.Controllers
             string donemBilgisi = DateTime.UtcNow.ToString("yyyyMM"); 
             string benzersizTekilKod = Guid.NewGuid().ToString("N")[..10].ToUpper(); 
 
+            bool faturaZatenVarMi = await _context.Faturas
+                .AnyAsync(f => f.SozlesmeId == sozlesme.SozlesmeId 
+                            && f.Donem == donemBilgisi 
+                            && f.FaturaTipi == "DONEM" 
+                            && f.Status == "AKTIF" 
+                            && f.Durum != "IPTAL");
+
+            if (faturaZatenVarMi)
+            {
+                return BadRequest(new { 
+                    message = "Bu sözleşme için bu döneme ait aktif bir fatura zaten mevcut. Lütfen önce mevcut faturayı iptal edin veya onaylayın." 
+                });
+            }
+
             // 4. FATURAYI VERİTABANINA BASMA
             var yeniFatura = new Fatura
             {
@@ -205,5 +219,45 @@ namespace KcetasAboneApi.Controllers
 
             return Ok(new { message = "Fatura oluşturuldu!", fatura = yeniFatura });
         }
+
+    [HttpPost("{faturaId}/onayla")]
+    public async Task<IActionResult> FaturaOnayla(long faturaId)
+    {
+        var fatura = await _context.Faturas.FindAsync(faturaId);
+        
+        if (fatura == null) 
+            return NotFound(new { message = "Fatura bulunamadı!" });
+
+        if (fatura.Durum != "HESAPLANDI")
+            return BadRequest(new { message = $"Fatura şu an '{fatura.Durum}' durumunda. Sadece HESAPLANDI olanlar onaylanabilir." });
+
+        // Statüyü güncelliyoruz
+        fatura.Durum = "ONAYLANDI";
+        fatura.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Fatura onaylandı!", faturaNo = fatura.FaturaNo });
+    }
+
+    [HttpPost("{faturaId}/iptal")]
+    public async Task<IActionResult> FaturaIptal(long faturaId)
+    {
+        var fatura = await _context.Faturas.FindAsync(faturaId);
+        
+        if (fatura == null) 
+            return NotFound(new { message = "Fatura bulunamadı!" });
+
+        if (fatura.Durum == "GONDERILDI" || fatura.Durum == "IPTAL")
+            return BadRequest(new { message = "Fatura zaten gönderilmiş veya iptal edilmiş!" });
+
+        fatura.Durum = "IPTAL";
+        fatura.Status = "PASIF"; 
+        fatura.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Fatura iptal edildi!", faturaNo = fatura.FaturaNo });
+    }
     }
 }

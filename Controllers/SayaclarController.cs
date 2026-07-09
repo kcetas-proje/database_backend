@@ -46,36 +46,44 @@ public class SayaclarController : ControllerBase
 
     // POST
     [HttpPost]
-    public async Task<ActionResult<Sayaclar>> PostSayac(Sayaclar sayac)
+public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
+{
+    // 1. Kapıdaki Bodyguard Kontrolleri
+    if (await _context.Sayaclars.AnyAsync(x => x.SeriNo == dto.SeriNo))
+        return BadRequest(new { message = "Bu seri numarası zaten kayıtlı." });
+
+    if (dto.TuketimNoktasiId != null)
     {
-        if (await _context.Sayaclars.AnyAsync(x => x.SeriNo == sayac.SeriNo))
-            return BadRequest(new
-            {
-                message = "Seri numarası zaten kayıtlı."
-            });
+        bool noktaVar = await _context.TuketimNoktasis
+            .AnyAsync(x => x.TuketimNoktasiId == dto.TuketimNoktasiId);
 
-        if (sayac.TuketimNoktasiId != null)
-        {
-            bool noktaVar = await _context.TuketimNoktasis
-                .AnyAsync(x => x.TuketimNoktasiId == sayac.TuketimNoktasiId);
-
-            if (!noktaVar)
-                return BadRequest(new
-                {
-                    message = "Tüketim noktası bulunamadı."
-                });
-        }
-
-        sayac.CreatedAt = DateTime.UtcNow;
-
-        _context.Sayaclars.Add(sayac);
-
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetSayac),
-            new { id = sayac.SayacId }, sayac);
+        if (!noktaVar)
+            return BadRequest(new { message = "Tüketim noktası bulunamadı." });
     }
 
+    var yeniSayac = new Sayaclar
+    {
+        SeriNo = dto.SeriNo,
+        TuketimNoktasiId = dto.TuketimNoktasiId,
+        Marka = dto.Marka ?? "Bilinmiyor",
+        Model = dto.Model ?? "Bilinmiyor",
+        
+        UretimYili = dto.UretimYili == 0 ? DateTime.UtcNow.Year : dto.UretimYili, 
+        
+        Faz = string.IsNullOrEmpty(dto.Faz) ? "TEK_FAZ" : dto.Faz,
+        Carpan = dto.Carpan == 0 ? 1 : dto.Carpan,
+        MuhurNo = dto.MuhurNo,
+        Durum = string.IsNullOrEmpty(dto.Durum) ? "DEPODA" : dto.Durum,
+        
+        CreatedAt = DateTime.UtcNow,
+        CreatedBy = 1 
+    };
+
+    _context.Sayaclars.Add(yeniSayac);
+    await _context.SaveChangesAsync();
+
+    return CreatedAtAction(nameof(GetSayac), new { id = yeniSayac.SayacId }, yeniSayac);
+}
     // PUT
     [HttpPut("{id}")]
     public async Task<IActionResult> PutSayac(long id, Sayaclar sayac)

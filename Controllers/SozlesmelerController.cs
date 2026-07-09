@@ -46,7 +46,6 @@ public class SozlesmelerController : ControllerBase
     [HttpPost]
 public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
 {
-
     if (!await _context.Abonelers.AnyAsync(x => x.AboneId == dto.AboneId))
         return BadRequest(new { message = "Abone bulunamadı." });
 
@@ -56,8 +55,17 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
     if (!await _context.Tarifelers.AnyAsync(x => x.TarifeId == dto.TarifeId))
         return BadRequest(new { message = "Tarife bulunamadı." });
 
-    var count = await _context.Sozlesmelers.CountAsync();
-    string yeniSozlesmeNo = $"SOZ-{DateTime.UtcNow:yyyy-MM}-{ (count + 1).ToString("D4") }";
+    string sozlesmePrefix = $"SOZ-{DateTime.UtcNow:yyyy-MM}-";
+    var sonSozlesme = await _context.Sozlesmelers
+        .Where(x => x.SozlesmeNo.StartsWith(sozlesmePrefix))
+        .OrderByDescending(x => x.SozlesmeNo)
+        .FirstOrDefaultAsync();
+
+    int sozlesmeSira = 1;
+    if (sonSozlesme != null && int.TryParse(sonSozlesme.SozlesmeNo.Substring(sonSozlesme.SozlesmeNo.Length - 4), out int sSira))
+        sozlesmeSira = sSira + 1;
+
+    string yeniSozlesmeNo = $"{sozlesmePrefix}{sozlesmeSira:D4}";
 
     var yeniSozlesme = new Sozlesmeler
     {
@@ -77,7 +85,34 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
     _context.Sozlesmelers.Add(yeniSozlesme);
     await _context.SaveChangesAsync();
 
-    return Ok(new { message = "Sözleşme başarıyla kuruldu!", no = yeniSozlesmeNo });
+    string isEmriPrefix = $"IE-{DateTime.UtcNow:yyyyMM}-";
+    var sonIsEmri = await _context.IsEmirleris
+        .Where(x => x.IsEmriNo.StartsWith(isEmriPrefix))
+        .OrderByDescending(x => x.IsEmriNo)
+        .FirstOrDefaultAsync();
+
+    int isEmriSira = 1;
+    if (sonIsEmri != null && int.TryParse(sonIsEmri.IsEmriNo.Substring(sonIsEmri.IsEmriNo.Length - 4), out int iSira))
+        isEmriSira = iSira + 1;
+
+    var otoAcmaIsEmri = new IsEmirleri
+    {
+        IsEmriNo = $"{isEmriPrefix}{isEmriSira:D4}",
+        TuketimNoktasiId = yeniSozlesme.TuketimNoktasiId,
+        Tip = "ACMA",
+        Oncelik = "YUKSEK", 
+        Durum = "ACIK",
+        CreatedAt = DateTime.UtcNow
+    };
+
+    _context.IsEmirleris.Add(otoAcmaIsEmri);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { 
+        message = "Sözleşme başarıyla oluşturuldu ve otomatik olarak ACMA iş emri oluşturuldu!", 
+        sozlesmeNo = yeniSozlesmeNo,
+        isEmriNo = otoAcmaIsEmri.IsEmriNo
+    });
 }
 
     // PUT: api/Sozlesmeler/5
@@ -125,29 +160,43 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
         var sozlesme = await _context.Sozlesmelers.FindAsync(id);
 
         if (sozlesme == null)
-        {
-            return NotFound(new
-            {
-                message = "Sözleşme bulunamadı."
-            });
-        }
+            return NotFound(new { message = "Sözleşme bulunamadı." });
 
-        // Bu sözleşmeye ait fatura var mı?
-        bool faturaVar = await _context.Faturas
-            .AnyAsync(x => x.SozlesmeId == id);
-
+        bool faturaVar = await _context.Faturas.AnyAsync(x => x.SozlesmeId == id);
         if (faturaVar)
-        {
-            return BadRequest(new
-            {
-                message = "Bu sözleşmeye ait fatura bulunduğu için silinemez."
-            });
-        }
+            return BadRequest(new { message = "Bu sözleşmeye ait fatura var, borcu ödenmeden silinemez." });
+
+        long mekanId = sozlesme.TuketimNoktasiId;
 
         _context.Sozlesmelers.Remove(sozlesme);
-
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        string isEmriPrefix = $"IE-{DateTime.UtcNow:yyyyMM}-";
+        var sonIsEmri = await _context.IsEmirleris
+            .Where(x => x.IsEmriNo.StartsWith(isEmriPrefix))
+            .OrderByDescending(x => x.IsEmriNo)
+            .FirstOrDefaultAsync();
+
+        int isEmriSira = 1;
+        if (sonIsEmri != null && int.TryParse(sonIsEmri.IsEmriNo.Substring(sonIsEmri.IsEmriNo.Length - 4), out int iSira))
+            isEmriSira = iSira + 1;
+
+        var otoKesmeIsEmri = new IsEmirleri
+        {
+            IsEmriNo = $"{isEmriPrefix}{isEmriSira:D4}",
+            TuketimNoktasiId = mekanId,
+            Tip = "KESME",
+            Oncelik = "YUKSEK", 
+            Durum = "ACIK",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.IsEmirleris.Add(otoKesmeIsEmri);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { 
+            message = "Sözleşme başarıyla silindi ve otomatik olarak KESME iş emri oluşturuldu!",
+            kesmeIsEmriNo = otoKesmeIsEmri.IsEmriNo
+        });
     }
 }

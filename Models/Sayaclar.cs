@@ -24,6 +24,9 @@ public partial class Sayaclar
     [Column("model")]
     public string? Model { get; set; }
 
+    [Column("uretim_yili")]
+    public int UretimYili { get; set; } = 2026;
+
     [Column("faz")]
     public string? Faz { get; set; }
 

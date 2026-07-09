@@ -6,6 +6,7 @@ public class SayacCreateDto
     public long? TuketimNoktasiId { get; set; }
     public string? Marka { get; set; }
     public string? Model { get; set; }
+    public int UretimYili { get; set; }
     public string? Faz { get; set; } 
     public decimal Carpan { get; set; } 
     public string? MuhurNo { get; set; }

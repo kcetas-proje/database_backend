@@ -134,3 +134,4 @@ C:\Users\Caner\KcetasAboneApi\obj\Release\net10.0\refint\KcetasAboneApi.dll
 C:\Users\Caner\KcetasAboneApi\obj\Release\net10.0\KcetasAboneApi.pdb
 C:\Users\Caner\KcetasAboneApi\obj\Release\net10.0\KcetasAboneApi.genruntimeconfig.cache
 C:\Users\Caner\KcetasAboneApi\obj\Release\net10.0\ref\KcetasAboneApi.dll
+C:\Users\Caner\KcetasAboneApi\bin\Release\net10.0\Bogus.dll

@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "v4lrTNgy+TE=",
+  "dgSpecHash": "Y/py4O4X5Qc=",
   "success": true,
   "projectFilePath": "C:\\Users\\Caner\\KcetasAboneApi\\KcetasAboneApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Caner\\.nuget\\packages\\bcrypt.net-next\\4.2.0\\bcrypt.net-next.4.2.0.nupkg.sha512",
+    "C:\\Users\\Caner\\.nuget\\packages\\bogus\\35.6.5\\bogus.35.6.5.nupkg.sha512",
     "C:\\Users\\Caner\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\Caner\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.9\\microsoft.aspnetcore.authentication.jwtbearer.10.0.9.nupkg.sha512",
     "C:\\Users\\Caner\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.9\\microsoft.aspnetcore.openapi.10.0.9.nupkg.sha512",

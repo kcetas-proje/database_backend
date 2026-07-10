@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using KcetasAboneApi.Models.Dtos;
+using Bogus;
+
 
 namespace KcetasAboneApi.Controllers;
 
@@ -182,4 +184,57 @@ public class TuketimNoktasiController : ControllerBase
 
         return Ok(new { message = "Tüketim noktası başarıyla silindi." });
     }
+
+[HttpPost("generate-fake-tuketim-noktalari")]
+public async Task<IActionResult> GenerateFakeTuketimNoktalari()
+{
+    string prefix = $"TK-{DateTime.UtcNow:yyyyMM}-";
+    var sonNokta = await _context.TuketimNoktasis
+        .Where(x => x.TekilKod.StartsWith(prefix))
+        .OrderByDescending(x => x.TekilKod)
+        .FirstOrDefaultAsync();
+
+    int baslangicSira = 1;
+    if (sonNokta != null && int.TryParse(sonNokta.TekilKod.Substring(sonNokta.TekilKod.Length - 4), out int sonSira))
+    {
+        baslangicSira = sonSira + 1;
+    }
+
+    var ilceMap = new Dictionary<int, string> 
+    {
+        { 1, "Melikgazi" },
+        { 2, "Kocasinan" },
+        { 3, "Talas" }
+    };
+    var noktaFaker = new Faker<TuketimNoktasi>("tr")
+
+        .RuleFor(t => t.IlceId, f => f.PickRandom(1, 2, 3)) 
+        .RuleFor(t => t.Mahalle, f => f.Address.StreetName() + " Mahallesi")
+        .RuleFor(t => t.BinaNo, f => f.Address.BuildingNumber())
+        .RuleFor(t => t.BagimsizBolumNo, f => f.Random.Number(1, 40).ToString())
+
+        .RuleFor(t => t.AcikAdres, (f, t) => $"{t.Mahalle}, No:{t.BinaNo}, Daire:{t.BagimsizBolumNo} {ilceMap[(int)t.IlceId]}/Kayseri")
+
+        .RuleFor(t => t.BaglantiGucuKw, f => Math.Round(f.Random.Decimal(5.5m, 22.0m), 1))
+        .RuleFor(t => t.TuketiciGrubu, f => f.PickRandom(new[] { "MESKEN", "TICARETHANE" }))
+        .RuleFor(t => t.BaglantiDurumu, "PASIF")
+        .RuleFor(t => t.Status, "AKTIF")
+        .RuleFor(t => t.CreatedAt, DateTime.UtcNow);
+
+    var sahteNoktalar = noktaFaker.Generate(50);
+
+    for (int i = 0; i < sahteNoktalar.Count; i++)
+    {
+        sahteNoktalar[i].TekilKod = $"{prefix}{(baslangicSira + i):D4}";
+    }
+
+    _context.TuketimNoktasis.AddRange(sahteNoktalar);
+    await _context.SaveChangesAsync();
+
+    return Ok(new 
+    { 
+        message = "50 sahte tüketim noktası başarıyla oluşturuldu.", 
+        eklenenSayi = sahteNoktalar.Count 
+    });
+}
 }

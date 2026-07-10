@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using Bogus;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -135,4 +136,41 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
 
         return NoContent();
     }
+
+    [HttpPost("generate-fake-sayaclar")]
+public async Task<IActionResult> GenerateFakeSayaclar()
+{
+
+    var markalar = new[] { "Makel", "Luna", "Viko", "Köhler" };
+
+    var sayacFaker = new Faker<Sayaclar>("tr")
+
+        .RuleFor(s => s.SeriNo, f => $"SYC-{DateTime.UtcNow:yyyyMM}-{f.IndexGlobal:D4}")
+        
+        .RuleFor(s => s.TuketimNoktasiId, f => null)
+        
+        .RuleFor(s => s.Marka, f => f.PickRandom(markalar))
+        .RuleFor(s => s.Model, f => f.Commerce.ProductName().Substring(0, 4).ToUpper() + "-" + f.Random.Number(100, 999))
+        .RuleFor(s => s.UretimYili, f => f.Random.Number(2023, 2026)) 
+        .RuleFor(s => s.Faz, f => f.PickRandom(new[] { "TEK_FAZ", "UC_FAZ" })) 
+        
+        .RuleFor(s => s.Carpan, 1m) 
+        .RuleFor(s => s.MuhurNo, f => $"MHR-{f.Random.Number(100000, 999999)}")
+        
+        .RuleFor(s => s.Durum, "DEPODA") 
+        .RuleFor(s => s.CreatedAt, DateTime.UtcNow)
+        .RuleFor(s => s.CreatedBy, 1); 
+
+    var sahteSayaclar = sayacFaker.Generate(50); 
+
+    _context.Sayaclars.AddRange(sahteSayaclar);
+    await _context.SaveChangesAsync();
+
+    return Ok(new 
+    { 
+        message = "50 sahte sayaç başarıyla oluşturuldu.", 
+        eklenenSayi = sahteSayaclar.Count 
+    });
 }
+}
+

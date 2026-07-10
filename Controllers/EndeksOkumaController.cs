@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using KcetasAboneApi.Models.Dtos;
+using Bogus;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -127,5 +128,77 @@ public async Task<IActionResult> Delete(long id)
 
     await _context.SaveChangesAsync();
     return NoContent(); 
+}
+
+[HttpPost("generate-fake-endeksler")]
+public async Task<IActionResult> GenerateFakeEndeksler()
+{
+    var sozlesmeler = await _context.Sozlesmelers.ToListAsync();
+    var takiliSayaclar = await _context.Sayaclars
+        .Where(s => s.Durum == "TAKILI" && s.TuketimNoktasiId != null)
+        .ToListAsync();
+
+    if (!sozlesmeler.Any() || !takiliSayaclar.Any())
+        return BadRequest(new { message = "Sözleşmeler veya takılı sayaçlar bulunamadı." });
+
+    var sahteEndeksler = new List<EndeksOkuma>();
+    var f = new Faker("tr"); 
+
+    foreach (var sozlesme in sozlesmeler)
+    {
+        var sayac = takiliSayaclar.FirstOrDefault(s => s.TuketimNoktasiId == sozlesme.TuketimNoktasiId);
+        if (sayac == null) continue; 
+
+        var ilgiliIsEmri = await _context.IsEmirleris
+            .Where(ie => ie.TuketimNoktasiId == sozlesme.TuketimNoktasiId)
+            .OrderByDescending(ie => ie.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        var sonOkuma = await _context.EndeksOkumas
+            .Where(e => e.SayacId == sayac.SayacId)
+            .OrderByDescending(e => e.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        var yeniEndeks = new EndeksOkuma
+        {
+            SayacId = sayac.SayacId,
+            SozlesmeId = sozlesme.SozlesmeId,
+            IsEmriId = ilgiliIsEmri?.IsEmriId,
+            OkumaKaynagi = "MANUEL",
+            Donem = $"{DateTime.UtcNow:yyyy/MM}",
+            OkumaZamani = DateTime.UtcNow,
+            KullaniciId = 1,
+            DogrulamaDurumu = "ONAYLANDI",
+            AnomaliMi = false,
+            Status = "AKTIF",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        if (sonOkuma == null)
+        {
+
+            yeniEndeks.OkumaTipi = "ILK_OKUMA";
+            yeniEndeks.OncekiEndeks = 0m;
+            yeniEndeks.YeniEndeks = Math.Round(f.Random.Decimal(50m, 150m), 3);
+        }
+        else
+        {
+
+            yeniEndeks.OkumaTipi = "RUTIN_DONEM";
+            yeniEndeks.OncekiEndeks = sonOkuma.YeniEndeks;
+            yeniEndeks.YeniEndeks = sonOkuma.YeniEndeks + Math.Round(f.Random.Decimal(100m, 400m), 3);
+        }
+
+        sahteEndeksler.Add(yeniEndeks);
+    }
+
+    _context.EndeksOkumas.AddRange(sahteEndeksler);
+    await _context.SaveChangesAsync();
+
+    return Ok(new 
+    { 
+        message = $"{sahteEndeksler.Count} adet sahte endeks okuma başarıyla oluşturuldu.",
+        eklenenSayi = sahteEndeksler.Count
+    });
 }
 }

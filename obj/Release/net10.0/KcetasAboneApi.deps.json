@@ -9,6 +9,7 @@
       "KcetasAboneApi/1.0.0": {
         "dependencies": {
           "BCrypt.Net-Next": "4.2.0",
+          "Bogus": "35.6.5",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "10.0.9",
           "Microsoft.AspNetCore.OpenApi": "10.0.9",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.2",
@@ -24,6 +25,14 @@
           "lib/net10.0/BCrypt-Net-Next.dll": {
             "assemblyVersion": "4.2.0.0",
             "fileVersion": "4.2.0.0"
+          }
+        }
+      },
+      "Bogus/35.6.5": {
+        "runtime": {
+          "lib/net6.0/Bogus.dll": {
+            "assemblyVersion": "35.6.5.0",
+            "fileVersion": "35.6.5.0"
           }
         }
       },
@@ -244,6 +253,13 @@
       "sha512": "sha512-gwLD2KfCuwQesP17aVh4h6lpiMPEVt5Lbpndo0ej903hNUUTtyxt3ARdDjmuydBRTAUICc7OVKVbaOvc6SQYXA==",
       "path": "bcrypt.net-next/4.2.0",
       "hashPath": "bcrypt.net-next.4.2.0.nupkg.sha512"
+    },
+    "Bogus/35.6.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2FGZn+aAVHjmCgClgmGkTDBVZk0zkLvAKGaxEf5JL6b3i9JbHTE4wnuY4vHCuzlCmJdU6VZjgDfHwmYkQF8VAA==",
+      "path": "bogus/35.6.5",
+      "hashPath": "bogus.35.6.5.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Authentication.JwtBearer/10.0.9": {
       "type": "package",

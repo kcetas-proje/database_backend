@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using Bogus;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -144,4 +145,29 @@ public class AbonelerController : ControllerBase
 
         return NoContent();
     }
+    [HttpPost("generate-fake-aboneler")]
+    public async Task<IActionResult> GenerateFakeAboneler()
+    {
+        var aboneFaker = new Faker<Aboneler>("tr") 
+            .RuleFor(a => a.AboneNo, f => $"ABN-{DateTime.Now.AddSeconds(f.IndexGlobal):yyyyMMddHHmmss}")
+            .RuleFor(a => a.Ad, f => f.Name.FirstName())
+            .RuleFor(a => a.Soyad, f => f.Name.LastName())
+            .RuleFor(a => a.Tckn, f => f.Random.Replace("###########"))
+            .RuleFor(a => a.Telefon, f => f.Phone.PhoneNumber("05#########"))
+            .RuleFor(a => a.EPosta, (f, a) => f.Internet.Email(a.Ad, a.Soyad).ToLower())
+
+            .RuleFor(a => a.AboneTipi, "BIREYSEL")
+            
+            .RuleFor(a => a.CreatedAt, f => f.Date.Past(1).ToUniversalTime());
+
+        var sahteAboneler = aboneFaker.Generate(50); 
+        _context.Abonelers.AddRange(sahteAboneler);
+        await _context.SaveChangesAsync();
+
+        return Ok(new 
+        { 
+            message = "50 sahte abone başarıyla oluşturuldu.", 
+            eklenenSayi = sahteAboneler.Count 
+        });
+} 
 }

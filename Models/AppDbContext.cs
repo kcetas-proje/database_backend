@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace KcetasAboneApi.Models;
 
@@ -31,16 +35,79 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Aboneler> Abonelers { get; set; }
     public virtual DbSet<Tarifeler> Tarifelers { get; set; }
 
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var degisenler = ChangeTracker.Entries()
+            .Where(e => e.Entity is not AuditLog && 
+                       (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
+            .ToList();
+
+        var auditListesi = new List<(EntityEntry Entry, AuditLog Log)>();
+
+        foreach (var entry in degisenler)
+        {
+            var auditLog = new AuditLog
+            {
+                VarlikTipi = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name,
+                IslemTipi = entry.State switch
+                {
+                    EntityState.Added => "EKLEME",
+                    EntityState.Modified => "GUNCELLEME",
+                    EntityState.Deleted => "SILME",
+                    _ => "DIGER"
+                },
+                IslemZamani = DateTime.UtcNow,
+                KullaniciId = 1,
+                IslemGerekcesi = "Sistem Otomasyon İşlemi"
+            };
+
+            if (entry.State == EntityState.Added)
+            {
+                auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
+            }
+            else if (entry.State == EntityState.Deleted)
+            {
+                auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
+                auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
+            }
+
+            auditListesi.Add((entry, auditLog));
+        }
+
+        var sonuc = await base.SaveChangesAsync(cancellationToken);
+
+        foreach (var item in auditListesi)
+        {
+            var pkName = item.Entry.Metadata.FindPrimaryKey()?.Properties.Select(p => p.Name).FirstOrDefault();
+            
+            if (pkName != null)
+            {
+                item.Log.VarlikId = Convert.ToInt64(item.Entry.Property(pkName).CurrentValue);
+            }
+            
+            AuditLogs.Add(item.Log);
+        }
+
+        if (auditListesi.Any())
+        {
+            await base.SaveChangesAsync(cancellationToken);
+        }
+
+        return sonuc;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Program.cs üzerinden bağladığın için burası boş kalabilir
+
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // GIGACHAD NOT: Sayaclar, Sozlesmeler, IsEmirleri, TuketimNoktasi ve EndeksOkuma bloklarını uçurduk!
-        // Çünkü o modellerin içine [Table] ve [Column] etiketlerini zaten bastık. 
-        // EF Core oradan okuyacak, burada çakışma yaratıp 500 hatası vermeyecek.
+
 
         modelBuilder.Entity<AuditLog>(entity =>
         {

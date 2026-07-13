@@ -244,12 +244,14 @@ public class IsEmirleriController : ControllerBase
     public async Task<IActionResult> GenerateRandomIsEmirleri()
     {
 
-        var mekanlar = await _context.TuketimNoktasis.ToListAsync();
-        if (!mekanlar.Any())
-            return BadRequest(new { message = "Tüketim noktaları bulunamadı." });
+        var takiliSayaclar = await _context.Sayaclars
+            .Where(s => s.Durum == "TAKILI" && s.TuketimNoktasiId != null)
+            .ToListAsync();
+
+        if (!takiliSayaclar.Any())
+            return BadRequest(new { message = "Takılı sayaç bulunamadı!" });
 
         string isEmriPrefix = $"IE-{DateTime.UtcNow:yyyyMM}-";
-
         int isEmriSira = 1;
         var sonIsEmri = await _context.IsEmirleris
             .Where(x => x.IsEmriNo.StartsWith(isEmriPrefix))
@@ -259,24 +261,35 @@ public class IsEmirleriController : ControllerBase
         if (sonIsEmri != null && int.TryParse(sonIsEmri.IsEmriNo.Substring(sonIsEmri.IsEmriNo.Length - 4), out int iSira))
             isEmriSira = iSira + 1;
 
-        var isEmriTipleri = new[] { "BAGLAMA","DEGISTIRME","SOKME","KESME","ACMA","ENDEKS_OKUMA","SAYAC_ARIZA","MUHURLEME","KESIF_INCELEME","YENI_BAGLANTI"};
+        var isEmriTipleri = new[] 
+        { 
+            "DEGISTIRME", "SOKME", "KESME", "ACMA", 
+            "ENDEKS_OKUMA", "SAYAC_ARIZA", "MUHURLEME", "KESIF_INCELEME" 
+        };
+        
         var oncelikler = new[] { "DUSUK", "NORMAL", "YUKSEK", "ACIL" };
+        var sahteIsEmirleri = new List<IsEmirleri>();
+        var random = new Random();
 
-        var isEmriFaker = new Faker<IsEmirleri>("tr")
-            .RuleFor(i => i.TuketimNoktasiId, f => f.PickRandom(mekanlar).TuketimNoktasiId)
-            .RuleFor(i => i.Tip, f => f.PickRandom(isEmriTipleri))
-            
-            // Arıza veya Kaçak İhbarı varsa aciliyet artar fr fr
-            .RuleFor(i => i.Oncelik, (f, i) => i.Tip == "ARIZA" ? "ACIL" : f.PickRandom(oncelikler))
-            
-            .RuleFor(i => i.Durum, "ACIK")
-            .RuleFor(i => i.CreatedAt, f => f.Date.Recent(7).ToUniversalTime());
-
-        var sahteIsEmirleri = isEmriFaker.Generate(30);
-
-        for (int j = 0; j < sahteIsEmirleri.Count; j++)
+        for (int j = 0; j < 30; j++)
         {
-            sahteIsEmirleri[j].IsEmriNo = $"{isEmriPrefix}{(isEmriSira + j):D4}";
+            var secilenSayac = takiliSayaclar[random.Next(takiliSayaclar.Count)];
+            string secilenTip = isEmriTipleri[random.Next(isEmriTipleri.Length)];
+
+            var yeniIsEmri = new IsEmirleri
+            {
+                IsEmriNo = $"{isEmriPrefix}{(isEmriSira + j):D4}",
+                TuketimNoktasiId = secilenSayac.TuketimNoktasiId.Value,
+                SayacId = secilenSayac.SayacId, 
+                Tip = secilenTip,
+
+                Oncelik = (secilenTip == "SAYAC_ARIZA" || secilenTip == "KESME") ? "ACIL" : oncelikler[random.Next(oncelikler.Length)],
+                
+                Durum = "ACIK",
+                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 7)).ToUniversalTime(),
+            };
+
+            sahteIsEmirleri.Add(yeniIsEmri);
         }
 
         _context.IsEmirleris.AddRange(sahteIsEmirleri);
@@ -284,7 +297,7 @@ public class IsEmirleriController : ControllerBase
 
         return Ok(new 
         { 
-            message = "30 sahte iş emri başarıyla oluşturuldu.", 
+            message = "30 adet sahte iş emri başarıyla oluşturuldu.", 
             eklenenSayi = sahteIsEmirleri.Count 
         });
     }

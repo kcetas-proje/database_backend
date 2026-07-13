@@ -24,6 +24,8 @@ public class IsEmirleriController : ControllerBase
     public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetIsEmirleri()
     {
         return await _context.IsEmirleris
+            .Include(i => i.Sayac)
+            .Include(i => i.TuketimNoktasi)
             .OrderBy(i => i.IsEmriId)
             .ToListAsync();
     }
@@ -32,7 +34,10 @@ public class IsEmirleriController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<IsEmirleri>> GetIsEmri(long id)
     {
-        var isEmri = await _context.IsEmirleris.FindAsync(id);
+        var isEmri = await _context.IsEmirleris
+            .Include(i => i.Sayac)
+            .Include(i => i.TuketimNoktasi)
+            .FirstOrDefaultAsync(i => i.IsEmriId == id);
 
         if (isEmri == null)
         {
@@ -51,10 +56,23 @@ public class IsEmirleriController : ControllerBase
             return BadRequest(new { message = "Geçersiz tüketim noktası." });
         }
 
-        if (dto.SayacId != null)
+        long? finalSayacId = dto.SayacId;
+
+        if (finalSayacId != null)
         {
-            if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == dto.SayacId))
+            if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == finalSayacId))
                 return BadRequest(new { message = "Sayaç bulunamadı." });
+        }
+        else if (dto.Tip != "YENI_BAGLANTI")
+        {
+            // Eğer sayaç ID gönderilmemişse ve yeni bağlantı değilse, o tüketim noktasındaki takılı sayacı otomatik bul.
+            var takiliSayac = await _context.Sayaclars
+                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == dto.TuketimNoktasiId && s.Durum == "TAKILI");
+            
+            if (takiliSayac != null)
+            {
+                finalSayacId = takiliSayac.SayacId;
+            }
         }
 
         if (dto.AtananKullaniciId != null)
@@ -86,7 +104,7 @@ public class IsEmirleriController : ControllerBase
         {
             IsEmriNo = yeniIsEmriNo,
             TuketimNoktasiId = dto.TuketimNoktasiId,
-            SayacId = dto.SayacId,
+            SayacId = finalSayacId,
             AtananKullaniciId = dto.AtananKullaniciId,
             Tip = dto.Tip,
             Oncelik = dto.Oncelik,

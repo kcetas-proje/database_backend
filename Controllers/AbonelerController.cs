@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Bogus;
 
 namespace KcetasAboneApi.Controllers;
+using KcetasAboneApi.Models.Dtos;
 
 //[Authorize(Roles = "1,2")]
 [Route("api/[controller]")]
@@ -170,4 +171,98 @@ public class AbonelerController : ControllerBase
             eklenenSayi = sahteAboneler.Count 
         });
 } 
+    [HttpPost("abone-ve-tesisat-kaydet")]
+    public async Task<IActionResult> AboneVeTesisatKaydet([FromBody] AboneVeTesisatCreateDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            // 1. ABONE OLUŞTURMA
+            string yeniAboneNo = $"ABN-{DateTime.Now:yyyyMMddHHmmss}";
+            
+            var yeniAbone = new Aboneler
+            {
+                AboneNo = yeniAboneNo,
+                Ad = dto.Ad,
+                Soyad = dto.Soyad,
+                Tckn = dto.TcNo,
+                Telefon = dto.Telefon,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            _context.Abonelers.Add(yeniAbone);
+            await _context.SaveChangesAsync();
+
+            string prefix = $"TK-{DateTime.UtcNow:yyyyMM}-";
+            int sira = 1;
+            var sonNokta = await _context.TuketimNoktasis
+                .Where(x => x.TekilKod.StartsWith(prefix))
+                .OrderByDescending(x => x.TekilKod)
+                .FirstOrDefaultAsync();
+
+            if (sonNokta != null && int.TryParse(sonNokta.TekilKod.Substring(sonNokta.TekilKod.Length - 4), out int sonSira))
+                sira = sonSira + 1;
+
+            var yeniMekan = new TuketimNoktasi
+            {
+                TekilKod = $"{prefix}{sira:D4}",
+                IlceId = dto.IlceId,
+                Mahalle = dto.Mahalle,
+                BinaNo = dto.BinaNo,
+                BagimsizBolumNo = dto.BagimsizBolumNo,
+                AcikAdres = dto.AcikAdres,
+                BaglantiGucuKw = dto.BaglantiGucuKw,
+                TuketiciGrubu = dto.TuketiciGrubu,
+                BaglantiDurumu = "PASIF",
+                Status = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.TuketimNoktasis.Add(yeniMekan);
+            await _context.SaveChangesAsync();
+
+            string sozlesmePrefix = $"SOZ-{DateTime.UtcNow:yyyy-MM}-";
+            int sozlesmeSira = 1;
+            var sonSozlesme = await _context.Sozlesmelers
+                .Where(x => x.SozlesmeNo.StartsWith(sozlesmePrefix))
+                .OrderByDescending(x => x.SozlesmeNo)
+                .FirstOrDefaultAsync();
+
+            if (sonSozlesme != null && int.TryParse(sonSozlesme.SozlesmeNo.Substring(sonSozlesme.SozlesmeNo.Length - 4), out int sSira))
+                sozlesmeSira = sSira + 1;
+
+            var yeniSozlesme = new Sozlesmeler
+            {
+                SozlesmeNo = $"{sozlesmePrefix}{sozlesmeSira:D4}",
+                AboneId = yeniAbone.AboneId,
+                TuketimNoktasiId = yeniMekan.TuketimNoktasiId,
+                TarifeId = dto.TuketiciGrubu == "TICARET" ? 3 : 1,
+                SozlesmeTipi = dto.TuketiciGrubu,
+                GuvenceBedeli = dto.TuketiciGrubu == "TICARET" ? 4500m : 1500m,
+                BaslangicTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
+                Durum = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Sozlesmelers.Add(yeniSozlesme);
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return Ok(new 
+            { 
+                message = "Abone, Tesisat ve Sözleşme başarıyla oluşturuldu.", 
+                aboneNo = yeniAbone.AboneNo,
+                tekilKod = yeniMekan.TekilKod,
+                sozlesmeNo = yeniSozlesme.SozlesmeNo
+            });
+        }
+        catch (Exception ex)
+        {
+
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { message = "Bir hata oluştu.", error = ex.Message });
+        }
+    }
 }

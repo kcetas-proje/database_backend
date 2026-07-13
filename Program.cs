@@ -79,9 +79,18 @@ app.UseSwaggerUI();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
+// Global Exception Handler Middleware'i sisteme dahil ediyoruz
+app.UseMiddleware<KcetasAboneApi.Middlewares.ExceptionHandlingMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization(); 
 
 app.MapControllers(); 
+
+// Hata yönetimini test edebilmeniz için geçici bir test endpointi
+app.MapGet("/api/test-error", () =>
+{
+    throw new Exception("Bu bilerek fırlatılan bir test hatasıdır!");
+});
 
 app.Run();

@@ -21,6 +21,15 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
+        [HttpGet("All")]
+        public async Task<ActionResult<IEnumerable<Fatura>>> GetAllFaturalar()
+        {
+            return await _context.Faturas
+                .Where(f => f.Status == "AKTIF")
+                .OrderBy(f => f.FaturaId)
+                .ToListAsync();
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetFaturalar([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {

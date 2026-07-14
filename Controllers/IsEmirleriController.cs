@@ -19,6 +19,17 @@ public class IsEmirleriController : ControllerBase
         _context = context;
     }
 
+    // GET: api/IsEmirleri/All
+    [HttpGet("All")]
+    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetAllIsEmirleri()
+    {
+        return await _context.IsEmirleris
+            .Include(i => i.Sayac)
+            .Include(i => i.TuketimNoktasi)
+            .OrderBy(i => i.IsEmriId)
+            .ToListAsync();
+    }
+
     // GET: api/IsEmirleri
     [HttpGet]
     public async Task<IActionResult> GetIsEmirleri([FromQuery] int page = 1, [FromQuery] int pageSize = 10)

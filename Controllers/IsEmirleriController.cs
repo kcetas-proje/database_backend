@@ -364,23 +364,35 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     [HttpPost("CompleteJob")]
     public async Task<IActionResult> CompleteJob([FromBody] CompleteJobRequestDto request)
     {
+
         using var transaction = await _context.Database.BeginTransactionAsync();
         
         try
         {
-
             var isEmri = await _context.IsEmirleris
                 .Include(x => x.Sayac) 
                 .FirstOrDefaultAsync(x => x.IsEmriId == request.JobId);
 
-            if (isEmri == null) return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
-            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten tamamlanmış!" });
+            if (isEmri == null) 
+                return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
+                
+            if (isEmri.Durum == "TAMAMLANDI") 
+                return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
+
+            if (isEmri.SayacId == null || !isEmri.SayacId.HasValue)
+            {
+                return BadRequest(new 
+                { 
+                    message = "Bu iş emrine ait sayaç bulunamadı." 
+                });
+            }
+
+            long sayacId = isEmri.SayacId.Value;
 
             isEmri.Durum = "TAMAMLANDI";
-            isEmri.UpdatedAt = DateTime.UtcNow; 
 
             var sonOkuma = await _context.EndeksOkumas
-                .Where(e => e.SayacId == isEmri.SayacId)
+                .Where(e => e.SayacId == sayacId)
                 .OrderByDescending(e => e.CreatedAt)
                 .FirstOrDefaultAsync();
 
@@ -395,17 +407,17 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
             var yeniEndeks = new EndeksOkuma
             {
-                SayacId = isEmri.SayacId.Value, 
+                SayacId = sayacId, 
                 IsEmriId = isEmri.IsEmriId,
-                
                 OkumaTipi = dinamikOkumaTipi, 
-                
-                OkumaKaynagi = "MANUEL",
+                OkumaKaynagi = "MANUEL", 
                 OncekiEndeks = sonOkuma?.YeniEndeks ?? 0m,
                 YeniEndeks = request.SonEndeks, 
                 Donem = $"{DateTime.UtcNow:yyyy/MM}",
                 OkumaZamani = DateTime.UtcNow,
-                KullaniciId = request.IslemYapanKullaniciId,
+                
+                KullaniciId = request.IslemYapanKullaniciId, 
+                
                 DogrulamaDurumu = "ONAYLANDI",
                 AnomaliMi = false,
                 Status = "AKTIF",
@@ -428,7 +440,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            return StatusCode(500, new { message = "İş emri tamamlanırken bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
+            return StatusCode(500, new { message = "İş emri tamamlanırken hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
         }
     }
 

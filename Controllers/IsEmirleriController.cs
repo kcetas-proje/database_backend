@@ -390,40 +390,41 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             isEmri.Durum = "TAMAMLANDI";
             isEmri.UpdatedAt = DateTime.UtcNow; 
 
-            var sonOkuma = await _context.EndeksOkumas
-                .Where(e => e.SayacId == isEmri.SayacId)
-                .OrderByDescending(e => e.CreatedAt)
-                .FirstOrDefaultAsync();
-
-            string dinamikOkumaTipi = isEmri.Tip switch
+            if (isEmri.SayacId.HasValue)
             {
-                "KESME" => "KESME_ENDEKSI",
-                "DEGISTIRME" => "SAYAC_DEGISIM_OKUMASI",
-                "SAYAC_ARIZA" => "SAYAC_DEGISIM_OKUMASI",
-                "SOKME" => "SON_OKUMA",
-                _ => sonOkuma == null ? "ILK_OKUMA" : "RUTIN_DONEM"
-            };
+                var sonOkuma = await _context.EndeksOkumas
+                    .Where(e => e.SayacId == isEmri.SayacId)
+                    .OrderByDescending(e => e.CreatedAt)
+                    .FirstOrDefaultAsync();
 
-            var yeniEndeks = new EndeksOkuma
-            {
-                SayacId = isEmri.SayacId.Value, 
-                IsEmriId = isEmri.IsEmriId,
-                
-                OkumaTipi = dinamikOkumaTipi, 
-                
-                OkumaKaynagi = "MANUEL",
-                OncekiEndeks = sonOkuma?.YeniEndeks ?? 0m,
-                YeniEndeks = request.SonEndeks, 
-                Donem = $"{DateTime.UtcNow:yyyy/MM}",
-                OkumaZamani = DateTime.UtcNow,
-                KullaniciId = request.IslemYapanKullaniciId,
-                DogrulamaDurumu = "ONAYLANDI",
-                AnomaliMi = false,
-                Status = "AKTIF",
-                CreatedAt = DateTime.UtcNow
-            };
+                string dinamikOkumaTipi = isEmri.Tip switch
+                {
+                    "KESME" => "KESME_ENDEKSI",
+                    "DEGISTIRME" => "SAYAC_DEGISIM_OKUMASI",
+                    "SAYAC_ARIZA" => "SAYAC_DEGISIM_OKUMASI",
+                    "SOKME" => "SON_OKUMA",
+                    _ => sonOkuma == null ? "ILK_OKUMA" : "RUTIN_DONEM"
+                };
 
-            _context.EndeksOkumas.Add(yeniEndeks);
+                var yeniEndeks = new EndeksOkuma
+                {
+                    SayacId = isEmri.SayacId.Value, 
+                    IsEmriId = isEmri.IsEmriId,
+                    OkumaTipi = dinamikOkumaTipi, 
+                    OkumaKaynagi = "MANUEL",
+                    OncekiEndeks = sonOkuma?.YeniEndeks ?? 0m,
+                    YeniEndeks = request.SonEndeks, 
+                    Donem = $"{DateTime.UtcNow:yyyy/MM}",
+                    OkumaZamani = DateTime.UtcNow,
+                    KullaniciId = request.IslemYapanKullaniciId,
+                    DogrulamaDurumu = "ONAYLANDI",
+                    AnomaliMi = false,
+                    Status = "AKTIF",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.EndeksOkumas.Add(yeniEndeks);
+            }
 
             if (isEmri.Sayac != null && !string.IsNullOrEmpty(request.MuhurNo))
             {

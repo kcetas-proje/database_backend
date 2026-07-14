@@ -28,6 +28,24 @@ public partial class EndeksOkuma
     [Column("okuma_kaynagi")]
     public string OkumaKaynagi { get; set; } = null!;
 
+    [Column("gunduz_endeks")]
+    public decimal? GunduzEndeks { get; set; }
+
+    [Column("puant_endeks")]
+    public decimal? PuantEndeks { get; set; }
+
+    [Column("gece_endeks")]
+    public decimal? GeceEndeks { get; set; }
+
+    [Column("induktif_endeks")]
+    public decimal? InduktifEndeks { get; set; }
+
+    [Column("kapasitif_endeks")]
+    public decimal? KapasitifEndeks { get; set; }
+
+    [Column("demand")]
+    public decimal? Demand { get; set; }
+
     [Column("onceki_endeks")]
     public decimal? OncekiEndeks { get; set; }
 

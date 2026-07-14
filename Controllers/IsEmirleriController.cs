@@ -335,7 +335,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         var isEmriTipleri = new[] 
         { 
             "DEGISTIRME", "SOKME", "KESME", "ACMA", 
-            "ENDEKS_OKUMA", "SAYAC_ARIZA", "MUHURLEME", "KESIF_INCELEME" 
+            "ENDEKS_OKUMA", "SAYAC_ARIZA", "MUHURLEME", "KESIF_INCELEME", "ENERJI_ACMA" 
         };
         
         var oncelikler = new[] { "DUSUK", "NORMAL", "YUKSEK", "ACIL" };
@@ -413,6 +413,8 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 "DEGISTIRME" => "SAYAC_DEGISIM_OKUMASI",
                 "SAYAC_ARIZA" => "SAYAC_DEGISIM_OKUMASI",
                 "SOKME" => "SON_OKUMA",
+                "ENERJI_ACMA" => "ILK_OKUMA", 
+                "ACMA" => "ILK_OKUMA",
                 _ => sonOkuma == null ? "ILK_OKUMA" : "RUTIN_DONEM"
             };
 
@@ -502,5 +504,397 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         await _context.SaveChangesAsync();
 
         return Ok(new { message = "Enerji açma işlemi başarıyla kaydedildi.", isEmriNo = isEmri.IsEmriNo });
+    }
+
+    // 1. Sayaç Değişimi Operasyonu
+    [HttpPost("SayacDegisimi")]
+    public async Task<IActionResult> SayacDegisimi([FromBody] SayacDegisimiRequestDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            // 1. İş Emrini Bul
+            var isEmri = await _context.IsEmirleris
+                .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
+
+            if (isEmri == null) 
+                return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
+                
+            if (isEmri.Durum == "TAMAMLANDI") 
+                return BadRequest(new { message = "Bu iş emri zaten tamamlanmış!" });
+
+            isEmri.Durum = "TAMAMLANDI";
+            isEmri.SokulenSeriNo = dto.SokulenSeriNo;
+            isEmri.YeniSeriNo = dto.YeniSeriNo;
+            isEmri.YeniMuhurNo = dto.YeniMuhurNo;
+            isEmri.DamgaYili = dto.DamgaYili;
+            isEmri.AkimTrafosuSeriNo = dto.AkimTrafosuSeriNo;
+            isEmri.AkimTrafosuMarka = dto.AkimTrafosuMarka;
+            isEmri.GerilimTrafosuSeriNo = dto.GerilimTrafosuSeriNo;
+            isEmri.GerilimTrafosuMarka = dto.GerilimTrafosuMarka;
+            isEmri.SahaSonucu = "Sayaç değişimi sahada tamamlandı.";
+            isEmri.AtananKullaniciId = dto.IslemYapanKullaniciId;
+            isEmri.UpdatedAt = DateTime.UtcNow;
+
+            var eskiSayac = await _context.Sayaclars.FirstOrDefaultAsync(s => s.SeriNo == dto.SokulenSeriNo);
+            if (eskiSayac != null)
+            {
+                eskiSayac.Durum = "SOKULMUS";
+                eskiSayac.TuketimNoktasiId = null;
+                eskiSayac.UpdatedAt = DateTime.UtcNow;
+
+                var eskiOkuma = new EndeksOkuma
+                {
+                    SayacId = eskiSayac.SayacId,
+                    IsEmriId = isEmri.IsEmriId,
+                    OkumaTipi = "SAYAC_DEGISIM_OKUMASI",
+                    OkumaKaynagi = "MANUEL",
+                    YeniEndeks = dto.SokulenAktif, 
+                    OkumaZamani = DateTime.UtcNow,
+                    KullaniciId = dto.IslemYapanKullaniciId,
+                    DogrulamaDurumu = "ONAYLANDI",
+                    Status = "AKTIF",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.EndeksOkumas.Add(eskiOkuma);
+            }
+
+        // 4. Yeni Sayacı Mekana Tak
+            var yeniSayac = await _context.Sayaclars.FirstOrDefaultAsync(s => s.SeriNo == dto.YeniSeriNo);
+            if (yeniSayac == null)
+            {
+                return BadRequest(new { message = $"Yeni sayaç {dto.YeniSeriNo} numaralı sistemde bulunamadı!" });
+            }
+
+            yeniSayac.TuketimNoktasiId = isEmri.TuketimNoktasiId;
+            yeniSayac.Durum = "TAKILI";
+            yeniSayac.MuhurNo = dto.YeniMuhurNo;
+            yeniSayac.UpdatedAt = DateTime.UtcNow;
+
+            isEmri.SayacId = yeniSayac.SayacId;
+
+            var yeniOkuma = new EndeksOkuma
+            {
+                SayacId = yeniSayac.SayacId,
+                IsEmriId = isEmri.IsEmriId,
+                OkumaTipi = "ILK_OKUMA",
+                OkumaKaynagi = "MANUEL",
+                YeniEndeks = dto.YeniIlkEndeks,
+                OkumaZamani = DateTime.UtcNow,
+                KullaniciId = dto.IslemYapanKullaniciId,
+                DogrulamaDurumu = "ONAYLANDI",
+                Status = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.EndeksOkumas.Add(yeniOkuma);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(new 
+            { 
+                message = "Sayaç değişimi başarıyla tamamlandı.", 
+                isEmriNo = isEmri.IsEmriNo 
+            });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new 
+            { 
+                message = "Sayaç değişimi sırasında bir hata oluştu.", 
+                error = ex.InnerException?.Message ?? ex.Message 
+            });
+        }
+    }
+
+    // 2. Enerji Kesme Operasyonu
+    [HttpPost("EnerjiKesme")]
+    public async Task<IActionResult> EnerjiKesme([FromBody] EnerjiKesmeRequestDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            var isEmri = await _context.IsEmirleris
+                .Include(x => x.Sayac)
+                .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
+
+            if (isEmri == null) return NotFound(new { message = "İş emri bulunamadı." });
+            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten kapatılmış." });
+
+            isEmri.Durum = "TAMAMLANDI";
+            isEmri.KesmeNoktasi = dto.KesmeNoktasi;
+            isEmri.KesmeNedeni = dto.KesmeNedeni;
+            isEmri.AboneDurumu = dto.AboneDurumu;
+            isEmri.SayacDurumu = dto.SayacDurumu;
+            isEmri.Gerekce = dto.Aciklama;
+            isEmri.MuhurNo = dto.MuhurNo;
+            isEmri.SahaSonucu = "Enerji kesme işlemi tamamlandı.";
+            isEmri.AtananKullaniciId = dto.IslemYapanKullaniciId;
+            isEmri.UpdatedAt = DateTime.UtcNow;
+
+            if (isEmri.Sayac != null)
+            {
+                isEmri.Sayac.MuhurNo = dto.MuhurNo;
+                isEmri.Sayac.UpdatedAt = DateTime.UtcNow;
+
+                var kesmeOkumasi = new EndeksOkuma
+                {
+                    SayacId = isEmri.Sayac.SayacId,
+                    IsEmriId = isEmri.IsEmriId,
+                    OkumaTipi = "KESME_ENDEKSI",
+                    OkumaKaynagi = "MANUEL",
+                    YeniEndeks = dto.SonEndeks,
+                    OkumaZamani = DateTime.UtcNow,
+                    KullaniciId = dto.IslemYapanKullaniciId,
+                    DogrulamaDurumu = "ONAYLANDI",
+                    Status = "AKTIF",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.EndeksOkumas.Add(kesmeOkumasi);
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(new { message = "Enerji kesme işlemi tamamlandı.", isEmriNo = isEmri.IsEmriNo });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { message = "Enerji kesme işlemi sırasında bir hata oluştu!", error = ex.InnerException?.Message ?? ex.Message });
+        }
+    }
+
+    // 3. Sayaç Arıza Operasyonu
+    [HttpPost("SayacAriza")]
+    public async Task<IActionResult> SayacAriza([FromBody] SayacArizaRequestDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            var isEmri = await _context.IsEmirleris
+                .Include(x => x.Sayac)
+                .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
+
+            if (isEmri == null) return NotFound(new { message = "İş emri bulunamadı." });
+            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten kapatılmış." });
+
+            isEmri.Durum = "TAMAMLANDI";
+            isEmri.ArizaTipi = dto.ArizaTipi; 
+            isEmri.SahaSonucu = dto.SahaSonucu;
+            isEmri.TutanakNo = dto.TutanakNo;
+            isEmri.AtananKullaniciId = dto.IslemYapanKullaniciId;
+            isEmri.UpdatedAt = DateTime.UtcNow;
+
+            if (isEmri.Sayac != null)
+            {
+                isEmri.Sayac.Durum = "ARIZALI"; 
+                isEmri.Sayac.UpdatedAt = DateTime.UtcNow;
+
+                var arizaOkumasi = new EndeksOkuma
+                {
+                    SayacId = isEmri.Sayac.SayacId,
+                    IsEmriId = isEmri.IsEmriId,
+                    OkumaTipi = "SAYAC_ARIZA_OKUMASI",
+                    OkumaKaynagi = "MANUEL", // veya "MOBIL"
+                    YeniEndeks = dto.Aktif, // T0
+                    GunduzEndeks = dto.Gunduz, // T1
+                    PuantEndeks = dto.Puant, // T2
+                    GeceEndeks = dto.Gece, // T3
+                    InduktifEndeks = dto.Induktif, // Ceza
+                    KapasitifEndeks = dto.Kapasitif, // Ceza
+                    Demand = dto.Demand, // Güç
+                    OkumaZamani = DateTime.UtcNow,
+                    KullaniciId = dto.IslemYapanKullaniciId,
+                    DogrulamaDurumu = "ONAYLANDI",
+                    Status = "AKTIF",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.EndeksOkumas.Add(arizaOkumasi);
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(new { message = "Arıza kaydı oluşturuldu.", isEmriNo = isEmri.IsEmriNo });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { message = "Arıza kaydı oluşturulurken bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
+        }
+    }
+
+    // 4. Mühürleme Operasyonu
+    [HttpPost("SayacMuhurleme")]
+    public async Task<IActionResult> Muhurleme([FromBody] SayacMuhurlemeRequestDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            var isEmri = await _context.IsEmirleris
+                .Include(x => x.Sayac)
+                .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
+
+            if (isEmri == null) return NotFound(new { message = "İş emri bulunamadı." });
+            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
+
+            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Gerekce = dto.Gerekce;
+            isEmri.EskiMuhurNo = dto.EskiMuhurNo;
+            isEmri.YeniMuhurNo = dto.YeniMuhurNo;
+            isEmri.TutanakNo = dto.TutanakNo;
+            isEmri.SahaSonucu = "Mühürleme işlemi sahada tamamlandı.";
+            isEmri.AtananKullaniciId = dto.IslemYapanKullaniciId;
+            isEmri.UpdatedAt = DateTime.UtcNow;
+
+            if (isEmri.Sayac != null)
+            {
+                isEmri.Sayac.MuhurNo = dto.YeniMuhurNo;
+                isEmri.Sayac.UpdatedAt = DateTime.UtcNow;
+
+                // 3. Mühürleme Anındaki Tüm Endeksleri Logla (Gigachad Endeks Modeli)
+                var muhurOkumasi = new EndeksOkuma
+                {
+                    SayacId = isEmri.Sayac.SayacId,
+                    IsEmriId = isEmri.IsEmriId,
+                    OkumaTipi = "MUHURLEME_ENDEKSI",
+                    OkumaKaynagi = "MANUEL",
+                    YeniEndeks = dto.Aktif,
+                    GunduzEndeks = dto.Gunduz,
+                    PuantEndeks = dto.Puant,
+                    GeceEndeks = dto.Gece,
+                    InduktifEndeks = dto.Induktif,
+                    KapasitifEndeks = dto.Kapasitif,
+                    Demand = dto.Demand,
+                    OkumaZamani = DateTime.UtcNow,
+                    KullaniciId = dto.IslemYapanKullaniciId,
+                    DogrulamaDurumu = "ONAYLANDI",
+                    Status = "AKTIF",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.EndeksOkumas.Add(muhurOkumasi);
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(new { message = "Mühürleme işlemi başarıyla tamamlandı.", isEmriNo = isEmri.IsEmriNo });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { message = "Mühürleme işlemi sırasında bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
+        }
+    }
+
+    // 5. Yeni Bağlantı Operasyonu
+    [HttpPost("SayacYeniBaglanti")]
+    public async Task<IActionResult> YeniBaglanti([FromBody] SayacYeniBaglantiRequestDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            var isEmri = await _context.IsEmirleris
+                .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
+
+            if (isEmri == null) return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
+            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
+
+            // 1. İş Emrini Kapat
+            isEmri.Durum = "TAMAMLANDI";
+            isEmri.YeniSeriNo = dto.SeriNo; // Takılan sayacın seri nosu
+            isEmri.YapiTesisTipi = dto.BaglantiTipi;
+            isEmri.DamgaYili = dto.DamgaYili;
+            isEmri.YeniMuhurNo = dto.YeniMuhurNo;
+            isEmri.SahaSonucu = "Yeni bağlantı başarıyla sağlandı.";
+            isEmri.AtananKullaniciId = dto.IslemYapanKullaniciId;
+            isEmri.UpdatedAt = DateTime.UtcNow;
+
+            // 2. Depodaki Sayacı Bul ve Mekana Zımbala
+            var sayac = await _context.Sayaclars.FirstOrDefaultAsync(s => s.SeriNo == dto.SeriNo);
+            if (sayac == null) 
+                return BadRequest(new { message = $" {dto.SeriNo} numaralı sayaç sistemde (depoda) bulunamadı!" });
+
+            // Veritabanı raconuna tam uyum: Durumu "TAKILI" yapıyoruz
+            sayac.Durum = "TAKILI";
+            sayac.TuketimNoktasiId = isEmri.TuketimNoktasiId; // Sayacı mekana (Tüketim Noktasına) bağlıyoruz
+            sayac.MuhurNo = dto.YeniMuhurNo;
+            sayac.UpdatedAt = DateTime.UtcNow;
+
+            // İş emrinin referansını yeni bağlanan sayaca kaydırıyoruz
+            isEmri.SayacId = sayac.SayacId;
+
+            // 3. Sayacın İlk Endeksini (Genelde 0 veya düşük bir değer) Çak
+            var ilkOkuma = new EndeksOkuma
+            {
+                SayacId = sayac.SayacId,
+                IsEmriId = isEmri.IsEmriId,
+                OkumaTipi = "ILK_OKUMA",
+                OkumaKaynagi = "MANUEL",
+                YeniEndeks = dto.IlkEndeks, // Sadece aktif endeks geliyor
+                OkumaZamani = DateTime.UtcNow,
+                KullaniciId = dto.IslemYapanKullaniciId,
+                DogrulamaDurumu = "ONAYLANDI",
+                Status = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.EndeksOkumas.Add(ilkOkuma);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(new { message = "Yeni bağlantı başarıyla sağlandı.", isEmriNo = isEmri.IsEmriNo });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { message = "Yeni bağlantı oluşturulurken bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
+        }
+    }
+
+    // 6. Keşif Raporlama Operasyonu
+    [HttpPost("KesifRaporlama")]
+    public async Task<IActionResult> KesifRaporlama([FromBody] KesifRaporlamaRequestDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            var isEmri = await _context.IsEmirleris
+                .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
+
+            if (isEmri == null) return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
+            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu keşif zaten raporlanmış." });
+
+            // 1. İş Emrini Keşif Detaylarıyla Zırhlandır
+            isEmri.Durum = "TAMAMLANDI";
+            isEmri.PanoDirekNo = dto.PanoDirekNo;
+            isEmri.KesifSonucu = dto.KesifSonucu;
+            isEmri.YapiTesisTipi = dto.YapiTesisTipi;
+            isEmri.HatMesafesi = dto.HatMesafesi;
+            isEmri.TalepGucu = dto.TalepGucu;
+            isEmri.IncelemeNotu = dto.IncelemeNotu;
+            isEmri.SahaSonucu = "Keşif ve şebeke incelemesi tamamlandı.";
+            isEmri.AtananKullaniciId = dto.IslemYapanKullaniciId;
+            isEmri.UpdatedAt = DateTime.UtcNow;
+
+            // Burada sayaç veya endeks tablosuyla işimiz yok, direkt fişi çekiyoruz
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(new { message = "Keşif raporu başarıyla oluşturuldu.", isEmriNo = isEmri.IsEmriNo });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { message = "Keşif raporu oluşturulurken bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
+        }
     }
 }

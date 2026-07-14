@@ -26,6 +26,15 @@ public partial class Tarifeler
     
     [Column("gece_birim_fiyat")]
     public decimal? GeceBirimFiyat { get; set; }
+
+    [Column("induktif_birim_fiyat")]
+    public decimal? InduktifBirimFiyat { get; set; }
+
+    [Column("kapasitif_birim_fiyat")]
+    public decimal? KapasitifBirimFiyat { get; set; }
+
+    [Column("demand_birim_fiyat")]
+    public decimal? DemandBirimFiyat { get; set; }
     
     [Column("kdv_orani")]
     public decimal KdvOrani { get; set; }
@@ -41,4 +50,6 @@ public partial class Tarifeler
     
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    
 }

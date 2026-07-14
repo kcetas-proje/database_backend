@@ -22,18 +22,38 @@ namespace KcetasAboneApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFaturalar()
+        public async Task<IActionResult> GetFaturalar([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var faturalar = await _context.Faturas
-                .Where(f => f.Status == "AKTIF")
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+
+            var query = _context.Faturas.Where(f => f.Status == "AKTIF");
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var faturalar = await query
+                .OrderBy(f => f.FaturaId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            if (!faturalar.Any())
+            if (totalCount == 0)
             {
                 return NotFound("Sistemde aktif fatura bulunamadı.");
             }
 
-            return Ok(faturalar);
+            var response = new
+            {
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                PageSize = pageSize,
+                Data = faturalar
+            };
+
+            return Ok(response);
         }
 
         [HttpPost]

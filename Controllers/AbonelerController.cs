@@ -21,11 +21,35 @@ public class AbonelerController : ControllerBase
 
     // GET: api/Aboneler
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Aboneler>>> GetAboneler()
+    public async Task<IActionResult> GetAboneler([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        return await _context.Abonelers
+        // Güvenlik kontrolleri: Sayfa 1'den, istenen kayıt sayısı 1'den küçük olamaz.
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100; // API yorulmasın diye tek seferde en fazla 100 kayıt veriyoruz.
+
+        // 1. Veritabanındaki TOPLAM abone sayısını buluyoruz (Sayfa sayısını hesaplamak için)
+        var totalCount = await _context.Abonelers.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        // 2. Kullanıcının istediği sayfanın verilerini (sadece o kısmı) çekiyoruz
+        var aboneler = await _context.Abonelers
             .OrderBy(a => a.AboneId)
+            .Skip((page - 1) * pageSize) // Önceki sayfaların verilerini atla
+            .Take(pageSize)              // Kalanlardan istenen miktar (pageSize) kadar al
             .ToListAsync();
+
+        // 3. Veriyi ve sayfalama bilgilerini güzel bir JSON paketi halinde geri dönüyoruz
+        var response = new
+        {
+            TotalCount = totalCount,
+            TotalPages = totalPages,
+            CurrentPage = page,
+            PageSize = pageSize,
+            Data = aboneler
+        };
+
+        return Ok(response);
     }
 
     // GET: api/Aboneler/5

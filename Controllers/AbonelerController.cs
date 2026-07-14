@@ -19,6 +19,15 @@ public class AbonelerController : ControllerBase
         _context = context;
     }
 
+    // GET: api/Aboneler/All (Sayfalamasız tüm veriler)
+    [HttpGet("All")]
+    public async Task<ActionResult<IEnumerable<Aboneler>>> GetAllAboneler()
+    {
+        return await _context.Abonelers
+            .OrderBy(a => a.AboneId)
+            .ToListAsync();
+    }
+
     // GET: api/Aboneler
     [HttpGet]
     public async Task<IActionResult> GetAboneler([FromQuery] int page = 1, [FromQuery] int pageSize = 10)

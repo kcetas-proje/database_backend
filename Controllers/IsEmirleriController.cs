@@ -21,13 +21,33 @@ public class IsEmirleriController : ControllerBase
 
     // GET: api/IsEmirleri
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetIsEmirleri()
+    public async Task<IActionResult> GetIsEmirleri([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        return await _context.IsEmirleris
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var totalCount = await _context.IsEmirleris.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var isEmirleri = await _context.IsEmirleris
             .Include(i => i.Sayac)
             .Include(i => i.TuketimNoktasi)
             .OrderBy(i => i.IsEmriId)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        var response = new
+        {
+            TotalCount = totalCount,
+            TotalPages = totalPages,
+            CurrentPage = page,
+            PageSize = pageSize,
+            Data = isEmirleri
+        };
+
+        return Ok(response);
     }
 
     // GET: api/IsEmirleri/5

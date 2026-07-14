@@ -71,6 +71,43 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    // Sadece geliştirme (local) ortamında ve eğer fatura tablosu boşsa sahte veri üretelim
+    if (app.Environment.IsDevelopment() && !db.Faturas.Any())
+    {
+        var mevcutSozlesmeler = db.Sozlesmelers.Select(s => s.SozlesmeId).ToList();
+        
+        // Fatura kesebilmemiz için sistemde en az 1 sözleşme olması lazım
+        if (mevcutSozlesmeler.Any())
+        {
+            var faker = new Bogus.Faker<Fatura>("tr")
+                .RuleFor(f => f.FaturaNo, f => "FAT-" + f.Random.Number(100000, 999999))
+                .RuleFor(f => f.SozlesmeId, f => f.PickRandom(mevcutSozlesmeler))
+                .RuleFor(f => f.TekilKod, f => f.Random.String2(10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
+                .RuleFor(f => f.FaturaTipi, f => "DONEM")
+                .RuleFor(f => f.Donem, f => DateTime.UtcNow.ToString("yyyyMM"))
+                .RuleFor(f => f.FaturaTarihi, f => DateOnly.FromDateTime(f.Date.Recent(30)))
+                .RuleFor(f => f.SonOdemeTarihi, (f, u) => u.FaturaTarihi.AddDays(10))
+                .RuleFor(f => f.TuketimKwh, f => Math.Round(f.Random.Decimal(50, 500), 2))
+                .RuleFor(f => f.ToplamTutar, f => Math.Round(f.Random.Decimal(100, 1500), 2))
+                .RuleFor(f => f.EnerjiBedeli, (f, u) => Math.Round(u.ToplamTutar * 0.50m, 2))
+                .RuleFor(f => f.DagitimBedeli, (f, u) => Math.Round(u.ToplamTutar * 0.30m, 2))
+                .RuleFor(f => f.VergiFonToplam, (f, u) => Math.Round(u.ToplamTutar * 0.20m, 2))
+                .RuleFor(f => f.Durum, f => f.PickRandom("HESAPLANDI", "ONAYLANDI", "ODENDI"))
+                .RuleFor(f => f.Status, f => "AKTIF")
+                .RuleFor(f => f.CreatedAt, f => DateTime.UtcNow);
+
+            var sahteFaturalar = faker.Generate(25); // 25 adet sahte fatura
+            db.Faturas.AddRange(sahteFaturalar);
+            db.SaveChanges();
+            
+            Console.WriteLine("--> LOKAL ORTAM: 25 Adet Sahte Fatura (Bogus) Başarıyla Eklendi!");
+        }
+        else 
+        {
+            Console.WriteLine("--> LOKAL ORTAM: Fatura üretilemedi çünkü sistemde hiç 'Sözleşme' yok.");
+        }
+    }
 }
 
 app.UseSwagger();

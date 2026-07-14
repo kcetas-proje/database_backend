@@ -397,4 +397,53 @@ public class IsEmirleriController : ControllerBase
             return StatusCode(500, new { message = "İş emri tamamlanırken bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
         }
     }
+
+    [HttpPost("EnerjiAcma")]
+    public async Task<IActionResult> EnerjiAcma([FromBody] EnerjiAcmaDto dto)
+    {
+        var isEmri = await _context.IsEmirleris.FindAsync(dto.IsEmriId);
+        
+        if (isEmri == null)
+            return NotFound(new { message = "İş emri bulunamadı." });
+
+        if (isEmri.Durum == "TAMAMLANDI")
+            return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
+
+        // İş Emri Durum Güncellemesi
+        isEmri.Durum = "TAMAMLANDI";
+        isEmri.SahaSonucu = "Enerji Açıldı - Nokta: " + dto.AcmaNoktasi;
+        isEmri.MuhurNo = dto.MuhurNo;
+        isEmri.Gerekce = dto.Aciklama;
+        isEmri.UpdatedAt = DateTime.UtcNow;
+
+        // Endeks Okuma Kaydı (Enerji açılırken alınan ilk endeks)
+        if (isEmri.SayacId.HasValue && isEmri.TuketimNoktasiId > 0)
+        {
+            // İlgili sözleşmeyi bulalım (Tüketim noktasına bağlı aktif sözleşme)
+            var sozlesme = await _context.Sozlesmelers
+                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == isEmri.TuketimNoktasiId && s.Durum == "AKTIF");
+
+            var okuma = new EndeksOkuma
+            {
+                SayacId = isEmri.SayacId.Value,
+                IsEmriId = isEmri.IsEmriId,
+                SozlesmeId = sozlesme?.SozlesmeId,
+                OkumaTipi = "ACILIS",
+                OkumaKaynagi = "MOBIL",
+                OncekiEndeks = 0,
+                YeniEndeks = dto.Aktif,
+                OkumaZamani = DateTime.UtcNow,
+                DogrulamaDurumu = "ONAYLANDI",
+                AnomaliMi = false,
+                Status = "AKTIF",
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            _context.EndeksOkumas.Add(okuma);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Enerji açma işlemi başarıyla kaydedildi.", isEmriNo = isEmri.IsEmriNo });
+    }
 }

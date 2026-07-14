@@ -120,7 +120,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         {
             // Eğer sayaç ID gönderilmemişse ve yeni bağlantı değilse, o tüketim noktasındaki takılı sayacı otomatik bul.
             var takiliSayac = await _context.Sayaclars
-                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == dto.TuketimNoktasiId && s.Durum == "TAKILI");
+                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == dto.TuketimNoktasiId && (s.Durum == "TAKILI" || s.Durum == "AKTIF"));
             
             if (takiliSayac != null)
             {

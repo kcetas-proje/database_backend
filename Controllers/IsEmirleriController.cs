@@ -399,8 +399,13 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             }
 
             long sayacId = isEmri.SayacId.Value;
-
+            
+            // 1. İş Emrini Kapat ve Detayları Ekle
             isEmri.Durum = "TAMAMLANDI";
+            if (!string.IsNullOrEmpty(request.SahaSonucu))
+                isEmri.SahaSonucu = request.SahaSonucu;
+            
+            isEmri.UpdatedAt = DateTime.UtcNow;
 
             var sonOkuma = await _context.EndeksOkumas
                 .Where(e => e.SayacId == sayacId)
@@ -411,26 +416,35 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             {
                 "KESME" => "KESME_ENDEKSI",
                 "DEGISTIRME" => "SAYAC_DEGISIM_OKUMASI",
-                "SAYAC_ARIZA" => "SAYAC_DEGISIM_OKUMASI",
+                "SAYAC_ARIZA" => "SAYAC_ARIZA_OKUMASI", 
+                "MUHURLEME" => "MUHURLEME_ENDEKSI", 
                 "SOKME" => "SON_OKUMA",
                 "ENERJI_ACMA" => "ILK_OKUMA", 
                 "ACMA" => "ILK_OKUMA",
+                "YENI_BAGLANTI" => "ILK_OKUMA", 
                 _ => sonOkuma == null ? "ILK_OKUMA" : "RUTIN_DONEM"
             };
 
             var yeniEndeks = new EndeksOkuma
             {
-                SayacId = sayacId, 
+                SayacId = sayacId,
                 IsEmriId = isEmri.IsEmriId,
-                OkumaTipi = dinamikOkumaTipi, 
-                OkumaKaynagi = "MANUEL", 
+                OkumaTipi = dinamikOkumaTipi,
+                OkumaKaynagi = "MANUEL",
                 OncekiEndeks = sonOkuma?.YeniEndeks ?? 0m,
-                YeniEndeks = request.SonEndeks, 
+                YeniEndeks = request.SonEndeks,
+
+                GunduzEndeks = request.Gunduz,
+                PuantEndeks = request.Puant,
+                GeceEndeks = request.Gece,
+                InduktifEndeks = request.Induktif,
+                KapasitifEndeks = request.Kapasitif,
+                Demand = request.Demand,
+
+
                 Donem = $"{DateTime.UtcNow:yyyy/MM}",
                 OkumaZamani = DateTime.UtcNow,
-                
-                KullaniciId = request.IslemYapanKullaniciId, 
-                
+                KullaniciId = request.IslemYapanKullaniciId,
                 DogrulamaDurumu = "ONAYLANDI",
                 AnomaliMi = false,
                 Status = "AKTIF",
@@ -439,9 +453,19 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
             _context.EndeksOkumas.Add(yeniEndeks);
 
-            if (isEmri.Sayac != null && !string.IsNullOrEmpty(request.MuhurNo))
+            if (isEmri.Sayac != null)
             {
-                isEmri.Sayac.MuhurNo = request.MuhurNo;
+                if (!string.IsNullOrEmpty(request.MuhurNo))
+                    isEmri.Sayac.MuhurNo = request.MuhurNo;
+
+                isEmri.Sayac.Durum = isEmri.Tip switch
+                {
+                    "SOKME" => "SOKULMUS",
+                    "DEGISTIRME" => "SOKULMUS",
+                    "SAYAC_ARIZA" => "ARIZALI",
+                    _ => isEmri.Sayac.Durum 
+                };
+
                 isEmri.Sayac.UpdatedAt = DateTime.UtcNow;
             }
 

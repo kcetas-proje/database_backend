@@ -62,4 +62,9 @@ public partial class Fatura
     public virtual EndeksOkuma? Okuma { get; set; }
 
     public virtual Sozlesmeler Sozlesme { get; set; } = null!;
+
+    public static implicit operator Fatura(Fatura v)
+    {
+        throw new NotImplementedException();
+    }
 }

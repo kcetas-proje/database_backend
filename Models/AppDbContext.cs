@@ -19,6 +19,7 @@ public partial class AppDbContext : DbContext
     {
     }
 
+    public long? MevcutKullaniciId { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
     public virtual DbSet<EndeksOkuma> EndeksOkumas { get; set; }
     public virtual DbSet<EntegrasyonOutbox> EntegrasyonOutboxes { get; set; }
@@ -57,7 +58,7 @@ public partial class AppDbContext : DbContext
                     _ => "DIGER"
                 },
                 IslemZamani = DateTime.UtcNow,
-                KullaniciId = 1,
+                KullaniciId = this.MevcutKullaniciId ?? 1,
                 IslemGerekcesi = "Sistem Otomasyon İşlemi"
             };
 

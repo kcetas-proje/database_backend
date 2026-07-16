@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -29,21 +29,27 @@ public partial class EndeksOkuma
     public string OkumaKaynagi { get; set; } = null!;
 
     [Column("gunduz_endeks")]
+    [NotMapped]
     public decimal? GunduzEndeks { get; set; }
 
     [Column("puant_endeks")]
+    [NotMapped]
     public decimal? PuantEndeks { get; set; }
 
     [Column("gece_endeks")]
+    [NotMapped]
     public decimal? GeceEndeks { get; set; }
 
     [Column("induktif_endeks")]
+    [NotMapped]
     public decimal? InduktifEndeks { get; set; }
 
     [Column("kapasitif_endeks")]
+    [NotMapped]
     public decimal? KapasitifEndeks { get; set; }
 
     [Column("demand")]
+    [NotMapped]
     public decimal? Demand { get; set; }
 
     [Column("onceki_endeks")]

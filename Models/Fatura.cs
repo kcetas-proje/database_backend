@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace KcetasAboneApi.Models;
@@ -63,8 +63,4 @@ public partial class Fatura
 
     public virtual Sozlesmeler Sozlesme { get; set; } = null!;
 
-    public static implicit operator Fatura(Fatura v)
-    {
-        throw new NotImplementedException();
-    }
 }

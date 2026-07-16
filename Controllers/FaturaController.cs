@@ -155,6 +155,35 @@ namespace KcetasAboneApi.Controllers
             }
         }
 
+
+        [HttpPost("{faturaId}/tahsil-et")]
+        public async Task<IActionResult> FaturaTahsilEt(long faturaId)
+        {
+            // 1. Faturayı bul
+            var fatura = await _context.Faturas.FindAsync(faturaId);
+            if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
+
+            // 2. İş mantığı: Sadece 'ODENMEDI' veya 'GONDERILDI' durumundakiler tahsil edilebilir
+            // (İhtiyacına göre bu kontrolü esnetebilirsin)
+            if (fatura.Durum == "ODENDI") 
+                return BadRequest(new { message = "Bu fatura zaten daha önce tahsil edilmiş!" });
+            
+            if (fatura.Durum != "ODENMEDI" && fatura.Durum != "GONDERILDI")
+                return BadRequest(new { message = $"Sadece ODENMEDI veya GONDERILDI durumundaki faturalar tahsil edilebilir. Mevcut durum: {fatura.Durum}" });
+
+            // 3. Durumu güncelle
+            fatura.Durum = "ODENDI";
+            fatura.UpdatedAt = DateTime.UtcNow;
+
+            // 4. Kaydet
+            await _context.SaveChangesAsync();
+
+            return Ok(new { 
+                message = $"{fatura.FaturaNo} numaralı fatura başarıyla tahsil edildi!", 
+                tarih = DateTime.UtcNow 
+            });
+        }
+
         [HttpPost]
         public async Task<IActionResult> YeniFaturaEkle([FromBody] FaturaCreateDto dto)
         {

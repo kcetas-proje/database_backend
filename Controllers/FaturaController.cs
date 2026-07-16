@@ -1,7 +1,9 @@
 using KcetasAboneApi.Models;
+using KcetasAboneApi.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
@@ -53,16 +55,104 @@ namespace KcetasAboneApi.Controllers
                 return NotFound("Sistemde aktif fatura bulunamadı.");
             }
 
-            var response = new
+            return Ok(new
             {
                 TotalCount = totalCount,
                 TotalPages = totalPages,
                 CurrentPage = page,
                 PageSize = pageSize,
                 Data = faturalar
-            };
+            });
+        }
 
-            return Ok(response);
+        // ⚡ TEKLİ FATURA KESİMİ (Transaction + Outbox + Kalemler)
+        [HttpPost("FaturaKes")]
+        public async Task<IActionResult> FaturaKes([FromBody] FaturaKesRequestDto request)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var okuma = await _context.EndeksOkumas.FirstOrDefaultAsync(o => o.OkumaId == request.OkumaId);
+                if (okuma == null) return NotFound(new { message = "Okuma kaydı bulunamadı." });
+                if (okuma.DogrulamaDurumu != "ONAYLANDI") return BadRequest(new { message = "Onaylanmamış okumadan fatura kesilemez!" });
+
+                bool faturaVarMi = await _context.Faturas.AnyAsync(f => f.OkumaId == request.OkumaId && f.Status == "AKTIF");
+                if (faturaVarMi) return BadRequest(new { message = "Bu okuma için zaten fatura kesilmiş boss!" });
+
+                var sozlesme = await _context.Sozlesmelers.FirstOrDefaultAsync(s => s.SozlesmeId == request.SozlesmeId);
+                if (sozlesme == null) return NotFound(new { message = "Sözleşme bulunamadı." });
+
+                decimal carpan = 1.000m; 
+                decimal oncekiEndeksDegeri = okuma.OncekiEndeks ?? 0m; // Null güvenliği
+                decimal tuketimKwh = (okuma.YeniEndeks - oncekiEndeksDegeri) * carpan;
+                if (tuketimKwh < 0) tuketimKwh = 0; 
+
+                decimal enerjiBirimFiyat = 2.50m;
+                decimal dagitimBirimFiyat = 1.20m;
+                
+                decimal enerjiBedeli = tuketimKwh * enerjiBirimFiyat;
+                decimal dagitimBedeli = tuketimKwh * dagitimBirimFiyat;
+                decimal vergiFonToplam = enerjiBedeli * 0.20m; 
+                decimal toplamTutar = enerjiBedeli + dagitimBedeli + vergiFonToplam;
+
+                var fatura = new Fatura
+                {
+                    FaturaNo = $"FAT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0,6).ToUpper()}",
+                    SozlesmeId = request.SozlesmeId,
+                    OkumaId = okuma.OkumaId,
+                    Donem = okuma.Donem,
+                    FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow), // Model uyumu
+                    SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)), // Model uyumu
+                    IlkEndeks = oncekiEndeksDegeri,
+                    SonEndeks = okuma.YeniEndeks,
+                    TuketimKwh = tuketimKwh,
+                    Carpan = carpan,
+                    EnerjiBedeli = enerjiBedeli,
+                    DagitimBedeli = dagitimBedeli,
+                    VergiFonToplam = vergiFonToplam,
+                    ToplamTutar = toplamTutar,
+                    Durum = "ONAYLANDI", 
+                    Status = "AKTIF",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Faturas.Add(fatura);
+                await _context.SaveChangesAsync(); 
+
+                var kalemler = new List<FaturaKalemi>
+                {
+                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = "ENERJI_BEDELI", Miktar = tuketimKwh, BirimFiyat = enerjiBirimFiyat, Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
+                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = "DAGITIM_BEDELI", Miktar = tuketimKwh, BirimFiyat = dagitimBirimFiyat, Tutar = dagitimBedeli, Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
+                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = "VERGI_FON", Miktar = 1, BirimFiyat = vergiFonToplam, Tutar = vergiFonToplam, Aciklama = "KDV ve Diğer Fonlar" }
+                };
+                
+                _context.FaturaKalemis.AddRange(kalemler);
+
+                _context.MevcutKullaniciId = request.IslemYapanKullaniciId; 
+
+                var outboxKargosu = new EntegrasyonOutbox
+                {
+                    FaturaId = fatura.FaturaId,
+                    HedefSistem = "GIB_EFATURA",
+                    Durum = "BEKLIYOR",
+                    IdempotencyKey = Guid.NewGuid().ToString(),
+                    Payload = JsonSerializer.Serialize(new { faturaNo = fatura.FaturaNo, tutar = fatura.ToplamTutar, vergi = fatura.VergiFonToplam }),
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.EntegrasyonOutboxes.Add(outboxKargosu);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Fatura kesildi", faturaNo = fatura.FaturaNo, tutar = fatura.ToplamTutar });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Hata oluştu", error = ex.InnerException?.Message ?? ex.Message });
+            }
         }
 
         [HttpPost]
@@ -71,27 +161,25 @@ namespace KcetasAboneApi.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try 
             {
-                // 1. Sözleşme ve Sayaç Bulma
                 var sozlesme = await _context.Sozlesmelers
                     .Include(s => s.TuketimNoktasi)
-                    .ThenInclude(t => t.Sayaclars)
+                        .ThenInclude(t => t.Sayaclars)
                     .FirstOrDefaultAsync(s => s.SozlesmeId == dto.SozlesmeId);
                     
                 if (sozlesme == null) 
-                    return NotFound("Sözleşme bulunamadı");
+                    return NotFound("Sözleşme bulunamadı.");
                     
                 var sayac = sozlesme.TuketimNoktasi?.Sayaclars?.FirstOrDefault();
                 if (sayac == null) 
-                    return BadRequest("Bu sözleşmeye bağlı bir sayaç bulunamadı.");
+                    return BadRequest("Bu sözleşmeye bağlı aktif sayaç yok!");
 
-                // 2. Endeks Okuma Kaydı
                 var yeniOkuma = new EndeksOkuma
                 {
                     SayacId = sayac.SayacId,
                     IsEmriId = dto.IsEmriId,
                     SozlesmeId = dto.SozlesmeId,
                     OkumaTipi = "RUTIN_DONEM",
-                    OkumaKaynagi = "MANUEL",
+                    OkumaKaynagi = "OSOS",
                     OncekiEndeks = dto.IlkEndeks,
                     YeniEndeks = dto.SonEndeks,
                     Donem = dto.Donem,
@@ -104,11 +192,14 @@ namespace KcetasAboneApi.Controllers
                 };
                 
                 _context.EndeksOkumas.Add(yeniOkuma);
-                await _context.SaveChangesAsync(); // OkumaId almak için
+                await _context.SaveChangesAsync(); 
 
-                // 3. Fatura Kaydı
                 string rasgeleFaturaNo = "FAT" + DateTime.Now.ToString("yyyyMMddHHmmss");
                 string rasgeleTekilKod = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+
+                decimal enerjiBedeli = dto.ToplamTutar * 0.50m;
+                decimal dagitimBedeli = dto.ToplamTutar * 0.30m;
+                decimal vergiFonBedeli = dto.ToplamTutar * 0.20m;
 
                 var yeniFatura = new Fatura
                 {
@@ -126,20 +217,28 @@ namespace KcetasAboneApi.Controllers
                     ReaktifEnduktif = dto.ReaktifEnduktif,
                     ReaktifKapasitif = dto.ReaktifKapasitif,
                     ToplamTutar = dto.ToplamTutar,
-                    EnerjiBedeli = dto.ToplamTutar * 0.50m,
-                    DagitimBedeli = dto.ToplamTutar * 0.30m,
-                    VergiFonToplam = dto.ToplamTutar * 0.20m,
+                    EnerjiBedeli = enerjiBedeli,
+                    DagitimBedeli = dagitimBedeli,
+                    VergiFonToplam = vergiFonBedeli,
                     HizmetBedeli = 0m,
                     KesmeBaglamaBedeli = 0m,
                     Carpan = 1m,
                     Durum = string.IsNullOrEmpty(dto.Durum) ? "ODENMEDI" : dto.Durum, 
                     Status = "AKTIF",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+
+                    // 🚀 FAT-REQ-02: Fatura Kalemleri otomatik doğuyor
+                    FaturaKalemis = new List<FaturaKalemi>
+                    {
+                        new FaturaKalemi { KalemTipi = "ENERJI_BEDELI", Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(enerjiBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
+                        new FaturaKalemi { KalemTipi = "DAGITIM_BEDELI", Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(dagitimBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = dagitimBedeli, Aciklama = "Dağıtım Bedeli" },
+                        new FaturaKalemi { KalemTipi = "VERGI_FON", Miktar = 1, BirimFiyat = vergiFonBedeli, Tutar = vergiFonBedeli, Aciklama = "Yasal Vergiler ve Fonlar" }
+                    }
                 };
 
                 _context.Faturas.Add(yeniFatura);
 
-                // İş emri varsa tamamla
+                // 4. İş Emri Varsa Kapat
                 if (dto.IsEmriId.HasValue) 
                 {
                     var isEmri = await _context.IsEmirleris.FindAsync(dto.IsEmriId.Value);
@@ -150,7 +249,8 @@ namespace KcetasAboneApi.Controllers
                     }
                 }
 
-                // 4. Outbox Kaydı
+                _context.MevcutKullaniciId = dto.KullaniciId;
+
                 var payloadData = new 
                 {
                     FaturaNo = yeniFatura.FaturaNo,
@@ -181,7 +281,7 @@ namespace KcetasAboneApi.Controllers
             {
                 await transaction.RollbackAsync();
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : "";
-                return StatusCode(500, new { message = "Fatura oluşturulurken hata oluştu", details = ex.Message, inner = innerMessage });
+                return StatusCode(500, new { message = "Fatura oluştururken bir hata oluştu.", details = ex.Message, inner = innerMessage });
             }
         }
 
@@ -207,235 +307,156 @@ namespace KcetasAboneApi.Controllers
         public async Task<IActionResult> FaturaSil(long id)
         {
             var dbFatura = await _context.Faturas.FindAsync(id);
-
-            if (dbFatura == null)
-            {
-                return NotFound("Böyle bir fatura bulunamadı.");
-            }
+            if (dbFatura == null) return NotFound("Böyle bir fatura bulunamadı.");
 
             dbFatura.Status = "PASIF";
             dbFatura.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                mesaj = $"{dbFatura.FaturaNo} numaralı fatura başarıyla pasif duruma alındı."
-            });
+            return Ok(new { mesaj = $"{dbFatura.FaturaNo} numaralı fatura başarıyla pasif duruma alındı." });
         }
 
-        [HttpPost("hesapla/{endeksOkumaId}")]
-        public async Task<ActionResult> FaturaKes(long endeksOkumaId)
+        // 🔓 FATURA ONAYLAMA (Outbox Postacısını Tetikler)
+        [HttpPost("{faturaId}/onayla")]
+        public async Task<IActionResult> FaturaOnayla(long faturaId)
         {
-            var okuma = await _context.EndeksOkumas.FindAsync(endeksOkumaId);
-            if (okuma == null) 
-                return NotFound(new { message = "Okuma kaydı bulunamadı." });
+            var fatura = await _context.Faturas.FindAsync(faturaId);
+            if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
+            if (fatura.Durum != "HESAPLANDI") return BadRequest(new { message = $"Sadece HESAPLANDI olanlar onaylanabilir." });
 
-            var sozlesme = await _context.Sozlesmelers
-                .Include(s => s.Tarife) 
-                .FirstOrDefaultAsync(s => s.SozlesmeId == okuma.SozlesmeId);
+            fatura.Durum = "ONAYLANDI";
+            fatura.UpdatedAt = DateTime.UtcNow;
 
-            if (sozlesme == null || sozlesme.Tarife == null)
-                return BadRequest(new { message = "Sözleşme veya Tarife bulunamadı." });
-
-            decimal tuketimMiktari = Convert.ToDecimal(okuma.YeniEndeks - (okuma.OncekiEndeks ?? 0));
-            
-            if (tuketimMiktari < 0) 
-                return BadRequest(new { message = "Tüketim miktarı negatif olamaz." });
-
-            decimal aktifEnerjiTutari = tuketimMiktari * Convert.ToDecimal(sozlesme.Tarife.GunduzBirimFiyat); 
-            decimal dagitimTutari = tuketimMiktari * Convert.ToDecimal(sozlesme.Tarife.DagitimBedeli);
-            decimal vergisizToplam = aktifEnerjiTutari + dagitimTutari;
-
-            decimal kdvCarpani = Convert.ToDecimal(sozlesme.Tarife.KdvOrani >= 1 ? (sozlesme.Tarife.KdvOrani / 100m) : sozlesme.Tarife.KdvOrani);
-            decimal kdvTutari = vergisizToplam * kdvCarpani;
-            decimal genelToplam = Math.Round(vergisizToplam + kdvTutari, 2);
-
-            // 3. FATURA NUMARASI VE DÖNEM ÜRETİMİ
-            var buAykiSayi = await _context.Faturas.CountAsync(f => f.FaturaTarihi.Year == DateTime.UtcNow.Year && f.FaturaTarihi.Month == DateTime.UtcNow.Month);
-            string faturaNumarasi = $"FAT-{DateTime.UtcNow:yyyyMM}-{(buAykiSayi + 1).ToString("D5")}"; 
-            string donemBilgisi = DateTime.UtcNow.ToString("yyyyMM"); 
-            string benzersizTekilKod = Guid.NewGuid().ToString("N")[..10].ToUpper(); 
-
-            bool faturaZatenVarMi = await _context.Faturas
-                .AnyAsync(f => f.SozlesmeId == sozlesme.SozlesmeId 
-                            && f.Donem == donemBilgisi 
-                            && f.FaturaTipi == "DONEM" 
-                            && f.Status == "AKTIF" 
-                            && f.Durum != "IPTAL");
-
-            if (faturaZatenVarMi)
+            var outboxKargosu = new EntegrasyonOutbox
             {
-                return BadRequest(new { 
-                    message = "Bu sözleşme için bu döneme ait aktif bir fatura zaten mevcut. Lütfen önce mevcut faturayı iptal edin veya onaylayın." 
-                });
-            }
-
-            // 4. FATURAYI VERİTABANINA BASMA
-            var yeniFatura = new Fatura
-            {
-                FaturaNo = faturaNumarasi,
-                SozlesmeId = sozlesme.SozlesmeId,
-                TekilKod = benzersizTekilKod,
-                FaturaTipi = "DONEM",
-                Donem = donemBilgisi,
-                
-                FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
-                SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                
-                OkumaId = okuma.OkumaId,
-                IlkEndeks = okuma.OncekiEndeks ?? 0,
-                SonEndeks = okuma.YeniEndeks,
-                TuketimKwh = tuketimMiktari,
-                Carpan = 1.0m, 
-                ReaktifEnduktif = 0, 
-                ReaktifKapasitif = 0,
-
-                EnerjiBedeli = aktifEnerjiTutari,
-                DagitimBedeli = dagitimTutari,
-                HizmetBedeli = 0, 
-                KesmeBaglamaBedeli = 0,
-                VergiFonToplam = kdvTutari, 
-                ToplamTutar = genelToplam,
-                
-                Durum = "HESAPLANDI",
-                Status = "AKTIF",
+                FaturaId = fatura.FaturaId,
+                HedefSistem = "GIB_EFATURA",
+                Durum = "BEKLIYOR",
+                IdempotencyKey = Guid.NewGuid().ToString(),
+                Payload = JsonSerializer.Serialize(new { faturaNo = fatura.FaturaNo, tutar = fatura.ToplamTutar }),
                 CreatedAt = DateTime.UtcNow
             };
-
-            _context.Faturas.Add(yeniFatura);
+            
+            _context.EntegrasyonOutboxes.Add(outboxKargosu);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Fatura oluşturuldu!", fatura = yeniFatura });
+            return Ok(new { message = "Fatura onaylandı ve GİB'e gönderildi!", faturaNo = fatura.FaturaNo });
         }
 
-    [HttpPost("{faturaId}/onayla")]
-    public async Task<IActionResult> FaturaOnayla(long faturaId)
-    {
-        var fatura = await _context.Faturas.FindAsync(faturaId);
-        
-        if (fatura == null) 
-            return NotFound(new { message = "Fatura bulunamadı!" });
-
-        if (fatura.Durum != "HESAPLANDI")
-            return BadRequest(new { message = $"Fatura şu an '{fatura.Durum}' durumunda. Sadece HESAPLANDI olanlar onaylanabilir." });
-
-        // Statüyü güncelliyoruz
-        fatura.Durum = "ONAYLANDI";
-        fatura.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Fatura onaylandı!", faturaNo = fatura.FaturaNo });
-    }
-
-    [HttpPost("{faturaId}/iptal")]
-    public async Task<IActionResult> FaturaIptal(long faturaId)
-    {
-        var fatura = await _context.Faturas.FindAsync(faturaId);
-        
-        if (fatura == null) 
-            return NotFound(new { message = "Fatura bulunamadı!" });
-
-        if (fatura.Durum == "GONDERILDI" || fatura.Durum == "IPTAL")
-            return BadRequest(new { message = "Fatura zaten gönderilmiş veya iptal edilmiş!" });
-
-        fatura.Durum = "IPTAL";
-        fatura.Status = "PASIF"; 
-        fatura.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Fatura iptal edildi!", faturaNo = fatura.FaturaNo });
-    }
-
-    [HttpPost("generate-faturalar")]
-    public async Task<IActionResult> GenerateFaturalar()
-    {
-
-        var okunmusEndeksler = await _context.EndeksOkumas
-            .Include(e => e.Sozlesme)
-                .ThenInclude(s => s.TuketimNoktasi) 
-            .Include(e => e.Sozlesme)
-                .ThenInclude(s => s.Tarife)
-            .Include(e => e.Sayac)
-            .Where(e => e.DogrulamaDurumu == "ONAYLANDI")
-            .ToListAsync();
-
-        if (!okunmusEndeksler.Any())
-            return BadRequest(new { message = "Onaylanan endeksler bulunamadı." });
-
-        var yeniFaturalar = new List<Fatura>();
-        string faturaPrefix = $"FAT-{DateTime.UtcNow:yyyyMM}-";
-        int faturaSira = 1;
-
-        foreach (var endeks in okunmusEndeksler)
+        [HttpPost("{faturaId}/iptal")]
+        public async Task<IActionResult> FaturaIptal(long faturaId)
         {
-            // ⚡ Net tüketim hesabı
-            decimal hamTuketim = (decimal)(endeks.YeniEndeks - endeks.OncekiEndeks!);
-            if (hamTuketim <= 0) continue; 
+            var fatura = await _context.Faturas.FindAsync(faturaId);
+            if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
 
-            decimal carpan = endeks.Sayac?.Carpan ?? 1m;
-            decimal gercekTuketimKwh = hamTuketim * carpan;
+            if (fatura.Durum == "GONDERILDI" || fatura.Durum == "IPTAL")
+                return BadRequest(new { message = "Fatura zaten gönderilmiş veya iptal edilmiş!" });
 
-            var tarife = endeks.Sozlesme.Tarife;
+            fatura.Durum = "IPTAL";
+            fatura.Status = "PASIF"; 
+            fatura.UpdatedAt = DateTime.UtcNow;
 
-            decimal enerjiBedeli = gercekTuketimKwh * tarife.GunduzBirimFiyat; 
-            decimal dagitimBedeli = gercekTuketimKwh * tarife.DagitimBedeli;
-            
-            decimal hizmetBedeli = 15.50m; 
-
-            decimal vergisizToplam = enerjiBedeli + dagitimBedeli;
-            decimal vergiFon = vergisizToplam * (tarife.KdvOrani / 100m); 
-            
-            decimal toplamTutar = vergisizToplam + hizmetBedeli + vergiFon;
-
-            var yeniFatura = new Fatura
-            {
-                FaturaNo = $"{faturaPrefix}{faturaSira:D4}",
-                SozlesmeId = endeks.SozlesmeId.Value,
-                TekilKod = endeks.Sozlesme.TuketimNoktasi!.TekilKod, 
-                FaturaTipi = "DONEM",
-                Donem = endeks.Donem,
-
-                FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
-                SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
-                
-                OkumaId = endeks.OkumaId,
-                IlkEndeks = endeks.OncekiEndeks,
-                SonEndeks = endeks.YeniEndeks,
-                TuketimKwh = Math.Round(gercekTuketimKwh, 2),
-                
-                ReaktifEnduktif = 0m,
-                ReaktifKapasitif = 0m,
-                Carpan = carpan,
-                
-                EnerjiBedeli = Math.Round(enerjiBedeli, 2),
-                DagitimBedeli = Math.Round(dagitimBedeli, 2),
-                HizmetBedeli = hizmetBedeli,
-                KesmeBaglamaBedeli = 0m, 
-                VergiFonToplam = Math.Round(vergiFon, 2),
-                ToplamTutar = Math.Round(toplamTutar, 2),
-                
-                Durum = "HESAPLANDI",
-                Status = "AKTIF",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            yeniFaturalar.Add(yeniFatura);
-
-            endeks.DogrulamaDurumu = "TAHAKKUKA_AKTARILDI";
-            
-            faturaSira++;
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Fatura iptal edildi!", faturaNo = fatura.FaturaNo });
         }
-        _context.Faturas.AddRange(yeniFaturalar);
-        await _context.SaveChangesAsync();
 
-        return Ok(new 
-        { 
-            message = $"{yeniFaturalar.Count} adet fatura başarıyla oluşturuldu.",
-            beklenenCiro = yeniFaturalar.Sum(f => f.ToplamTutar) + " TL"
-        });
-    }
+        // 🏭 TOPLU FATURA MOTORU (Transaction + FaturaKalemi listeleri)
+        [HttpPost("generate-faturalar")]
+        public async Task<IActionResult> GenerateFaturalar()
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var okunmusEndeksler = await _context.EndeksOkumas
+                    .Include(e => e.Sozlesme).ThenInclude(s => s.TuketimNoktasi) 
+                    .Include(e => e.Sozlesme).ThenInclude(s => s.Tarife)
+                    .Include(e => e.Sayac)
+                    .Where(e => e.DogrulamaDurumu == "ONAYLANDI")
+                    .ToListAsync();
+
+                if (!okunmusEndeksler.Any())
+                    return BadRequest(new { message = "Onaylanan endeksler bulunamadı." });
+
+                var yeniFaturalar = new List<Fatura>();
+                string faturaPrefix = $"FAT-{DateTime.UtcNow:yyyyMM}-";
+                
+                int faturaSira = await _context.Faturas.CountAsync(f => f.FaturaTarihi.Year == DateTime.UtcNow.Year && f.FaturaTarihi.Month == DateTime.UtcNow.Month) + 1;
+
+                foreach (var endeks in okunmusEndeksler)
+                {
+                    decimal hamTuketim = (decimal)(endeks.YeniEndeks - endeks.OncekiEndeks!);
+                    if (hamTuketim <= 0) continue; 
+
+                    decimal carpan = endeks.Sayac?.Carpan ?? 1m;
+                    decimal gercekTuketimKwh = hamTuketim * carpan;
+
+                    var tarife = endeks.Sozlesme.Tarife;
+
+                    decimal enerjiBedeli = gercekTuketimKwh * tarife.GunduzBirimFiyat; 
+                    decimal dagitimBedeli = gercekTuketimKwh * tarife.DagitimBedeli;
+                    decimal hizmetBedeli = 15.50m; 
+
+                    decimal vergisizToplam = enerjiBedeli + dagitimBedeli;
+                    decimal vergiFon = vergisizToplam * (tarife.KdvOrani / 100m); 
+                    decimal toplamTutar = vergisizToplam + hizmetBedeli + vergiFon;
+
+                    var yeniFatura = new Fatura
+                    {
+                        FaturaNo = $"{faturaPrefix}{faturaSira:D5}",
+                        SozlesmeId = endeks.SozlesmeId.Value,
+                        TekilKod = endeks.Sozlesme.TuketimNoktasi!.TekilKod, 
+                        FaturaTipi = "DONEM",
+                        Donem = endeks.Donem,
+                        FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
+                        SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                        OkumaId = endeks.OkumaId,
+                        IlkEndeks = endeks.OncekiEndeks,
+                        SonEndeks = endeks.YeniEndeks,
+                        TuketimKwh = Math.Round(gercekTuketimKwh, 2),
+                        ReaktifEnduktif = 0m,
+                        ReaktifKapasitif = 0m,
+                        Carpan = carpan,
+                        EnerjiBedeli = Math.Round(enerjiBedeli, 2),
+                        DagitimBedeli = Math.Round(dagitimBedeli, 2),
+                        HizmetBedeli = hizmetBedeli,
+                        KesmeBaglamaBedeli = 0m, 
+                        VergiFonToplam = Math.Round(vergiFon, 2),
+                        ToplamTutar = Math.Round(toplamTutar, 2),
+                        Durum = "HESAPLANDI",
+                        Status = "AKTIF",
+                        CreatedAt = DateTime.UtcNow,
+
+                        FaturaKalemis = new List<FaturaKalemi>
+                        {
+                            new FaturaKalemi { KalemTipi = "ENERJI_BEDELI", Miktar = gercekTuketimKwh, BirimFiyat = tarife.GunduzBirimFiyat, Tutar = Math.Round(enerjiBedeli, 2), Aciklama = "Aktif Enerji Bedeli" },
+                            new FaturaKalemi { KalemTipi = "DAGITIM_BEDELI", Miktar = gercekTuketimKwh, BirimFiyat = tarife.DagitimBedeli, Tutar = Math.Round(dagitimBedeli, 2), Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
+                            new FaturaKalemi { KalemTipi = "HIZMET_BEDELI", Miktar = 1, BirimFiyat = hizmetBedeli, Tutar = hizmetBedeli, Aciklama = "Sabit Hizmet Bedeli" },
+                            new FaturaKalemi { KalemTipi = "VERGI_FON", Miktar = 1, BirimFiyat = Math.Round(vergiFon, 2), Tutar = Math.Round(vergiFon, 2), Aciklama = "KDV ve Diğer Fonlar" }
+                        }
+                    };
+
+                    yeniFaturalar.Add(yeniFatura);
+                    endeks.DogrulamaDurumu = "TAHAKKUKA_AKTARILDI";
+                    faturaSira++;
+                }
+
+                _context.Faturas.AddRange(yeniFaturalar);
+                
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new 
+                { 
+                    message = $"{yeniFaturalar.Count} adet fatura başarıyla oluşturuldu.",
+                    beklenenCiro = yeniFaturalar.Sum(f => f.ToplamTutar) + " TL"
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
     }
 }

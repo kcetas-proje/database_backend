@@ -3104,19 +3104,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/akinaslanoglu/.nuget/packages/": {}
+    "C:\\Users\\Caner\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/akinaslanoglu/Downloads/kcetas_proje-databaseapi 2/KcetasAboneApi.csproj",
+      "projectUniqueName": "C:\\Users\\Caner\\Desktop\\KcetasAboneApi\\kcetas_proje\\KcetasAboneApi.csproj",
       "projectName": "KcetasAboneApi",
-      "projectPath": "/Users/akinaslanoglu/Downloads/kcetas_proje-databaseapi 2/KcetasAboneApi.csproj",
-      "packagesPath": "/Users/akinaslanoglu/.nuget/packages/",
-      "outputPath": "/Users/akinaslanoglu/Downloads/kcetas_proje-databaseapi 2/obj/",
+      "projectPath": "C:\\Users\\Caner\\Desktop\\KcetasAboneApi\\kcetas_proje\\KcetasAboneApi.csproj",
+      "packagesPath": "C:\\Users\\Caner\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Caner\\Desktop\\KcetasAboneApi\\kcetas_proje\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/akinaslanoglu/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Caner\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -3208,7 +3208,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.302/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

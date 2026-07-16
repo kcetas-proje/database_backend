@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KcetasAboneApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+47b8d6e288ca5edc37c548365e92415466adda44")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+46d0e13cde7dc84723ac2bf2fe9b7a36868b0dbe")]
 [assembly: System.Reflection.AssemblyProductAttribute("KcetasAboneApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KcetasAboneApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -700,6 +700,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         
         try
         {
+            // 1. İş emrini Sayac'ı ile birlikte çek (Eğer sayaç null gelirse SayacId'den manuel bulacağız)
             var isEmri = await _context.IsEmirleris
                 .Include(x => x.Sayac)
                 .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
@@ -707,6 +708,13 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             if (isEmri == null) return NotFound(new { message = "İş emri bulunamadı." });
             if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten kapatılmış." });
 
+            // 2. Eğer isEmri.Sayac hala null ise, SayacId'den manuel çek (Kritik Racon!)
+            if (isEmri.Sayac == null && isEmri.SayacId.HasValue)
+            {
+                isEmri.Sayac = await _context.Sayaclars.FindAsync(isEmri.SayacId.Value);
+            }
+
+            // 3. İş emri statülerini mühürle
             isEmri.Durum = "TAMAMLANDI";
             isEmri.ArizaTipi = dto.ArizaTipi; 
             isEmri.SahaSonucu = dto.SahaSonucu;
@@ -714,6 +722,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             isEmri.AtananKullaniciId = dto.IslemYapanKullaniciId;
             isEmri.UpdatedAt = DateTime.UtcNow;
 
+            // 4. Sayaç işlemleri (Bağlantı sağlandıysa)
             if (isEmri.Sayac != null)
             {
                 isEmri.Sayac.Durum = "ARIZALI"; 
@@ -721,17 +730,17 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
                 var arizaOkumasi = new EndeksOkuma
                 {
-                    SayacId = isEmri.Sayac.SayacId,
+                    SayacId = isEmri.Sayac.SayacId, // Artık null dönmez!
                     IsEmriId = isEmri.IsEmriId,
                     OkumaTipi = "SAYAC_ARIZA_OKUMASI",
-                    OkumaKaynagi = "MANUEL", // veya "MOBIL"
-                    YeniEndeks = dto.Aktif, // T0
-                    GunduzEndeks = dto.Gunduz, // T1
-                    PuantEndeks = dto.Puant, // T2
-                    GeceEndeks = dto.Gece, // T3
-                    InduktifEndeks = dto.Induktif, // Ceza
-                    KapasitifEndeks = dto.Kapasitif, // Ceza
-                    Demand = dto.Demand, // Güç
+                    OkumaKaynagi = "MANUEL", 
+                    YeniEndeks = dto.Aktif,
+                    GunduzEndeks = dto.Gunduz,
+                    PuantEndeks = dto.Puant,
+                    GeceEndeks = dto.Gece,
+                    InduktifEndeks = dto.Induktif,
+                    KapasitifEndeks = dto.Kapasitif,
+                    Demand = dto.Demand,
                     OkumaZamani = DateTime.UtcNow,
                     KullaniciId = dto.IslemYapanKullaniciId,
                     DogrulamaDurumu = "ONAYLANDI",
@@ -740,16 +749,21 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 };
                 _context.EndeksOkumas.Add(arizaOkumasi);
             }
+            else 
+            {
+                // Eğer sayaç hala yoksa transaction'ı iptal edip log tutmak en iyisidir
+                throw new Exception("İş emrine bağlı hiçbir sayaç bilgisi bulunamadı!");
+            }
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return Ok(new { message = "Arıza kaydı oluşturuldu.", isEmriNo = isEmri.IsEmriNo });
+            return Ok(new { message = "Arıza kaydı başarıyla tamamlandı.", isEmriNo = isEmri.IsEmriNo });
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            return StatusCode(500, new { message = "Arıza kaydı oluşturulurken bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
+            return StatusCode(500, new { message = "Arıza kaydı sırasında hata oluştu.", error = ex.Message });
         }
     }
 

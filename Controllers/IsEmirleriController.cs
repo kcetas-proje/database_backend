@@ -751,7 +751,6 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             }
             else 
             {
-                // Eğer sayaç hala yoksa transaction'ı iptal edip log tutmak en iyisidir
                 throw new Exception("İş emrine bağlı hiçbir sayaç bilgisi bulunamadı!");
             }
 

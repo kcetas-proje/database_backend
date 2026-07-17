@@ -85,6 +85,12 @@ namespace KcetasAboneApi.Controllers
 
                 decimal carpan = 1.000m; 
                 decimal oncekiEndeksDegeri = okuma.OncekiEndeks ?? 0m; // Null güvenliği
+
+                if (oncekiEndeksDegeri > okuma.YeniEndeks)
+                {
+                    return BadRequest(new { message = "İlk endeks, son endeksten büyük olamaz." });
+                }
+
                 decimal tuketimKwh = (okuma.YeniEndeks - oncekiEndeksDegeri) * carpan;
                 if (tuketimKwh < 0) tuketimKwh = 0; 
 
@@ -190,6 +196,12 @@ namespace KcetasAboneApi.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try 
             {
+
+                if (dto.IlkEndeks > dto.SonEndeks)
+                {
+                    return BadRequest(new { message = "İlk endeks, son endeksten büyük olamaz." });
+                }
+
                 var sozlesme = await _context.Sozlesmelers
                     .Include(s => s.TuketimNoktasi)
                         .ThenInclude(t => t.Sayaclars)

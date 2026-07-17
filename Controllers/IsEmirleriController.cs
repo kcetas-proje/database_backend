@@ -953,4 +953,38 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             return StatusCode(500, new { message = "Keşif raporu oluşturulurken bir hata oluştu.", error = ex.InnerException?.Message ?? ex.Message });
         }
     }
+
+    [HttpPost("otomatik-atama")]
+public async Task<IActionResult> OtomatikAtamaYap()
+{
+
+    var sahipsizIsEmirleri = await _context.IsEmirleris
+        .Where(i => i.AtananKullaniciId == null && i.Durum == "ACIK")
+        .ToListAsync();
+
+    var sahaEkipleri = await _context.Kullanicilars
+        .Where(k => k.RolId == 1)
+        .ToListAsync();
+
+    if (!sahipsizIsEmirleri.Any() || !sahaEkipleri.Any())
+        return BadRequest(new { message = "Atanacak iş emri veya atanacak kullanıcı kalmamış!" });
+
+    int atananSayisi = 0;
+    int ekipIndex = 0;
+
+    foreach (var isEmri in sahipsizIsEmirleri)
+    {
+        isEmri.AtananKullaniciId = sahaEkipleri[ekipIndex].KullaniciId;
+        isEmri.Durum = "ATANDI";
+        
+        ekipIndex++;
+        if (ekipIndex >= sahaEkipleri.Count) ekipIndex = 0; 
+        
+        atananSayisi++;
+    }
+
+    await _context.SaveChangesAsync();
+
+    return Ok(new { message = $"{atananSayisi} adet iş emri ekiplere başarıyla atandı." });
+}
 }

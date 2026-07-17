@@ -23,8 +23,11 @@ public class IsEmirleriController : ControllerBase
     [HttpGet("All")]
     public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetAllIsEmirleri([FromQuery] bool includeCompleted = false)
     {
-        var query = _context.IsEmirleris.Where(i => i.Durum == "AKTIF");
+        // 🚀 GIGACHAD FIX: Başlangıçta tüm veritabanını query'e al, filtre koyma!
+        var query = _context.IsEmirleris.AsQueryable();
 
+        // 🛡️ Şalter kapalıysa (Mobilse) tamamlanmış olanları nuke'le (gizle).
+        // Web'den includeCompleted=true gelirse buraya hiç girmez, her şeyi çeker!
         if (!includeCompleted)
         {
             query = query.Where(i => i.Durum != "TAMAMLANDI");
@@ -45,9 +48,10 @@ public class IsEmirleriController : ControllerBase
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 100) pageSize = 100;
 
-        var query = _context.IsEmirleris.Where(i => i.Durum == "AKTIF");
+        // 🚀 GIGACHAD FIX: Başlangıçta hiçbir statüyü filtreleme!
+        var query = _context.IsEmirleris.AsQueryable();
 
-        // 🚀 GIGACHAD ŞALTERİ: Web'den true gelene kadar tamamlanmışları gizle!
+        // 🛡️ Web'den true gelene kadar tamamlanmışları gizle!
         if (!includeCompleted) 
         {
             query = query.Where(i => i.Durum != "TAMAMLANDI");

@@ -41,10 +41,17 @@ namespace KcetasAboneApi.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Kullanicilars.Add(yeniKullanici);
-            await _context.SaveChangesAsync();
-
-            return Ok(yeniKullanici);
+            try
+            {
+                _context.Kullanicilars.Add(yeniKullanici);
+                await _context.SaveChangesAsync();
+                return Ok(yeniKullanici);
+            }
+            catch (Exception ex)
+            {
+                var innerMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, new { error = "Veritabanı kayıt hatası", detay = innerMsg });
+            }
         }
 
         

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KcetasAboneApi.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -29,33 +30,47 @@ namespace KcetasAboneApi.Services
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    int currentYear = 2026; // Veya DateTime.UtcNow.Year kullanabiliriz, plana göre 2026 baz alındı.
+                    int currentYear = 2026; 
 
-                    // Aktif olan, bir tüketim noktasına bağlı olan ve 5 yaşından büyük sayaçları bul
-                    var yasliSayaclar = context.Sayaclars
+                    var yasliSayaclar = await context.Sayaclars
                         .Where(s => s.TuketimNoktasiId != null 
-                                 && s.Durum != "IPTAL" // İptal edilmemiş
+                                 && s.Durum != "IPTAL" 
                                  && (currentYear - s.UretimYili) >= 5)
-                        .ToList();
+                        .ToListAsync(stoppingToken);
 
                     if (yasliSayaclar.Any())
                     {
-                        _logger.LogInformation($"{yasliSayaclar.Count} adet 5 yaşını doldurmuş aktif sayaç bulundu. Değiştirme iş emirleri kontrol ediliyor...");
+                        _logger.LogInformation($"{yasliSayaclar.Count} adet 5 yaşını doldurmuş aktif sayaç bulundu. Kontrol ediliyor...");
 
+                        // 1. Prefix ve Sıra Numarası Raconu (Döngü Dışında)
+                        string prefix = $"IE-{DateTime.UtcNow:yyyyMM}-";
+
+                        // 2. Veritabanındaki en yüksek sırayı al (Sıralama hatasını önlemek için Int dönüşümü burada)
+                        var sonSira = await context.IsEmirleris
+                            .Where(x => x.IsEmriNo.StartsWith(prefix))
+                            .Select(x => x.IsEmriNo.Substring(x.IsEmriNo.Length - 4))
+                            .OrderByDescending(x => x)
+                            .FirstOrDefaultAsync(stoppingToken);
+
+                        int yeniSira = 1;
+                        if (!string.IsNullOrEmpty(sonSira) && int.TryParse(sonSira, out int sonSiraInt))
+                        {
+                            yeniSira = sonSiraInt + 1;
+                        }
+
+                        // 2. İş Emri Kontrolü ve Oluşturma
                         foreach (var sayac in yasliSayaclar)
                         {
-                            // Bu tüketim noktası için halihazırda açık bir "DEGISTIRME" iş emri var mı kontrol et
-                            bool acikIsEmriVar = context.IsEmirleris
-                                .Any(ie => ie.TuketimNoktasiId == sayac.TuketimNoktasiId 
-                                        && ie.Tip == "DEGISTIRME" 
-                                        && (ie.Durum == "ACIK" || ie.Durum == "ATANDI" || ie.Durum == "SAHADA"));
+                            bool acikIsEmriVar = await context.IsEmirleris
+                                .AnyAsync(ie => ie.TuketimNoktasiId == sayac.TuketimNoktasiId 
+                                             && ie.Tip == "DEGISTIRME" 
+                                             && (ie.Durum == "ACIK" || ie.Durum == "ATANDI" || ie.Durum == "SAHADA"), stoppingToken);
 
                             if (!acikIsEmriVar)
                             {
-                                // Yoksa yeni iş emri oluştur
                                 var yeniIsEmri = new IsEmirleri
                                 {
-                                    IsEmriNo = "IE-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
+                                    IsEmriNo = $"{prefix}{yeniSira:D4}",
                                     TuketimNoktasiId = sayac.TuketimNoktasiId.Value,
                                     SayacId = sayac.SayacId,
                                     Tip = "DEGISTIRME",
@@ -66,11 +81,12 @@ namespace KcetasAboneApi.Services
                                 };
 
                                 context.IsEmirleris.Add(yeniIsEmri);
-                                _logger.LogInformation($"Sayaç (ID: {sayac.SayacId}, Üretim: {sayac.UretimYili}) için {yeniIsEmri.IsEmriNo} numaralı değişim iş emri oluşturuldu.");
+                                _logger.LogInformation($"İş emri oluşturuldu: {yeniIsEmri.IsEmriNo}");
+                                
+                                yeniSira++; // Numarayı her seferinde artır
                             }
                         }
 
-                        // Değişiklikleri veritabanına kaydet
                         await context.SaveChangesAsync(stoppingToken);
                     }
                     else
@@ -79,7 +95,6 @@ namespace KcetasAboneApi.Services
                     }
                 }
 
-                // Test için 5 dakikada bir çalışacak. (Gerçekte gece 03:00 için Task.Delay hesabı yapılabilir)
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
             }
         }

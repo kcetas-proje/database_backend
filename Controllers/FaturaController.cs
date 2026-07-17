@@ -350,11 +350,11 @@ namespace KcetasAboneApi.Controllers
             var dbFatura = await _context.Faturas.FindAsync(id);
             if (dbFatura == null) return NotFound("Böyle bir fatura bulunamadı.");
 
-            dbFatura.Status = "PASIF";
+            dbFatura.Status = "IPTAL";
             dbFatura.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return Ok(new { mesaj = $"{dbFatura.FaturaNo} numaralı fatura başarıyla pasif duruma alındı." });
+            return Ok(new { mesaj = $"{dbFatura.FaturaNo} numaralı fatura başarıyla iptal duruma alındı." });
         }
 
         // 🔓 FATURA ONAYLAMA (Outbox Postacısını Tetikler)

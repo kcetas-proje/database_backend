@@ -30,7 +30,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
-
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<OutboxWorkerService>(); 
 builder.Services.AddHostedService<SayacAvcisiWorkerService>();
@@ -44,20 +43,19 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Kcetas Sistem API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-{
-    Type = SecuritySchemeType.Http,
-    Scheme = "bearer",
-    BearerFormat = "JWT",
-    Name = "Authorization",
-    In = ParameterLocation.Header,
-    Description = "JWT Authorization header using the Bearer scheme."
-});
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
 
-c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-{
-    [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
-});
-
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+    });
 });
 
 builder.Services.AddCors(options =>
@@ -67,11 +65,19 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Veritabanı yoksa oluştur
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+}
 
+// 💥 GIGACHAD SEEDER KONTROLÜ (Kurşun Geçirmez Versiyon)
+var komutlar = Environment.GetCommandLineArgs();
+if (komutlar.Any(k => k.ToLower().Contains("seed")))
+{
+    await RunSeederMenu(app.Services);
+    return; 
 }
 
 app.UseSwagger();
@@ -80,7 +86,7 @@ app.UseSwaggerUI();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-// Global Exception Handler Middleware'i sisteme dahil ediyoruz
+// Global Exception Handler Middleware
 app.UseMiddleware<KcetasAboneApi.Middlewares.ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
@@ -88,10 +94,106 @@ app.UseAuthorization();
 
 app.MapControllers(); 
 
-// Hata yönetimini test edebilmeniz için geçici bir test endpointi
+// Hata yönetimini test endpointi
 app.MapGet("/api/test-error", () =>
 {
     throw new Exception("Bu bilerek fırlatılan bir test hatasıdır!");
 });
 
+// 🔥 WEB API BURADA ATEŞLENİYOR
 app.Run();
+
+
+// ========================================================================
+// 🏗️ ŞANTİYE TOHUMLAMA (SEEDER) METODU 
+// ========================================================================
+static async Task RunSeederMenu(IServiceProvider services)
+{
+    using var scope = services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    while (true)
+    {
+        Console.Clear();
+        Console.WriteLine("==========================================");
+        Console.WriteLine("          KCETAŞ RANDOM DATA SEEDER");
+        Console.WriteLine("==========================================");
+        Console.WriteLine();
+        Console.WriteLine("1 - Aboneler");
+        Console.WriteLine("2 - Tüketim Noktaları");
+        Console.WriteLine("3 - Sayaçlar");
+        Console.WriteLine("4 - Sözleşmeler");
+        Console.WriteLine("5 - Endeks Okuma");
+        Console.WriteLine("6 - Faturalar");
+        Console.WriteLine("0 - Çıkış");
+        Console.WriteLine();
+        Console.Write("Seçiminiz : ");
+        
+        string? secim = Console.ReadLine();
+
+        if (secim == "0")
+        {
+            Console.WriteLine("Program sonlandırıldı.");
+            break;
+        }
+
+        int adet = 0;
+
+        switch (secim)
+        {
+            case "1":
+                Console.Write("Kaç adet abone üretilecek : ");
+                if (int.TryParse(Console.ReadLine(), out adet) && adet > 0)
+                {
+                    Console.WriteLine("\nAboneler oluşturuluyor...\n");
+                    await new AboneSeeder(context).Generate(adet);
+                }
+                else Console.WriteLine("Geçerli bir sayı giriniz.");
+                break;
+            case "2":
+                Console.Write("Kaç adet tüketim noktası üretilecek : ");
+                if (int.TryParse(Console.ReadLine(), out adet) && adet > 0)
+                {
+                    Console.WriteLine("\nTüketim noktaları oluşturuluyor...\n");
+                    await new TuketimNoktasiSeeder(context).Generate(adet);
+                }
+                else Console.WriteLine("Geçerli bir sayı giriniz.");
+                break;
+            case "3":
+                Console.WriteLine("\nSayaçlar oluşturuluyor...\n");
+                await new SayacSeeder(context).Generate();
+                break;
+            case "4":
+                Console.Write("Kaç adet sözleşme üretilecek : ");
+                if (int.TryParse(Console.ReadLine(), out adet) && adet > 0)
+                {
+                    Console.WriteLine("\nSözleşmeler oluşturuluyor...\n");
+                    await new SozlesmeSeeder(context).Generate(adet);
+                }
+                else Console.WriteLine("Geçerli bir sayı giriniz.");
+                break;
+            case "5":
+                Console.Write("Kaç aylık endeks oluşturulsun : ");
+                if (int.TryParse(Console.ReadLine(), out adet) && adet > 0)
+                {
+                    Console.WriteLine("\nEndeks okumaları oluşturuluyor...\n");
+                    await new EndeksOkumaSeeder(context).Generate(adet);
+                }
+                else Console.WriteLine("Geçerli bir sayı giriniz.");
+                break;
+            case "6":
+                Console.WriteLine("\nFaturalar oluşturuluyor...\n");
+                await new FaturaSeeder(context).Generate();
+                break;
+            default:
+                Console.WriteLine("Geçersiz seçim yaptınız.");
+                break;
+        }
+
+        Console.WriteLine("\n==========================================");
+        Console.WriteLine("İşlem tamamlandı veya hata alındı.");
+        Console.WriteLine("==========================================");
+        Console.WriteLine("Devam etmek için bir tuşa basınız...");
+        Console.ReadKey();
+    }
+}

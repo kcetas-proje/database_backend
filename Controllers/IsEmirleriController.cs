@@ -21,9 +21,16 @@ public class IsEmirleriController : ControllerBase
 
     // GET: api/IsEmirleri/All
     [HttpGet("All")]
-    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetAllIsEmirleri()
+    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetAllIsEmirleri([FromQuery] bool includeCompleted = false)
     {
-        return await _context.IsEmirleris
+        var query = _context.IsEmirleris.Where(i => i.Durum == "AKTIF");
+
+        if (!includeCompleted)
+        {
+            query = query.Where(i => i.Durum != "TAMAMLANDI");
+        }
+
+        return await query
             .Include(i => i.Sayac)
             .Include(i => i.TuketimNoktasi)
             .OrderBy(i => i.IsEmriId)
@@ -32,16 +39,24 @@ public class IsEmirleriController : ControllerBase
 
     // GET: api/IsEmirleri
     [HttpGet]
-    public async Task<IActionResult> GetIsEmirleri([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetIsEmirleri([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeCompleted = false)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 100) pageSize = 100;
 
-        var totalCount = await _context.IsEmirleris.CountAsync();
+        var query = _context.IsEmirleris.Where(i => i.Durum == "AKTIF");
+
+        // 🚀 GIGACHAD ŞALTERİ: Web'den true gelene kadar tamamlanmışları gizle!
+        if (!includeCompleted) 
+        {
+            query = query.Where(i => i.Durum != "TAMAMLANDI");
+        }
+
+        var totalCount = await query.CountAsync();
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-        var isEmirleri = await _context.IsEmirleris
+        var isEmirleri = await query
             .Include(i => i.Sayac)
             .Include(i => i.TuketimNoktasi)
             .OrderBy(i => i.IsEmriId)

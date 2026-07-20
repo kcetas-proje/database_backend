@@ -298,4 +298,46 @@ public class AbonelerController : ControllerBase
             return StatusCode(500, new { message = "Bir hata oluştu.", error = ex.Message });
         }
     }
+    [HttpGet("faturalar")]
+    public async Task<IActionResult> GetSon10Fatura([FromQuery] string prefix)
+    {
+        if (string.IsNullOrWhiteSpace(prefix))
+            return BadRequest("Abone numarasının ilk 3 hanesini giriniz.");
+
+        if (prefix.Length != 3)
+            return BadRequest("İlk 3 hane girilmelidir.");
+
+        var faturalar = await _context.Faturas
+            .Include(f => f.Sozlesme)
+                .ThenInclude(s => s.Abone)
+            .Where(f => f.Sozlesme.Abone != null &&
+                        f.Sozlesme.Abone.AboneNo.StartsWith(prefix))
+            .OrderByDescending(f => f.FaturaTarihi)
+            .Take(10)
+            .Select(f => new
+            {
+                AboneNo = f.Sozlesme.Abone!.AboneNo,
+                AdSoyad = f.Sozlesme.Abone.AboneTipi == "BIREYSEL"
+                    ? $"{f.Sozlesme.Abone.Ad} {f.Sozlesme.Abone.Soyad}"
+                    : f.Sozlesme.Abone.Unvan,
+
+                FaturaNo = f.FaturaNo,
+                Donem = f.Donem,
+                FaturaTarihi = f.FaturaTarihi,
+                SonOdemeTarihi = f.SonOdemeTarihi,
+                ToplamTutar = f.ToplamTutar,
+                Durum = f.Durum
+            })
+            .ToListAsync();
+
+        if (!faturalar.Any())
+        {
+            return NotFound(new
+            {
+                message = "Bu ön eke sahip abone bulunamadı."
+            });
+        }
+
+        return Ok(faturalar);
+    }
 }

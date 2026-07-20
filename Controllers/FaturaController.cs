@@ -118,7 +118,7 @@ namespace KcetasAboneApi.Controllers
                     DagitimBedeli = dagitimBedeli,
                     VergiFonToplam = vergiFonToplam,
                     ToplamTutar = toplamTutar,
-                    Durum = "ONAYLANDI", 
+                    Durum = FaturaDurumu.ONAYLANDI, 
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow
                 };
@@ -171,14 +171,14 @@ namespace KcetasAboneApi.Controllers
 
             // 2. İş mantığı: Sadece 'ODENMEDI' veya 'GONDERILDI' durumundakiler tahsil edilebilir
             // (İhtiyacına göre bu kontrolü esnetebilirsin)
-            if (fatura.Durum == "ODENDI") 
+            if (fatura.Durum == FaturaDurumu.ODENDI) 
                 return BadRequest(new { message = "Bu fatura zaten daha önce tahsil edilmiş!" });
             
-            if (fatura.Durum != "ODENMEDI" && fatura.Durum != "GONDERILDI")
+            if (fatura.Durum != FaturaDurumu.ODENMEDI && fatura.Durum != FaturaDurumu.GONDERILDI)
                 return BadRequest(new { message = $"Sadece ODENMEDI veya GONDERILDI durumundaki faturalar tahsil edilebilir. Mevcut durum: {fatura.Durum}" });
 
             // 3. Durumu güncelle
-            fatura.Durum = "ODENDI";
+            fatura.Durum = FaturaDurumu.ODENDI;
             fatura.UpdatedAt = DateTime.UtcNow;
 
             // 4. Kaydet
@@ -264,7 +264,7 @@ namespace KcetasAboneApi.Controllers
                     HizmetBedeli = 0m,
                     KesmeBaglamaBedeli = 0m,
                     Carpan = 1m,
-                    Durum = string.IsNullOrEmpty(dto.Durum) ? "ODENMEDI" : dto.Durum, 
+                    Durum = dto.Durum == 0 ? FaturaDurumu.ODENMEDI : dto.Durum, 
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow,
 
@@ -363,9 +363,9 @@ namespace KcetasAboneApi.Controllers
         {
             var fatura = await _context.Faturas.FindAsync(faturaId);
             if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
-            if (fatura.Durum != "HESAPLANDI") return BadRequest(new { message = $"Sadece HESAPLANDI olanlar onaylanabilir." });
+            if (fatura.Durum != FaturaDurumu.HESAPLANDI) return BadRequest(new { message = $"Sadece HESAPLANDI olanlar onaylanabilir." });
 
-            fatura.Durum = "ONAYLANDI";
+            fatura.Durum = FaturaDurumu.ONAYLANDI;
             fatura.UpdatedAt = DateTime.UtcNow;
 
             var outboxKargosu = new EntegrasyonOutbox
@@ -390,10 +390,10 @@ namespace KcetasAboneApi.Controllers
             var fatura = await _context.Faturas.FindAsync(faturaId);
             if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
 
-            if (fatura.Durum == "GONDERILDI" || fatura.Durum == "IPTAL")
+            if (fatura.Durum == FaturaDurumu.GONDERILDI || fatura.Durum == FaturaDurumu.IPTAL)
                 return BadRequest(new { message = "Fatura zaten gönderilmiş veya iptal edilmiş!" });
 
-            fatura.Durum = "IPTAL";
+            fatura.Durum = FaturaDurumu.IPTAL;
             fatura.Status = "PASIF"; 
             fatura.UpdatedAt = DateTime.UtcNow;
 
@@ -464,7 +464,7 @@ namespace KcetasAboneApi.Controllers
                         KesmeBaglamaBedeli = 0m, 
                         VergiFonToplam = Math.Round(vergiFon, 2),
                         ToplamTutar = Math.Round(toplamTutar, 2),
-                        Durum = "HESAPLANDI",
+                        Durum = FaturaDurumu.HESAPLANDI,
                         Status = "AKTIF",
                         CreatedAt = DateTime.UtcNow,
 

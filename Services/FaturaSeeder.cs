@@ -1,4 +1,4 @@
-﻿using KcetasAboneApi.Models;
+using KcetasAboneApi.Models;
 using KcetasSeeder.Helpers;
 using Microsoft.EntityFrameworkCore;
 
@@ -127,7 +127,7 @@ public class FaturaSeeder
 
                 ToplamTutar = toplam,
 
-                Durum = "HESAPLANDI",
+                Durum = FaturaDurumu.HESAPLANDI,
 
                 Status = "AKTIF",
 

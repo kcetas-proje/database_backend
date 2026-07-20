@@ -12,7 +12,7 @@ public class FaturaCreateDto
     public decimal ReaktifEnduktif { get; set; }
     public decimal ReaktifKapasitif { get; set; }
     public decimal ToplamTutar { get; set; }
-    public string Durum { get; set; } 
+    public FaturaDurumu Durum { get; set; } = FaturaDurumu.ODENMEDI;
     public DateTime OkumaZamani { get; set; } 
     public long KullaniciId { get; set; }
 }

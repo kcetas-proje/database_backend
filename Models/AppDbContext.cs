@@ -169,7 +169,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
             entity.Property(e => e.DagitimBedeli).HasPrecision(14, 2).HasColumnName("dagitim_bedeli");
             entity.Property(e => e.Donem).HasMaxLength(7).HasColumnName("donem");
-            entity.Property(e => e.Durum).HasMaxLength(20).HasDefaultValueSql("'TASLAK'::character varying").HasColumnName("durum");
+            entity.Property(e => e.Durum).HasConversion<string>().HasMaxLength(20).HasDefaultValueSql("'TASLAK'::character varying").HasColumnName("durum");
             entity.Property(e => e.EnerjiBedeli).HasPrecision(14, 2).HasColumnName("enerji_bedeli");
             entity.Property(e => e.FaturaNo).HasMaxLength(40).HasColumnName("fatura_no");
             entity.Property(e => e.FaturaTarihi).HasColumnName("fatura_tarihi");

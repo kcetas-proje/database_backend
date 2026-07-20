@@ -47,7 +47,7 @@ public partial class Fatura
 
     public decimal ToplamTutar { get; set; }
 
-    public string Durum { get; set; } = null!;
+    public FaturaDurumu Durum { get; set; } = FaturaDurumu.ODENMEDI;
 
     public string Status { get; set; } = null!;
 

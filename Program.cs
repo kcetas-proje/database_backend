@@ -125,6 +125,7 @@ static async Task RunSeederMenu(IServiceProvider services)
         Console.WriteLine("4 - Sözleşmeler");
         Console.WriteLine("5 - Endeks Okuma");
         Console.WriteLine("6 - Faturalar");
+        Console.WriteLine("7 - İş Emirleri");
         Console.WriteLine("0 - Çıkış");
         Console.WriteLine();
         Console.Write("Seçiminiz : ");
@@ -185,9 +186,26 @@ static async Task RunSeederMenu(IServiceProvider services)
                 Console.WriteLine("\nFaturalar oluşturuluyor...\n");
                 await new FaturaSeeder(context).Generate();
                 break;
-            default:
-                Console.WriteLine("Geçersiz seçim yaptınız.");
-                break;
+            case "7":
+            Console.Write("Kaç adet iş emri üretilecek : ");
+
+            if (!int.TryParse(Console.ReadLine(), out adet) || adet <= 0)
+            {
+                Console.WriteLine("Geçerli bir sayı giriniz.");
+                Console.ReadKey();
+                continue;
+            }
+
+            Console.WriteLine("\nİş emirleri oluşturuluyor...\n");
+            await new IsEmriSeeder(context).Generate(adet);
+
+            break;
+
+        default: 
+            Console.WriteLine("Geçersiz seçim yaptınız."); 
+            Console.ReadKey(); 
+            continue; 
+    }
         }
 
         Console.WriteLine("\n==========================================");
@@ -196,4 +214,3 @@ static async Task RunSeederMenu(IServiceProvider services)
         Console.WriteLine("Devam etmek için bir tuşa basınız...");
         Console.ReadKey();
     }
-}

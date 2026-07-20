@@ -56,5 +56,15 @@ public static class NumaraGenerator
             .MaxAsync(x => (long?)x.SayacId);
 
         return (int)(sonId ?? 0);
+
     }
+    // KcetasSeeder/Helpers/NumaraGenerator.cs
+    public static async Task<int> GetLastIsEmriNumber(AppDbContext context)
+    {
+        var sonId = await context.IsEmirleris
+            .MaxAsync(x => (long?)x.IsEmriId);
+
+        return (int)(sonId ?? 0);
+    }
+
 }

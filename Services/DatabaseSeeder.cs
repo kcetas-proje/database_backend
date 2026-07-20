@@ -1,5 +1,4 @@
 ﻿using KcetasAboneApi.Models;
-
 namespace KcetasAboneApi.Services;
 
 public class DatabaseSeeder
@@ -45,5 +44,13 @@ public class DatabaseSeeder
         await new SozlesmeSeeder(_context).Generate(adet);
 
         Console.WriteLine("Sözleşmeler oluşturuldu.");
+    }
+    // KcetasSeeder/Services/DatabaseSeeder.cs içerisine ekleyin:
+
+    public async Task SeedIsEmirleriAsync(int adet)
+    {
+        Console.WriteLine("İş emirleri oluşturuluyor...");
+        await new IsEmriSeeder(_context).Generate(adet);
+        Console.WriteLine("İş emirleri oluşturuldu.");
     }
 }

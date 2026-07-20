@@ -1,0 +1,30 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace KcetasAboneApi.Models 
+{
+    public class Bildirim
+    {
+        [Key]
+        public int BildirimId { get; set; }
+
+
+        [Required]
+        public int KullaniciId { get; set; } 
+
+        [Required]
+        [MaxLength(200)]
+        public string Baslik { get; set; }
+
+
+        [Required]
+        public string Icerik { get; set; }
+
+
+        public bool OkunduMu { get; set; } = false;
+
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}

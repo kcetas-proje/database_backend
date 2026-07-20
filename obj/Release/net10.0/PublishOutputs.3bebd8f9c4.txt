@@ -6,6 +6,9 @@ C:\LocalServerApi\KcetasAboneApi.runtimeconfig.json
 C:\LocalServerApi\KcetasAboneApi.pdb
 C:\LocalServerApi\BCrypt-Net-Next.dll
 C:\LocalServerApi\Bogus.dll
+C:\LocalServerApi\FluentValidation.dll
+C:\LocalServerApi\FluentValidation.AspNetCore.dll
+C:\LocalServerApi\FluentValidation.DependencyInjectionExtensions.dll
 C:\LocalServerApi\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\LocalServerApi\Microsoft.AspNetCore.OpenApi.dll
 C:\LocalServerApi\Microsoft.Bcl.Cryptography.dll

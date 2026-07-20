@@ -272,3 +272,6 @@ C:\Users\Caner\Desktop\KcetasAboneApi\kcetas_proje\obj\Release\net10.0\refint\Kc
 C:\Users\Caner\Desktop\KcetasAboneApi\kcetas_proje\obj\Release\net10.0\KcetasAboneApi.pdb
 C:\Users\Caner\Desktop\KcetasAboneApi\kcetas_proje\obj\Release\net10.0\KcetasAboneApi.genruntimeconfig.cache
 C:\Users\Caner\Desktop\KcetasAboneApi\kcetas_proje\obj\Release\net10.0\ref\KcetasAboneApi.dll
+C:\Users\Caner\Desktop\KcetasAboneApi\kcetas_proje\bin\Release\net10.0\FluentValidation.dll
+C:\Users\Caner\Desktop\KcetasAboneApi\kcetas_proje\bin\Release\net10.0\FluentValidation.AspNetCore.dll
+C:\Users\Caner\Desktop\KcetasAboneApi\kcetas_proje\bin\Release\net10.0\FluentValidation.DependencyInjectionExtensions.dll

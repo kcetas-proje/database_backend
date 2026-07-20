@@ -28,6 +28,31 @@ public class SayaclarController : ControllerBase
             .ToListAsync();
     }
 
+    // GET: /api/Sayaclar/depodakiler
+    [HttpGet("depodakiler")]
+    public async Task<ActionResult<IEnumerable<object>>> GetDepodakiSayaclar()
+    {
+        var depodakiSayaclar = await _context.Sayaclars
+            .Where(s => s.Durum == "DEPODA")
+            .Select(s => new 
+            {
+                s.SayacId,
+                s.SeriNo,
+                s.Marka,
+                s.Model,
+                s.UretimYili,
+                s.Faz,
+                s.Carpan
+            })
+            .OrderBy(s => s.SayacId)
+            .ToListAsync();
+
+        if (!depodakiSayaclar.Any())
+            return Ok(new { message = "Depoda uygun sayaç bulunmamaktadır.", data = new List<object>() });
+
+        return Ok(new { data = depodakiSayaclar });
+    }
+
     // GET BY ID
     [HttpGet("{id}")]
     public async Task<ActionResult<Sayaclar>> GetSayac(long id)

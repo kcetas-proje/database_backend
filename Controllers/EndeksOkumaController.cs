@@ -167,7 +167,7 @@ public async Task<IActionResult> GenerateFakeEndeksler()
             OkumaKaynagi = "MANUEL",
             Donem = $"{DateTime.UtcNow:yyyy/MM}",
             OkumaZamani = DateTime.UtcNow,
-            KullaniciId = 1,
+            KullaniciId = _context.MevcutKullaniciId,
             DogrulamaDurumu = "ONAYLANDI",
             AnomaliMi = false,
             Status = "AKTIF",

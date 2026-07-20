@@ -95,7 +95,8 @@ app.UseHttpsRedirection();
 app.UseMiddleware<KcetasAboneApi.Middlewares.ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
-app.UseAuthorization(); 
+app.UseMiddleware<KcetasAboneApi.Middlewares.UserContextMiddleware>();
+app.UseAuthorization();
 
 app.MapControllers(); 
 

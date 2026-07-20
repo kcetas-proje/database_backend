@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -58,7 +58,7 @@ public partial class AppDbContext : DbContext
                     _ => "DIGER"
                 },
                 IslemZamani = DateTime.UtcNow,
-                KullaniciId = this.MevcutKullaniciId ?? 1,
+                KullaniciId = this.MevcutKullaniciId,
                 IslemGerekcesi = "Sistem Otomasyon İşlemi"
             };
 

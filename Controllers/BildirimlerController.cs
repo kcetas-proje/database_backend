@@ -1,18 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using KcetasAboneApi.Models;
+using Microsoft.AspNetCore.SignalR; 
+using KcetasAboneApi.Hubs;          
 
 [Route("api/[controller]")]
 [ApiController]
 public class BildirimlerController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IHubContext<BildirimHub> _hubContext;
 
-    public BildirimlerController(AppDbContext context)
+    public BildirimlerController(AppDbContext context, IHubContext<BildirimHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     // 1. ŞEFİN GÖREVİ: Bildirim Gönderme / Kaydetme Fonksiyonu
@@ -28,14 +33,13 @@ public class BildirimlerController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        // Veritabanına kaydet (Loglama)
         _context.Bildirimlers.Add(yeniBildirim);
         await _context.SaveChangesAsync();
 
-        // NOT: İleride Firebase (FCM) veya OneSignal eklerseniz, 
-        // telefona anlık titreme/bildirim gönderme kodunu tam buraya yazacaksın!
 
-        return Ok(new { mesaj = "Bildirim başarıyla kaydedildi ve gönderildi!", data = yeniBildirim });
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("YeniBildirimGeldi", baslik, icerik);
+
+        return Ok(new { mesaj = "Bildirim başarıyla kaydedildi ve gönderildi.", data = yeniBildirim });
     }
 
     [HttpGet("MyNotifications/{userId}")]

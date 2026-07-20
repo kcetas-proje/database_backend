@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.OpenApi;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using KcetasAboneApi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
+builder.Services.AddSignalR();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -97,6 +98,8 @@ app.UseMiddleware<KcetasAboneApi.Middlewares.ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<KcetasAboneApi.Middlewares.UserContextMiddleware>();
 app.UseAuthorization();
+
+app.MapHub<BildirimHub>("/bildirimHub");
 
 app.MapControllers(); 
 

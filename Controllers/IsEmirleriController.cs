@@ -39,6 +39,30 @@ public class IsEmirleriController : ControllerBase
             .OrderBy(i => i.IsEmriId)
             .ToListAsync();
     }
+    // GET: api/IsEmirleri/Kullanici/5
+    [HttpGet("Kullanici/{kullaniciId}")]
+    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetKullaniciIsEmirleri(
+        long kullaniciId,
+        [FromQuery] bool includeCompleted = false)
+    {
+        var query = _context.IsEmirleris
+    .AsNoTracking()
+    .Where(i =>
+        i.AtananKullaniciId == kullaniciId &&
+        i.Durum != "IPTAL");
+        if (!includeCompleted)
+        {
+            query = query.Where(i => i.Durum != "TAMAMLANDI");
+        }
+
+        var isEmirleri = await query
+            .Include(i => i.Sayac)
+            .Include(i => i.TuketimNoktasi)
+            .OrderBy(i => i.IsEmriId)
+            .ToListAsync();
+
+        return Ok(isEmirleri);
+    }
 
     // GET: api/IsEmirleri
     [HttpGet]

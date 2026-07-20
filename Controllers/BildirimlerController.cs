@@ -33,7 +33,7 @@ public class BildirimlerController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Bildirimlers.Add(yeniBildirim);
+        _context.Bildirimler.Add(yeniBildirim);
         await _context.SaveChangesAsync();
 
 
@@ -45,7 +45,7 @@ public class BildirimlerController : ControllerBase
     [HttpGet("MyNotifications/{userId}")]
     public async Task<IActionResult> GetMyNotifications(int userId)
     {
-        var bildirimler = await _context.Bildirimlers
+        var bildirimler = await _context.Bildirimler
             .AsNoTracking()
             .Where(b => b.KullaniciId == userId)
             .OrderByDescending(b => b.CreatedAt)

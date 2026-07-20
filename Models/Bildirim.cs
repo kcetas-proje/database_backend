@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KcetasAboneApi.Models 
 {
+    [Table("bildirimler")]
     public class Bildirim
     {
         [Key]

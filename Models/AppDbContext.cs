@@ -35,7 +35,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<TuketimNoktasi> TuketimNoktasis { get; set; }
     public virtual DbSet<Aboneler> Abonelers { get; set; }
     public virtual DbSet<Tarifeler> Tarifelers { get; set; }
-    public DbSet<Bildirim> Bildirimlers { get; set; }
+    public DbSet<Bildirim> Bildirimler { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

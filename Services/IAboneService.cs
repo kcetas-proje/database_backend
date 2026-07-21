@@ -2,7 +2,7 @@ using KcetasAboneApi.Models;
 
 public interface IAboneService
 {
-    Task<AboneFaturaResponseDto> GetFaturalar(
+    Task<AboneListResponseDto> GetAboneler(
         string? isim,
         int page,
         int pageSize);

@@ -53,4 +53,27 @@ public class BildirimlerController : ControllerBase
 
         return Ok(bildirimler);
     }
+
+    [HttpPut("OkunduIsaretle/{bildirimId}")]
+    public async Task<IActionResult> OkunduIsaretle(int bildirimId)
+    {
+        // Bildirimi DB'den çek
+        var bildirim = await _context.Bildirimler.FindAsync(bildirimId);
+        
+        if (bildirim == null)
+        {
+            return NotFound(new { message = "Böyle bir bildirim bulunamadı." });
+        }
+
+        if (bildirim.OkunduMu)
+        {
+            return BadRequest(new { message = "Bu bildirim zaten okunmuş." });
+        }
+
+        bildirim.OkunduMu = true;
+        
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Bildirim başarıyla okundu olarak işaretlendi." });
+    }
 }

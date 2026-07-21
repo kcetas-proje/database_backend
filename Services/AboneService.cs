@@ -65,4 +65,39 @@ public class AboneService : IAboneService
             Data = liste
         };
     }
+    public async Task<AboneFaturaResponseDto> GetAboneFaturalari(
+    long aboneId,
+    int page,
+    int pageSize)
+    {
+        var query = _context.Faturas
+            .Include(f => f.Sozlesme)
+            .Where(f => f.Sozlesme.AboneId == aboneId);
+
+        var totalCount = await query.CountAsync();
+
+        var liste = await query
+            .OrderByDescending(f => f.FaturaTarihi)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(f => new AboneFaturaDto
+            {
+                FaturaId = f.FaturaId,
+                FaturaNo = f.FaturaNo,
+                Donem = f.Donem,
+                FaturaTarihi = f.FaturaTarihi,
+                ToplamTutar = f.ToplamTutar,
+                Durum = f.Durum.ToString()
+            })
+            .ToListAsync();
+
+        return new AboneFaturaResponseDto
+        {
+            TotalCount = totalCount,
+            CurrentPage = page,
+            PageSize = pageSize,
+            HasNextPage = page * pageSize < totalCount,
+            Data = liste
+        };
+    }
 }

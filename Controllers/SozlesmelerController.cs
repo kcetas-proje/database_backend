@@ -78,7 +78,7 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
         BaslangicTarihi = dto.BaslangicTarihi != default 
             ? DateOnly.FromDateTime(dto.BaslangicTarihi) 
             : DateOnly.FromDateTime(DateTime.UtcNow),
-        Durum = "AKTIF",
+        Durum = SozlesmeDurumu.AKTIF,
         CreatedAt = DateTime.UtcNow
     };
 
@@ -244,7 +244,7 @@ public async Task<IActionResult> GenerateFakeSozlesmeler()
             SozlesmeTipi = secilenTarife.TarifeAdi.Contains("Ticarethane") ? "TICARET" : "MESKEN",
             GuvenceBedeli = secilenTarife.TarifeAdi.Contains("Ticarethane") ? 4500.0m : 1500.0m,
             BaslangicTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
-            Durum = "AKTIF",
+            Durum = SozlesmeDurumu.AKTIF,
             CreatedAt = DateTime.UtcNow
         };
         yeniSozlesmeler.Add(yeniSozlesme);

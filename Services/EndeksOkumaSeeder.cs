@@ -1,4 +1,4 @@
-﻿using Bogus;
+using Bogus;
 using KcetasAboneApi.Models;
 using KcetasSeeder.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +30,7 @@ public class EndeksOkumaSeeder
             from sozlesme in _context.Sozlesmelers.AsNoTracking()
             join sayac in _context.Sayaclars.AsNoTracking()
                 on sozlesme.TuketimNoktasiId equals sayac.TuketimNoktasiId
-            where sozlesme.Durum == "AKTIF"
+            where sozlesme.Durum == SozlesmeDurumu.AKTIF
                   && !mevcutSozlesmeler.Contains(sozlesme.SozlesmeId)
             select new
             {

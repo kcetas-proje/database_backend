@@ -279,7 +279,7 @@ public class AbonelerController : ControllerBase
                 SozlesmeTipi = dto.TuketiciGrubu,
                 GuvenceBedeli = dto.TuketiciGrubu == "TICARET" ? 4500m : 1500m,
                 BaslangicTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
-                Durum = "AKTIF",
+                Durum = SozlesmeDurumu.AKTIF,
                 CreatedAt = DateTime.UtcNow
             };
 

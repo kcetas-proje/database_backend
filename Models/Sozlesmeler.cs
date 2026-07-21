@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -29,7 +29,7 @@ public partial class Sozlesmeler
     public string SozlesmeTipi { get; set; } = null!;
 
     [Column("durum")]
-    public string Durum { get; set; } = "AKTIF";
+    public SozlesmeDurumu Durum { get; set; } = SozlesmeDurumu.AKTIF;
 
     [Column("baslangic_tarihi")]
     public DateOnly BaslangicTarihi { get; set; }

@@ -59,12 +59,12 @@ public class TuketimNoktasiController : ControllerBase
                     .FirstOrDefault() ?? "SAYAÇ YOK",
 
                 AktifAboneId = t.Sozlesmelers
-                    .Where(soz => soz.Durum == "AKTIF")
+                    .Where(soz => soz.Durum == SozlesmeDurumu.AKTIF)
                     .Select(soz => (long?)soz.AboneId)
                     .FirstOrDefault(),
 
                 AktifSozlesmeNo = t.Sozlesmelers
-                    .Where(soz => soz.Durum == "AKTIF")
+                    .Where(soz => soz.Durum == SozlesmeDurumu.AKTIF)
                     .Select(soz => soz.SozlesmeNo)
                     .FirstOrDefault() ?? "SÖZLEŞME YOK"
             })

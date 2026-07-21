@@ -550,7 +550,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         {
             // İlgili sözleşmeyi bulalım (Tüketim noktasına bağlı aktif sözleşme)
             var sozlesme = await _context.Sozlesmelers
-                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == isEmri.TuketimNoktasiId && s.Durum == "AKTIF");
+                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == isEmri.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF);
 
             var okuma = new EndeksOkuma
             {

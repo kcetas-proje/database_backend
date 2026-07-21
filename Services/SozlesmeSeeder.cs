@@ -1,4 +1,4 @@
-﻿using KcetasAboneApi.Models;
+using KcetasAboneApi.Models;
 using KcetasSeeder.Helpers;
 using Microsoft.EntityFrameworkCore;
 
@@ -83,7 +83,7 @@ public class SozlesmeSeeder
                     ? "BIREYSEL"
                     : "KURUMSAL",
 
-                Durum = "AKTIF",
+                Durum = SozlesmeDurumu.AKTIF,
 
                 BaslangicTarihi =
                     DateOnly.FromDateTime(FakerHelper.GecmisTarih()),

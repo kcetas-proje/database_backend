@@ -81,7 +81,6 @@ public class IsEmriSeeder
 
         string[] tipler =
         {
-            "BAGLAMA",
             "DEGISTIRME",
             "SOKME",
             "KESME",

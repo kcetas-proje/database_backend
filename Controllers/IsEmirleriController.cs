@@ -4,6 +4,8 @@ using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using KcetasAboneApi.Models.Dtos;
 using Bogus;
+using Microsoft.AspNetCore.SignalR;
+using KcetasAboneApi.Hubs;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -13,6 +15,7 @@ namespace KcetasAboneApi.Controllers;
 public class IsEmirleriController : ControllerBase
 {
     private readonly AppDbContext _context; 
+    private readonly IHubContext<BildirimHub> _hubContext;
 
     public IsEmirleriController(AppDbContext context) 
     {
@@ -978,37 +981,72 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         }
     }
 
-    [HttpPost("otomatik-atama")]
-public async Task<IActionResult> OtomatikAtamaYap()
-{
-
-    var sahipsizIsEmirleri = await _context.IsEmirleris
-        .Where(i => i.AtananKullaniciId == null && i.Durum == "ACIK")
-        .ToListAsync();
-
-    var sahaEkipleri = await _context.Kullanicilars
-        .Where(k => k.RolId == 1)
-        .ToListAsync();
-
-    if (!sahipsizIsEmirleri.Any() || !sahaEkipleri.Any())
-        return BadRequest(new { message = "Atanacak iş emri veya atanacak kullanıcı kalmamış!" });
-
-    int atananSayisi = 0;
-    int ekipIndex = 0;
-
-    foreach (var isEmri in sahipsizIsEmirleri)
+    [HttpPost("atama-yap")]
+    public async Task<IActionResult> UstayaIsAta([FromQuery] long isEmriId, [FromQuery] long ustaId)
     {
-        isEmri.AtananKullaniciId = sahaEkipleri[ekipIndex].KullaniciId;
+        // DB'den iş emrini çek.
+        var isEmri = await _context.IsEmirleris.FindAsync(isEmriId);
+        if (isEmri == null) 
+            return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
+
+        if (isEmri.Durum == "TAMAMLANDI") 
+            return BadRequest(new { message = "Tamamlanmış işe personel atanamaz." });
+
+        // Usta ata ve durumu güncelle.
+        isEmri.AtananKullaniciId = ustaId;
         isEmri.Durum = "ATANDI";
+        isEmri.UpdatedAt = DateTime.UtcNow;
+
+        // Bildirimi DB'ye logla.
+        var mesaj = $"{isEmri.IsEmriNo} numaralı iş emri atandı.";
         
-        ekipIndex++;
-        if (ekipIndex >= sahaEkipleri.Count) ekipIndex = 0; 
+        var yeniBildirim = new Bildirim
+        {
+            KullaniciId = (int)ustaId, 
+            Baslik = "Yeni Görev",
+            Icerik = mesaj
+        };
         
-        atananSayisi++;
+        _context.Bildirimler.Add(yeniBildirim);
+        await _context.SaveChangesAsync();
+
+        // SignalR ile anlık füzeyi ateşle.
+        await _hubContext.Clients.User(ustaId.ToString()).SendAsync("YeniBildirimGeldi", "Yeni Görev", mesaj);
+
+        return Ok(new { message = "İş atandı ve personele bildirim gönderildi.", isEmriNo = isEmri.IsEmriNo });
     }
 
-    await _context.SaveChangesAsync();
+    [HttpPost("otomatik-atama")]
+    public async Task<IActionResult> OtomatikAtamaYap()
+    {
 
-    return Ok(new { message = $"{atananSayisi} adet iş emri ekiplere başarıyla atandı." });
-}
+        var sahipsizIsEmirleri = await _context.IsEmirleris
+            .Where(i => i.AtananKullaniciId == null && i.Durum == "ACIK")
+            .ToListAsync();
+
+        var sahaEkipleri = await _context.Kullanicilars
+            .Where(k => k.RolId == 1)
+            .ToListAsync();
+
+        if (!sahipsizIsEmirleri.Any() || !sahaEkipleri.Any())
+            return BadRequest(new { message = "Atanacak iş emri veya atanacak kullanıcı kalmamış!" });
+
+        int atananSayisi = 0;
+        int ekipIndex = 0;
+
+        foreach (var isEmri in sahipsizIsEmirleri)
+        {
+            isEmri.AtananKullaniciId = sahaEkipleri[ekipIndex].KullaniciId;
+            isEmri.Durum = "ATANDI";
+            
+            ekipIndex++;
+            if (ekipIndex >= sahaEkipleri.Count) ekipIndex = 0; 
+            
+            atananSayisi++;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"{atananSayisi} adet iş emri ekiplere başarıyla atandı." });
+    }
 }

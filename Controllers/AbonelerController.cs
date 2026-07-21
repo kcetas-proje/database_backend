@@ -325,4 +325,26 @@ public class AbonelerController : ControllerBase
 
         return Ok(sonuc);
     }
+    [HttpGet("{aboneId}/faturalar")]
+    public async Task<IActionResult> GetAboneFaturalari(
+    long aboneId,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+    {
+        if (page < 1)
+            page = 1;
+
+        if (pageSize < 1)
+            pageSize = 10;
+
+        if (pageSize > 100)
+            pageSize = 100;
+
+        var sonuc = await _aboneService.GetAboneFaturalari(
+            aboneId,
+            page,
+            pageSize);
+
+        return Ok(sonuc);
+    }
 }

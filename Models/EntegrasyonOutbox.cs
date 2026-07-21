@@ -9,7 +9,7 @@ public partial class EntegrasyonOutbox
 
     public long FaturaId { get; set; }
 
-    public string HedefSistem { get; set; } = null!;
+    public HedefSistem HedefSistem { get; set; }
 
     public string IdempotencyKey { get; set; } = null!;
 
@@ -17,7 +17,7 @@ public partial class EntegrasyonOutbox
 
     public string? Payload { get; set; }
 
-    public string Durum { get; set; } = null!;
+    public OutboxDurumu Durum { get; set; }
 
     public string? HataKodu { get; set; }
 

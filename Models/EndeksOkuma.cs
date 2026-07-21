@@ -23,10 +23,10 @@ public partial class EndeksOkuma
     public long? SozlesmeId { get; set; }
 
     [Column("okuma_tipi")]
-    public string OkumaTipi { get; set; } = null!;
+    public OkumaTipi OkumaTipi { get; set; }
 
     [Column("okuma_kaynagi")]
-    public string OkumaKaynagi { get; set; } = null!;
+    public OkumaKaynagi OkumaKaynagi { get; set; }
 
     [Column("gunduz_endeks")]
     [NotMapped]
@@ -71,7 +71,7 @@ public partial class EndeksOkuma
     public string? OkunamamaNedeni { get; set; }
 
     [Column("dogrulama_durumu")]
-    public string DogrulamaDurumu { get; set; } = "ONAYLANDI"; 
+    public DogrulamaDurumu DogrulamaDurumu { get; set; }
 
     [Column("anomali_mi")]
     public bool AnomaliMi { get; set; }

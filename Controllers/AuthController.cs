@@ -38,7 +38,7 @@ namespace KcetasAboneApi.Controllers
             }
 
             // 3. Kullanıcının hesabı pasife alınmışsa sisteme girişi engellenir
-            if (user.Durum != "AKTIF")
+            if (user.Durum != KullaniciDurumu.AKTIF)
             {
                 return BadRequest("Hesabınız aktif durumda değil. Lütfen sistem yöneticisiyle görüşün.");
             }

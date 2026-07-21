@@ -63,8 +63,8 @@ namespace KcetasAboneApi.Services
                         {
                             bool acikIsEmriVar = await context.IsEmirleris
                                 .AnyAsync(ie => ie.TuketimNoktasiId == sayac.TuketimNoktasiId 
-                                             && ie.Tip == "DEGISTIRME" 
-                                             && (ie.Durum == "ACIK" || ie.Durum == "ATANDI" || ie.Durum == "SAHADA"), stoppingToken);
+                                             && ie.Tip == IsEmriTipi.DEGISTIRME 
+                                             && (ie.Durum == IsEmriDurumu.ACIK || ie.Durum == IsEmriDurumu.ATANDI || ie.Durum == IsEmriDurumu.SAHADA), stoppingToken);
 
                             if (!acikIsEmriVar)
                             {
@@ -73,9 +73,9 @@ namespace KcetasAboneApi.Services
                                     IsEmriNo = $"{prefix}{yeniSira:D4}",
                                     TuketimNoktasiId = sayac.TuketimNoktasiId.Value,
                                     SayacId = sayac.SayacId,
-                                    Tip = "DEGISTIRME",
+                                    Tip = IsEmriTipi.DEGISTIRME,
                                     Oncelik = "YUKSEK",
-                                    Durum = "ACIK",
+                                    Durum = IsEmriDurumu.ACIK,
                                     Gerekce = "Sayaç 5 yılını doldurduğu için otomatik değişim talebi.",
                                     CreatedAt = DateTime.UtcNow
                                 };

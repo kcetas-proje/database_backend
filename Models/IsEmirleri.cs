@@ -22,7 +22,7 @@ public partial class IsEmirleri
     public long? SayacId { get; set; }
 
     [Column("tip")]
-    public string Tip { get; set; } = null!;
+    public IsEmriTipi Tip { get; set; }
 
     [Column("oncelik")]
     public string Oncelik { get; set; } = "NORMAL";
@@ -34,7 +34,7 @@ public partial class IsEmirleri
     public long? AtananKullaniciId { get; set; }
 
     [Column("durum")]
-    public string Durum { get; set; } = "ACIK";
+    public IsEmriDurumu Durum { get; set; } = IsEmriDurumu.ACIK;
 
     [Column("saha_sonucu")]
     public string? SahaSonucu { get; set; }

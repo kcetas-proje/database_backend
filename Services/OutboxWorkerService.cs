@@ -35,7 +35,7 @@ namespace KcetasAboneApi.Services
                     var client = httpClientFactory.CreateClient();
 
                     var bekleyenKayitlar = context.EntegrasyonOutboxes
-                        .Where(o => o.Durum == "BEKLIYOR" && o.RetryCount < 3)
+                        .Where(o => o.Durum == OutboxDurumu.BEKLIYOR && o.RetryCount < 3)
                         .ToList();
 
                     foreach (var kayit in bekleyenKayitlar)
@@ -51,7 +51,7 @@ namespace KcetasAboneApi.Services
 
                             if (response.IsSuccessStatusCode)
                             {
-                                kayit.Durum = "GONDERILDI";
+                                kayit.Durum = OutboxDurumu.GONDERILDI;
                                 kayit.GonderimZamani = DateTime.UtcNow;
                                 _logger.LogInformation($"[OutboxId: {kayit.OutboxId}] İşlem başarılı. Belge hedefe iletildi.");
                             }
@@ -66,7 +66,7 @@ namespace KcetasAboneApi.Services
 
                                 if (kayit.RetryCount >= 3)
                                 {
-                                    kayit.Durum = "MANUEL_MUDAHALE";
+                                    kayit.Durum = OutboxDurumu.MANUEL_MUDAHALE;
                                     _logger.LogError($"[OutboxId: {kayit.OutboxId}] Maksimum deneme sayısına (3) ulaşıldı. Kayıt 'MANUEL_MUDAHALE' statüsüne çekildi.");
                                 }
                             }

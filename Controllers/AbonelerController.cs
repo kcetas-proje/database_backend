@@ -195,7 +195,7 @@ public class AbonelerController : ControllerBase
             .RuleFor(a => a.Telefon, f => f.Phone.PhoneNumber("05#########"))
             .RuleFor(a => a.EPosta, (f, a) => f.Internet.Email(a.Ad, a.Soyad).ToLower())
 
-            .RuleFor(a => a.AboneTipi, "BIREYSEL")
+            .RuleFor(a => a.AboneTipi, AboneTipi.BIREYSEL)
             
             .RuleFor(a => a.CreatedAt, f => f.Date.Past(1).ToUniversalTime());
 
@@ -252,7 +252,7 @@ public class AbonelerController : ControllerBase
                 AcikAdres = dto.AcikAdres,
                 BaglantiGucuKw = dto.BaglantiGucuKw,
                 TuketiciGrubu = dto.TuketiciGrubu,
-                BaglantiDurumu = "PASIF",
+                BaglantiDurumu = BaglantiDurumu.PASIF,
                 Status = "AKTIF",
                 CreatedAt = DateTime.UtcNow
             };

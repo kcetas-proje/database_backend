@@ -21,7 +21,7 @@ namespace KcetasAboneApi.Controllers
         public async Task<IActionResult> GetKullanicilar()
         {
             var kullanicilar = await _context.Kullanicilars
-                .Where(k => k.Durum == "AKTIF")
+                .Where(k => k.Durum == KullaniciDurumu.AKTIF)
                 .ToListAsync();
 
             return Ok(kullanicilar);
@@ -37,7 +37,7 @@ namespace KcetasAboneApi.Controllers
                 EPosta = dto.EPosta,
                 SifreHash = BCrypt.Net.BCrypt.HashPassword(dto.Sifre), 
                 RolId = dto.RolId,
-                Durum = "AKTIF",
+                Durum = KullaniciDurumu.AKTIF,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -88,7 +88,7 @@ namespace KcetasAboneApi.Controllers
                 return NotFound("Böyle bir kullanıcı bulunamadı.");
             }
 
-            dbKullanici.Durum = "PASIF";
+            dbKullanici.Durum = BaglantiDurumu.PASIF;
             dbKullanici.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

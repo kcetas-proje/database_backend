@@ -7,8 +7,8 @@ public class EndeksOkumaCreateDto
     public long? SozlesmeId { get; set; }
     public decimal YeniEndeks { get; set; }
     public decimal? OncekiEndeks { get; set; } 
-    public string? OkumaTipi { get; set; }
-    public string? OkumaKaynagi { get; set; }
+    public OkumaTipi? OkumaTipi { get; set; }
+    public OkumaKaynagi? OkumaKaynagi { get; set; }
     public string? Donem { get; set; }
     public DateTime? OkumaZamani { get; set; }
     public long? KullaniciId { get; set; }

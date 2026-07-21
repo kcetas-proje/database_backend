@@ -4,7 +4,7 @@ public class FaturaCreateDto
 {
     public long SozlesmeId { get; set; }
     public long? IsEmriId { get; set; } 
-    public string FaturaTipi { get; set; }
+    public FaturaTipi FaturaTipi { get; set; }
     public string Donem { get; set; }
     public decimal IlkEndeks { get; set; }
     public decimal SonEndeks { get; set; }

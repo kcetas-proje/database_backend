@@ -33,7 +33,7 @@ public class IsEmirleriController : ControllerBase
         // Web'den includeCompleted=true gelirse buraya hiç girmez, her şeyi çeker!
         if (!includeCompleted)
         {
-            query = query.Where(i => i.Durum != "TAMAMLANDI");
+            query = query.Where(i => i.Durum != IsEmriDurumu.TAMAMLANDI);
         }
 
         return await query
@@ -52,10 +52,10 @@ public class IsEmirleriController : ControllerBase
     .AsNoTracking()
     .Where(i =>
         i.AtananKullaniciId == kullaniciId &&
-        i.Durum != "IPTAL");
+        i.Durum != IsEmriDurumu.IPTAL);
         if (!includeCompleted)
         {
-            query = query.Where(i => i.Durum != "TAMAMLANDI");
+            query = query.Where(i => i.Durum != IsEmriDurumu.TAMAMLANDI);
         }
 
         var isEmirleri = await query
@@ -81,7 +81,7 @@ public class IsEmirleriController : ControllerBase
         // 🛡️ Web'den true gelene kadar tamamlanmışları gizle!
         if (!includeCompleted) 
         {
-            query = query.Where(i => i.Durum != "TAMAMLANDI");
+            query = query.Where(i => i.Durum != IsEmriDurumu.TAMAMLANDI);
         }
 
         var totalCount = await query.CountAsync();
@@ -162,7 +162,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             if (!await _context.Sayaclars.AnyAsync(x => x.SayacId == finalSayacId))
                 return BadRequest(new { message = "Sayaç bulunamadı." });
         }
-        else if (dto.Tip != "YENI_BAGLANTI")
+        else if (dto.Tip != IsEmriTipi.YENI_BAGLANTI)
         {
             // Eğer sayaç ID gönderilmemişse ve yeni bağlantı değilse, o tüketim noktasındaki takılı sayacı otomatik bul.
             var takiliSayac = await _context.Sayaclars
@@ -295,7 +295,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     public async Task<IActionResult> IsEmriTamamla(long isEmriId, long sayacId)
     {
         var isEmri = await _context.IsEmirleris.FindAsync(isEmriId);
-        if (isEmri == null || isEmri.Durum != "ACIK")
+        if (isEmri == null || isEmri.Durum != IsEmriDurumu.ACIK)
             return BadRequest(new { message = "Böyle bir açık iş emri yok." });
 
         var sayac = await _context.Sayaclars.FindAsync(sayacId);
@@ -303,7 +303,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             return BadRequest(new { message = "Bu sayaç depoda değil." });
 
         isEmri.SayacId = sayac.SayacId; 
-        isEmri.Durum = "TAMAMLANDI";
+        isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
         
         isEmri.UpdatedAt = DateTime.UtcNow; 
 
@@ -324,7 +324,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     {
 
         var acikIsEmirleri = await _context.IsEmirleris
-            .Where(i => i.Tip == "YENI_BAGLANTI" && i.Durum == "ACIK")
+            .Where(i => i.Tip == IsEmriTipi.YENI_BAGLANTI && i.Durum == IsEmriDurumu.ACIK)
             .ToListAsync();
 
         var depodakiSayaclar = await _context.Sayaclars
@@ -342,7 +342,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             var sayac = depodakiSayaclar[i];
 
             isEmri.SayacId = sayac.SayacId; 
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
 
             sayac.TuketimNoktasiId = isEmri.TuketimNoktasiId;
             sayac.Durum = SayacDurumu.TAKILI;
@@ -380,8 +380,8 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
         var isEmriTipleri = new[] 
         { 
-            "DEGISTIRME", "SOKME", "KESME", "ACMA", 
-            "ENDEKS_OKUMA", "SAYAC_ARIZA", "MUHURLEME", "KESIF_INCELEME", "ENERJI_ACMA" 
+            IsEmriTipi.DEGISTIRME, IsEmriTipi.SOKME, IsEmriTipi.KESME, IsEmriTipi.ACMA, 
+            IsEmriTipi.ENDEKS_OKUMA, IsEmriTipi.SAYAC_ARIZA, IsEmriTipi.MUHURLEME, IsEmriTipi.KESIF_INCELEME, IsEmriTipi.ENERJI_ACMA 
         };
         
         var oncelikler = new[] { "DUSUK", "NORMAL", "YUKSEK", "ACIL" };
@@ -400,9 +400,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 SayacId = secilenSayac.SayacId, 
                 Tip = secilenTip,
 
-                Oncelik = (secilenTip == "SAYAC_ARIZA" || secilenTip == "KESME") ? "ACIL" : oncelikler[random.Next(oncelikler.Length)],
+                Oncelik = (secilenTip == IsEmriTipi.SAYAC_ARIZA || secilenTip == IsEmriTipi.KESME) ? "ACIL" : oncelikler[random.Next(oncelikler.Length)],
                 
-                Durum = "ACIK",
+                Durum = IsEmriDurumu.ACIK,
                 CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 7)).ToUniversalTime(),
             };
 
@@ -433,7 +433,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             if (isEmri == null) 
                 return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
                 
-            if (isEmri.Durum == "TAMAMLANDI") 
+            if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) 
                 return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
 
             if (isEmri.SayacId == null || !isEmri.SayacId.HasValue)
@@ -447,7 +447,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             long sayacId = isEmri.SayacId.Value;
             
             // 1. İş Emrini Kapat ve Detayları Ekle
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
             if (!string.IsNullOrEmpty(request.SahaSonucu))
                 isEmri.SahaSonucu = request.SahaSonucu;
             
@@ -458,17 +458,17 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 .OrderByDescending(e => e.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            string dinamikOkumaTipi = isEmri.Tip switch
+            OkumaTipi dinamikOkumaTipi = isEmri.Tip switch
             {
-                "KESME" => "KESME_ENDEKSI",
-                "DEGISTIRME" => "SAYAC_DEGISIM_OKUMASI",
-                "SAYAC_ARIZA" => "SAYAC_ARIZA_OKUMASI", 
-                "MUHURLEME" => "MUHURLEME_ENDEKSI", 
-                "SOKME" => "SON_OKUMA",
-                "ENERJI_ACMA" => "ILK_OKUMA", 
-                "ACMA" => "ILK_OKUMA",
-                "YENI_BAGLANTI" => "ILK_OKUMA", 
-                _ => sonOkuma == null ? "ILK_OKUMA" : "RUTIN_DONEM"
+                IsEmriTipi.KESME => OkumaTipi.KESME_ENDEKSI,
+                IsEmriTipi.DEGISTIRME => OkumaTipi.SAYAC_DEGISIM_OKUMASI,
+                IsEmriTipi.SAYAC_ARIZA => OkumaTipi.SAYAC_ARIZA_OKUMASI, 
+                IsEmriTipi.MUHURLEME => OkumaTipi.MUHURLEME_ENDEKSI, 
+                IsEmriTipi.SOKME => OkumaTipi.SON_OKUMA,
+                IsEmriTipi.ENERJI_ACMA => OkumaTipi.ILK_OKUMA, 
+                IsEmriTipi.ACMA => OkumaTipi.ILK_OKUMA,
+                IsEmriTipi.YENI_BAGLANTI => OkumaTipi.ILK_OKUMA, 
+                _ => sonOkuma == null ? OkumaTipi.ILK_OKUMA : OkumaTipi.RUTIN_DONEM
             };
 
             var yeniEndeks = new EndeksOkuma
@@ -476,7 +476,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 SayacId = sayacId,
                 IsEmriId = isEmri.IsEmriId,
                 OkumaTipi = dinamikOkumaTipi,
-                OkumaKaynagi = "MANUEL",
+                OkumaKaynagi = OkumaKaynagi.MANUEL,
                 OncekiEndeks = sonOkuma?.YeniEndeks ?? 0m,
                 YeniEndeks = request.SonEndeks,
 
@@ -491,7 +491,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 Donem = $"{DateTime.UtcNow:yyyy/MM}",
                 OkumaZamani = DateTime.UtcNow,
                 KullaniciId = request.IslemYapanKullaniciId,
-                DogrulamaDurumu = "ONAYLANDI",
+                DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                 AnomaliMi = false,
                 Status = "AKTIF",
                 CreatedAt = DateTime.UtcNow
@@ -506,9 +506,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
                 isEmri.Sayac.Durum = isEmri.Tip switch
                 {
-                    "SOKME" => SayacDurumu.SOKULMUS,
-                    "DEGISTIRME" => SayacDurumu.SOKULMUS,
-                    "SAYAC_ARIZA" => SayacDurumu.ARIZALI,
+                    IsEmriTipi.SOKME => SayacDurumu.SOKULMUS,
+                    IsEmriTipi.DEGISTIRME => SayacDurumu.SOKULMUS,
+                    IsEmriTipi.SAYAC_ARIZA => SayacDurumu.ARIZALI,
                     _ => isEmri.Sayac.Durum 
                 };
 
@@ -535,11 +535,11 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         if (isEmri == null)
             return NotFound(new { message = "İş emri bulunamadı." });
 
-        if (isEmri.Durum == "TAMAMLANDI")
+        if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI)
             return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
 
         // İş Emri Durum Güncellemesi
-        isEmri.Durum = "TAMAMLANDI";
+        isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
         isEmri.SahaSonucu = "Enerji Açıldı - Nokta: " + dto.AcmaNoktasi;
         isEmri.MuhurNo = dto.MuhurNo;
         isEmri.Gerekce = dto.Aciklama;
@@ -557,12 +557,12 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 SayacId = isEmri.SayacId.Value,
                 IsEmriId = isEmri.IsEmriId,
                 SozlesmeId = sozlesme?.SozlesmeId,
-                OkumaTipi = "ACILIS",
-                OkumaKaynagi = "MOBIL",
+                OkumaTipi = OkumaTipi.ILK_OKUMA,
+                OkumaKaynagi = OkumaKaynagi.MANUEL,
                 OncekiEndeks = 0,
                 YeniEndeks = dto.Aktif,
                 OkumaZamani = DateTime.UtcNow,
-                DogrulamaDurumu = "ONAYLANDI",
+                DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                 AnomaliMi = false,
                 Status = "AKTIF",
                 CreatedAt = DateTime.UtcNow
@@ -591,10 +591,10 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             if (isEmri == null) 
                 return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
                 
-            if (isEmri.Durum == "TAMAMLANDI") 
+            if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) 
                 return BadRequest(new { message = "Bu iş emri zaten tamamlanmış!" });
 
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
             isEmri.SokulenSeriNo = dto.SokulenSeriNo;
             isEmri.YeniSeriNo = dto.YeniSeriNo;
             isEmri.YeniMuhurNo = dto.YeniMuhurNo;
@@ -618,12 +618,12 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 {
                     SayacId = eskiSayac.SayacId,
                     IsEmriId = isEmri.IsEmriId,
-                    OkumaTipi = "SAYAC_DEGISIM_OKUMASI",
-                    OkumaKaynagi = "MANUEL",
+                    OkumaTipi = OkumaTipi.SAYAC_DEGISIM_OKUMASI,
+                    OkumaKaynagi = OkumaKaynagi.MANUEL,
                     YeniEndeks = dto.SokulenAktif, 
                     OkumaZamani = DateTime.UtcNow,
                     KullaniciId = dto.IslemYapanKullaniciId,
-                    DogrulamaDurumu = "ONAYLANDI",
+                    DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow
                 };
@@ -648,12 +648,12 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             {
                 SayacId = yeniSayac.SayacId,
                 IsEmriId = isEmri.IsEmriId,
-                OkumaTipi = "ILK_OKUMA",
-                OkumaKaynagi = "MANUEL",
+                OkumaTipi = OkumaTipi.ILK_OKUMA,
+                OkumaKaynagi = OkumaKaynagi.MANUEL,
                 YeniEndeks = dto.YeniIlkEndeks,
                 OkumaZamani = DateTime.UtcNow,
                 KullaniciId = dto.IslemYapanKullaniciId,
-                DogrulamaDurumu = "ONAYLANDI",
+                DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                 Status = "AKTIF",
                 CreatedAt = DateTime.UtcNow
             };
@@ -692,9 +692,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
 
             if (isEmri == null) return NotFound(new { message = "İş emri bulunamadı." });
-            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten kapatılmış." });
+            if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) return BadRequest(new { message = "Bu iş emri zaten kapatılmış." });
 
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
             isEmri.KesmeNoktasi = dto.KesmeNoktasi;
             isEmri.KesmeNedeni = dto.KesmeNedeni;
             isEmri.AboneDurumu = dto.AboneDurumu;
@@ -714,12 +714,12 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 {
                     SayacId = isEmri.Sayac.SayacId,
                     IsEmriId = isEmri.IsEmriId,
-                    OkumaTipi = "KESME_ENDEKSI",
-                    OkumaKaynagi = "MANUEL",
+                    OkumaTipi = OkumaTipi.KESME_ENDEKSI,
+                    OkumaKaynagi = OkumaKaynagi.MANUEL,
                     YeniEndeks = dto.SonEndeks,
                     OkumaZamani = DateTime.UtcNow,
                     KullaniciId = dto.IslemYapanKullaniciId,
-                    DogrulamaDurumu = "ONAYLANDI",
+                    DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow
                 };
@@ -752,7 +752,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
 
             if (isEmri == null) return NotFound(new { message = "İş emri bulunamadı." });
-            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten kapatılmış." });
+            if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) return BadRequest(new { message = "Bu iş emri zaten kapatılmış." });
 
             // 2. Eğer isEmri.Sayac hala null ise, SayacId'den manuel çek (Kritik Racon!)
             if (isEmri.Sayac == null && isEmri.SayacId.HasValue)
@@ -761,7 +761,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             }
 
             // 3. İş emri statülerini mühürle
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
             isEmri.ArizaTipi = dto.ArizaTipi; 
             isEmri.SahaSonucu = dto.SahaSonucu;
             isEmri.TutanakNo = dto.TutanakNo;
@@ -778,8 +778,8 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 {
                     SayacId = isEmri.Sayac.SayacId, // Artık null dönmez!
                     IsEmriId = isEmri.IsEmriId,
-                    OkumaTipi = "SAYAC_ARIZA_OKUMASI",
-                    OkumaKaynagi = "MANUEL", 
+                    OkumaTipi = OkumaTipi.SAYAC_ARIZA_OKUMASI,
+                    OkumaKaynagi = OkumaKaynagi.MANUEL, 
                     YeniEndeks = dto.Aktif,
                     GunduzEndeks = dto.Gunduz,
                     PuantEndeks = dto.Puant,
@@ -789,7 +789,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                     Demand = dto.Demand,
                     OkumaZamani = DateTime.UtcNow,
                     KullaniciId = dto.IslemYapanKullaniciId,
-                    DogrulamaDurumu = "ONAYLANDI",
+                    DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow
                 };
@@ -825,9 +825,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
 
             if (isEmri == null) return NotFound(new { message = "İş emri bulunamadı." });
-            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
+            if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
 
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
             isEmri.Gerekce = dto.Gerekce;
             isEmri.EskiMuhurNo = dto.EskiMuhurNo;
             isEmri.YeniMuhurNo = dto.YeniMuhurNo;
@@ -846,8 +846,8 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 {
                     SayacId = isEmri.Sayac.SayacId,
                     IsEmriId = isEmri.IsEmriId,
-                    OkumaTipi = "MUHURLEME_ENDEKSI",
-                    OkumaKaynagi = "MANUEL",
+                    OkumaTipi = OkumaTipi.MUHURLEME_ENDEKSI,
+                    OkumaKaynagi = OkumaKaynagi.MANUEL,
                     YeniEndeks = dto.Aktif,
                     GunduzEndeks = dto.Gunduz,
                     PuantEndeks = dto.Puant,
@@ -857,7 +857,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                     Demand = dto.Demand,
                     OkumaZamani = DateTime.UtcNow,
                     KullaniciId = dto.IslemYapanKullaniciId,
-                    DogrulamaDurumu = "ONAYLANDI",
+                    DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow
                 };
@@ -888,10 +888,10 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
 
             if (isEmri == null) return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
-            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
+            if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) return BadRequest(new { message = "Bu iş emri zaten tamamlanmış." });
 
             // 1. İş Emrini Kapat
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
             isEmri.YeniSeriNo = dto.SeriNo; // Takılan sayacın seri nosu
             isEmri.YapiTesisTipi = dto.BaglantiTipi;
             isEmri.DamgaYili = dto.DamgaYili;
@@ -919,12 +919,12 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             {
                 SayacId = sayac.SayacId,
                 IsEmriId = isEmri.IsEmriId,
-                OkumaTipi = "ILK_OKUMA",
-                OkumaKaynagi = "MANUEL",
+                OkumaTipi = OkumaTipi.ILK_OKUMA,
+                OkumaKaynagi = OkumaKaynagi.MANUEL,
                 YeniEndeks = dto.IlkEndeks, // Sadece aktif endeks geliyor
                 OkumaZamani = DateTime.UtcNow,
                 KullaniciId = dto.IslemYapanKullaniciId,
-                DogrulamaDurumu = "ONAYLANDI",
+                DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                 Status = "AKTIF",
                 CreatedAt = DateTime.UtcNow
             };
@@ -954,10 +954,10 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 .FirstOrDefaultAsync(x => x.IsEmriId == dto.JobId);
 
             if (isEmri == null) return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
-            if (isEmri.Durum == "TAMAMLANDI") return BadRequest(new { message = "Bu keşif zaten raporlanmış." });
+            if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) return BadRequest(new { message = "Bu keşif zaten raporlanmış." });
 
             // 1. İş Emrini Keşif Detaylarıyla Zırhlandır
-            isEmri.Durum = "TAMAMLANDI";
+            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
             isEmri.PanoDirekNo = dto.PanoDirekNo;
             isEmri.KesifSonucu = dto.KesifSonucu;
             isEmri.YapiTesisTipi = dto.YapiTesisTipi;
@@ -989,12 +989,12 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         if (isEmri == null) 
             return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
 
-        if (isEmri.Durum == "TAMAMLANDI") 
+        if (isEmri.Durum == IsEmriDurumu.TAMAMLANDI) 
             return BadRequest(new { message = "Tamamlanmış işe personel atanamaz." });
 
         // Ustaya kitle
         isEmri.AtananKullaniciId = request.UstaId;
-        isEmri.Durum = "ATANDI";
+        isEmri.Durum = IsEmriDurumu.ATANDI;
         isEmri.UpdatedAt = DateTime.UtcNow;
 
         // Bildirimi DB'ye çak
@@ -1020,7 +1020,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     {
         // Sahipsiz işleri ve aktif ekipleri topla
         var sahipsizIsEmirleri = await _context.IsEmirleris
-            .Where(i => i.AtananKullaniciId == null && i.Durum == "ACIK")
+            .Where(i => i.AtananKullaniciId == null && i.Durum == IsEmriDurumu.ACIK)
             .ToListAsync();
 
         var sahaEkipleri = await _context.Kullanicilars
@@ -1041,7 +1041,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             
             // İşi ustaya zimmetle
             isEmri.AtananKullaniciId = secilenUstaId;
-            isEmri.Durum = "ATANDI";
+            isEmri.Durum = IsEmriDurumu.ATANDI;
             isEmri.UpdatedAt = DateTime.UtcNow;
             
             // Bildirim paketini hazırla
@@ -1077,9 +1077,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     [HttpPost("planlanan-tarihleri-dagit")]
     public async Task<IActionResult> PlanlananTarihleriDagit()
     {
-        // 1. Durumu "ATANDI" olan ama tarihi hala boş olan amele işlerini topla
+        // 1. Durumu IsEmriDurumu.ATANDI olan ama tarihi hala boş olan amele işlerini topla
         var isEmirleri = await _context.IsEmirleris
-            .Where(i => i.Durum == "ATANDI" && i.PlanlananTarih == null)
+            .Where(i => i.Durum == IsEmriDurumu.ATANDI && i.PlanlananTarih == null)
             .ToListAsync();
 
         if (!isEmirleri.Any())

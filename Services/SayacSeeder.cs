@@ -77,8 +77,8 @@ public class SayacSeeder
                 UretimYili = faker.Random.Int(2018, DateTime.Now.Year),
 
                 Faz = faker.Random.Bool(0.75f)
-                    ? "TEK_FAZ"
-                    : "UC_FAZ",
+                    ? Faz.TEK_FAZ
+                    : Faz.UC_FAZ,
 
                 Carpan = faker.PickRandom(new decimal[]
                 {

@@ -99,9 +99,9 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
     {
         IsEmriNo = $"{isEmriPrefix}{isEmriSira:D4}",
         TuketimNoktasiId = yeniSozlesme.TuketimNoktasiId,
-        Tip = "ACMA",
+        Tip = IsEmriTipi.ACMA,
         Oncelik = "YUKSEK", 
-        Durum = "ACIK",
+        Durum = IsEmriDurumu.ACIK,
         CreatedAt = DateTime.UtcNow
     };
 
@@ -145,7 +145,7 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
         mevcut.BaslangicTarihi = sozlesme.BaslangicTarihi;
         mevcut.BitisTarihi = sozlesme.BitisTarihi;
         mevcut.GuvenceBedeli = sozlesme.GuvenceBedeli;
-        mevcut.Durum = sozlesme.Durum;
+        mevcut.Durum = System.Enum.Parse<IsEmriDurumu>(sozlesme.Durum.ToString());
         mevcut.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -185,9 +185,9 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
         {
             IsEmriNo = $"{isEmriPrefix}{isEmriSira:D4}",
             TuketimNoktasiId = mekanId,
-            Tip = "KESME",
+            Tip = IsEmriTipi.KESME,
             Oncelik = "YUKSEK", 
-            Durum = "ACIK",
+            Durum = IsEmriDurumu.ACIK,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -253,9 +253,9 @@ public async Task<IActionResult> GenerateFakeSozlesmeler()
         {
             IsEmriNo = $"{isEmriPrefix}{(isEmriSira + i):D4}",
             TuketimNoktasiId = mekanlar[i].TuketimNoktasiId,
-            Tip = "YENI_BAGLANTI",
+            Tip = IsEmriTipi.YENI_BAGLANTI,
             Oncelik = "YUKSEK", 
-            Durum = "ACIK",
+            Durum = IsEmriDurumu.ACIK,
             CreatedAt = DateTime.UtcNow
         };
         yeniIsEmirleri.Add(otoAcmaIsEmri);

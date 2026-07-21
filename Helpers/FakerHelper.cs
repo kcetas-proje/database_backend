@@ -1,4 +1,5 @@
-﻿using Bogus;
+using Bogus;
+using KcetasAboneApi.Models;
 
 namespace KcetasSeeder.Helpers;
 
@@ -147,8 +148,8 @@ public static class FakerHelper
     // SAYAÇ
     // ===========================
 
-    public static string Faz()
-        => Faker.PickRandom("TEK_FAZ", "UC_FAZ");
+    public static Faz GetFaz()
+        => Faker.PickRandom(Faz.TEK_FAZ, Faz.UC_FAZ);
 
     public static string SayacMarka()
         => Faker.PickRandom("Luna", "Makel", "Siemens", "Landis", "Klemsan");

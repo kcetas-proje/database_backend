@@ -8,7 +8,7 @@ public class TuketimNoktasiDetailDto
     public string AcikAdres { get; set; } = null!;
     public decimal BaglantiGucuKw { get; set; }
     public string TuketiciGrubu { get; set; } = null!;
-    public string BaglantiDurumu { get; set; } = null!;
+    public BaglantiDurumu BaglantiDurumu { get; set; }
     public string Status { get; set; } = null!;
 
     // 🎯 İlişkili Tablolardan Çekilecek VIP Veriler

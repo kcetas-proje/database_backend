@@ -28,7 +28,7 @@ public partial class Sayaclar
     public int UretimYili { get; set; } = DateTime.UtcNow.Year;
 
     [Column("faz")]
-    public string? Faz { get; set; }
+    public Faz? Faz { get; set; }
 
     [Column("carpan")]
     public decimal Carpan { get; set; } = 1;

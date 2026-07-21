@@ -96,7 +96,7 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
         
         UretimYili = dto.UretimYili == 0 ? DateTime.UtcNow.Year : dto.UretimYili, 
         
-        Faz = string.IsNullOrEmpty(dto.Faz) ? "TEK_FAZ" : dto.Faz,
+        Faz = dto.Faz == null ? Faz.TEK_FAZ : dto.Faz,
         Carpan = dto.Carpan == 0 ? 1 : dto.Carpan,
         MuhurNo = dto.MuhurNo,
         Durum = dto.Durum,
@@ -129,7 +129,7 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
         mevcut.Faz = sayac.Faz;
         mevcut.Carpan = sayac.Carpan;
         mevcut.MuhurNo = sayac.MuhurNo;
-        mevcut.Durum = sayac.Durum;
+        mevcut.Durum = System.Enum.Parse<IsEmriDurumu>(sayac.Durum.ToString());
         mevcut.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -177,7 +177,7 @@ public async Task<IActionResult> GenerateFakeSayaclar()
         .RuleFor(s => s.Marka, f => f.PickRandom(markalar))
         .RuleFor(s => s.Model, f => f.Commerce.ProductName().Substring(0, 4).ToUpper() + "-" + f.Random.Number(100, 999))
         .RuleFor(s => s.UretimYili, f => f.Random.Number(2023, 2026)) 
-        .RuleFor(s => s.Faz, f => f.PickRandom(new[] { "TEK_FAZ", "UC_FAZ" })) 
+        .RuleFor(s => s.Faz, f => f.PickRandom(new Faz?[] { (Faz?)Faz.TEK_FAZ, (Faz?)Faz.UC_FAZ })) 
         
         .RuleFor(s => s.Carpan, 1m) 
         .RuleFor(s => s.MuhurNo, f => $"MHR-{f.Random.Number(100000, 999999)}")

@@ -12,9 +12,9 @@ public class IsEmriCreateDto
     public long? AtananKullaniciId { get; set; }
 
     [Required]
-    public string Tip { get; set; } = null!;
+    public IsEmriTipi Tip { get; set; }
 
     public string Oncelik { get; set; } = "NORMAL";
     
-    public string Durum { get; set; } = "ACIK";
+    public IsEmriDurumu Durum { get; set; } = IsEmriDurumu.ACIK;
 }

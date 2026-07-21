@@ -57,7 +57,7 @@ namespace KcetasAboneApi.Controllers
                 IdempotencyKey = Guid.NewGuid().ToString(),
                 CorrelationId = Guid.NewGuid().ToString(),
                 
-                Durum = "BEKLIYOR",
+                Durum = OutboxDurumu.BEKLIYOR,
                 RetryCount = 0,
                 CreatedAt = DateTime.UtcNow
             };
@@ -74,7 +74,7 @@ namespace KcetasAboneApi.Controllers
             var log = await _context.EntegrasyonOutboxes.FindAsync(id);
             if (log == null) return NotFound();
 
-            log.Durum = dto.Durum;
+            log.Durum = System.Enum.Parse<IsEmriDurumu>(dto.Durum);
             log.RetryCount = dto.RetryCount;
             log.HataMesaji = dto.HataMesaji;
             log.SonDenemeTarihi = DateTime.UtcNow;

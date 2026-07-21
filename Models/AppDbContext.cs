@@ -170,7 +170,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
             entity.Property(e => e.DagitimBedeli).HasPrecision(14, 2).HasColumnName("dagitim_bedeli");
             entity.Property(e => e.Donem).HasMaxLength(7).HasColumnName("donem");
-            entity.Property(e => e.Durum).HasConversion<string>().HasMaxLength(20).HasDefaultValueSql("'TASLAK'::character varying").HasColumnName("durum");
+            entity.Property(e => e.Durum).HasMaxLength(20).HasDefaultValueSql("'TASLAK'::character varying").HasColumnName("durum");
             entity.Property(e => e.EnerjiBedeli).HasPrecision(14, 2).HasColumnName("enerji_bedeli");
             entity.Property(e => e.FaturaNo).HasMaxLength(40).HasColumnName("fatura_no");
             entity.Property(e => e.FaturaTarihi).HasColumnName("fatura_tarihi");
@@ -255,7 +255,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.KullaniciId).HasColumnName("kullanici_id");
             entity.Property(e => e.AdSoyad).HasMaxLength(150).HasColumnName("ad_soyad");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
-            entity.Property(e => e.Durum).HasMaxLength(20).HasDefaultValueSql("'AKTIF'::character varying").HasColumnName("durum");
+            entity.Property(e => e.Durum).HasMaxLength(20).HasDefaultValueSql("\'AKTIF\'::character varying").HasColumnName("durum");
             entity.Property(e => e.EPosta).HasMaxLength(150).HasColumnName("e_posta");
             entity.Property(e => e.KullaniciAdi).HasMaxLength(50).HasColumnName("kullanici_adi");
             entity.Property(e => e.RolId).HasColumnName("rol_id");
@@ -281,12 +281,12 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Sayaclar>(entity =>
         {
-            entity.Property(e => e.Durum).HasConversion<string>();
+            entity.Property(e => e.Durum);
         });
 
         modelBuilder.Entity<Sozlesmeler>(entity =>
         {
-            entity.Property(e => e.Durum).HasConversion<string>();
+            entity.Property(e => e.Durum);
         });
 
         OnModelCreatingPartial(modelBuilder);

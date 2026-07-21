@@ -7,8 +7,8 @@ public class EndeksOkumaDetailDto
     public long? IsEmriId { get; set; }
     public long? SozlesmeId { get; set; }
     public long? AboneId { get; set; }
-    public string? OkumaTipi { get; set; }
-    public string? OkumaKaynagi { get; set; }
+    public OkumaTipi? OkumaTipi { get; set; }
+    public OkumaKaynagi? OkumaKaynagi { get; set; }
     public decimal? OncekiEndeks { get; set; }
     public decimal YeniEndeks { get; set; }
     public string? Donem { get; set; }

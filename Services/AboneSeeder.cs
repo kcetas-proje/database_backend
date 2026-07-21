@@ -47,7 +47,7 @@ public class AboneSeeder
             {
                 AboneNo = $"ABN{DateTime.Now.Year}{sonAboneNo:D6}",
 
-                AboneTipi = bireysel ? "BIREYSEL" : "KURUMSAL",
+                AboneTipi = bireysel ? AboneTipi.BIREYSEL : AboneTipi.KURUMSAL,
 
                 Ad = bireysel ? FakerHelper.Ad() : null,
 

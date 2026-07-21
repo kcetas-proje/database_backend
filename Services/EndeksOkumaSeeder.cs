@@ -69,9 +69,9 @@ public class EndeksOkumaSeeder
 
                     IsEmriId = null,
 
-                    OkumaTipi = "RUTIN_DONEM",
+                    OkumaTipi = OkumaTipi.RUTIN_DONEM,
 
-                    OkumaKaynagi = "MANUEL",
+                    OkumaKaynagi = OkumaKaynagi.MANUEL,
 
                     OncekiEndeks = mevcutEndeks,
 
@@ -85,7 +85,7 @@ public class EndeksOkumaSeeder
 
                     OkunamamaNedeni = null,
 
-                    DogrulamaDurumu = "ONAYLANDI",
+                    DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
 
                     AnomaliMi = false,
 

@@ -75,7 +75,7 @@ namespace KcetasAboneApi.Controllers
             {
                 var okuma = await _context.EndeksOkumas.FirstOrDefaultAsync(o => o.OkumaId == request.OkumaId);
                 if (okuma == null) return NotFound(new { message = "Okuma kaydı bulunamadı." });
-                if (okuma.DogrulamaDurumu != "ONAYLANDI") return BadRequest(new { message = "Onaylanmamış okumadan fatura kesilemez!" });
+                if (okuma.DogrulamaDurumu != DogrulamaDurumu.ONAYLANDI) return BadRequest(new { message = "Onaylanmamış okumadan fatura kesilemez!" });
 
                 bool faturaVarMi = await _context.Faturas.AnyAsync(f => f.OkumaId == request.OkumaId && f.Status == "AKTIF");
                 if (faturaVarMi) return BadRequest(new { message = "Bu okuma için zaten fatura kesilmiş boss!" });
@@ -128,9 +128,9 @@ namespace KcetasAboneApi.Controllers
 
                 var kalemler = new List<FaturaKalemi>
                 {
-                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = "ENERJI_BEDELI", Miktar = tuketimKwh, BirimFiyat = enerjiBirimFiyat, Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
-                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = "DAGITIM_BEDELI", Miktar = tuketimKwh, BirimFiyat = dagitimBirimFiyat, Tutar = dagitimBedeli, Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
-                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = "VERGI_FON", Miktar = 1, BirimFiyat = vergiFonToplam, Tutar = vergiFonToplam, Aciklama = "KDV ve Diğer Fonlar" }
+                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = KalemTipi.ENERJI, Miktar = tuketimKwh, BirimFiyat = enerjiBirimFiyat, Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
+                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = KalemTipi.DAGITIM_BEDELI, Miktar = tuketimKwh, BirimFiyat = dagitimBirimFiyat, Tutar = dagitimBedeli, Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
+                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = KalemTipi.VERGI_FON, Miktar = 1, BirimFiyat = vergiFonToplam, Tutar = vergiFonToplam, Aciklama = "KDV ve Diğer Fonlar" }
                 };
                 
                 _context.FaturaKalemis.AddRange(kalemler);
@@ -140,8 +140,8 @@ namespace KcetasAboneApi.Controllers
                 var outboxKargosu = new EntegrasyonOutbox
                 {
                     FaturaId = fatura.FaturaId,
-                    HedefSistem = "GIB_EFATURA",
-                    Durum = "BEKLIYOR",
+                    HedefSistem = HedefSistem.GIB_EFATURA,
+                    Durum = OutboxDurumu.BEKLIYOR,
                     IdempotencyKey = Guid.NewGuid().ToString(),
                     Payload = JsonSerializer.Serialize(new { faturaNo = fatura.FaturaNo, tutar = fatura.ToplamTutar, vergi = fatura.VergiFonToplam }),
                     CreatedAt = DateTime.UtcNow
@@ -175,7 +175,7 @@ namespace KcetasAboneApi.Controllers
                 return BadRequest(new { message = "Bu fatura zaten daha önce tahsil edilmiş!" });
             
             if (fatura.Durum != FaturaDurumu.ODENMEDI && fatura.Durum != FaturaDurumu.GONDERILDI)
-                return BadRequest(new { message = $"Sadece ODENMEDI veya GONDERILDI durumundaki faturalar tahsil edilebilir. Mevcut durum: {fatura.Durum}" });
+                return BadRequest(new { message = $"Sadece ODENMEDI veya GONDERILDI durumundaki faturalar tahsil edilebilir. Mevcut durum: {fatura.Durum.ToString()}" });
 
             // 3. Durumu güncelle
             fatura.Durum = FaturaDurumu.ODENDI;
@@ -219,14 +219,14 @@ namespace KcetasAboneApi.Controllers
                     SayacId = sayac.SayacId,
                     IsEmriId = dto.IsEmriId,
                     SozlesmeId = dto.SozlesmeId,
-                    OkumaTipi = "RUTIN_DONEM",
-                    OkumaKaynagi = "OSOS",
+                    OkumaTipi = OkumaTipi.RUTIN_DONEM,
+                    OkumaKaynagi = OkumaKaynagi.OSOS,
                     OncekiEndeks = dto.IlkEndeks,
                     YeniEndeks = dto.SonEndeks,
                     Donem = dto.Donem,
                     OkumaZamani = dto.OkumaZamani != default ? dto.OkumaZamani : DateTime.UtcNow,
                     KullaniciId = dto.KullaniciId,
-                    DogrulamaDurumu = "ONAYLANDI",
+                    DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
                     AnomaliMi = false,
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow
@@ -248,7 +248,7 @@ namespace KcetasAboneApi.Controllers
                     OkumaId = yeniOkuma.OkumaId,
                     FaturaNo = rasgeleFaturaNo,
                     TekilKod = rasgeleTekilKod,
-                    FaturaTipi = string.IsNullOrEmpty(dto.FaturaTipi) ? "DONEM" : dto.FaturaTipi,
+                    FaturaTipi = string.IsNullOrEmpty(System.Enum.Parse<FaturaTipi>(dto.FaturaTipi.ToString())) ? FaturaTipi.DONEM : System.Enum.Parse<FaturaTipi>(dto.FaturaTipi.ToString()),
                     Donem = string.IsNullOrEmpty(dto.Donem) ? DateTime.Now.ToString("yyyy-MM") : dto.Donem,
                     FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
                     SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
@@ -271,9 +271,9 @@ namespace KcetasAboneApi.Controllers
                     // 🚀 FAT-REQ-02: Fatura Kalemleri otomatik doğuyor
                     FaturaKalemis = new List<FaturaKalemi>
                     {
-                        new FaturaKalemi { KalemTipi = "ENERJI_BEDELI", Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(enerjiBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
-                        new FaturaKalemi { KalemTipi = "DAGITIM_BEDELI", Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(dagitimBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = dagitimBedeli, Aciklama = "Dağıtım Bedeli" },
-                        new FaturaKalemi { KalemTipi = "VERGI_FON", Miktar = 1, BirimFiyat = vergiFonBedeli, Tutar = vergiFonBedeli, Aciklama = "Yasal Vergiler ve Fonlar" }
+                        new FaturaKalemi { KalemTipi = KalemTipi.ENERJI, Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(enerjiBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
+                        new FaturaKalemi { KalemTipi = KalemTipi.DAGITIM_BEDELI, Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(dagitimBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = dagitimBedeli, Aciklama = "Dağıtım Bedeli" },
+                        new FaturaKalemi { KalemTipi = KalemTipi.VERGI_FON, Miktar = 1, BirimFiyat = vergiFonBedeli, Tutar = vergiFonBedeli, Aciklama = "Yasal Vergiler ve Fonlar" }
                     }
                 };
 
@@ -285,7 +285,7 @@ namespace KcetasAboneApi.Controllers
                     var isEmri = await _context.IsEmirleris.FindAsync(dto.IsEmriId.Value);
                     if (isEmri != null) 
                     {
-                        isEmri.Durum = "TAMAMLANDI";
+                        isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
                         isEmri.UpdatedAt = DateTime.UtcNow;
                     }
                 }
@@ -303,10 +303,10 @@ namespace KcetasAboneApi.Controllers
                 var outboxKaydi = new EntegrasyonOutbox
                 {
                     Fatura = yeniFatura, 
-                    HedefSistem = "GIB_EFATURA",
+                    HedefSistem = HedefSistem.GIB_EFATURA,
                     IdempotencyKey = Guid.NewGuid().ToString(), 
                     Payload = JsonSerializer.Serialize(payloadData),
-                    Durum = "BEKLIYOR",
+                    Durum = OutboxDurumu.BEKLIYOR,
                     RetryCount = 0,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -350,7 +350,7 @@ namespace KcetasAboneApi.Controllers
             var dbFatura = await _context.Faturas.FindAsync(id);
             if (dbFatura == null) return NotFound("Böyle bir fatura bulunamadı.");
 
-            dbFatura.Status = "IPTAL";
+            dbFatura.Status = IsEmriDurumu.IPTAL.ToString();
             dbFatura.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -363,16 +363,16 @@ namespace KcetasAboneApi.Controllers
         {
             var fatura = await _context.Faturas.FindAsync(faturaId);
             if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
-            if (fatura.Durum != FaturaDurumu.HESAPLANDI) return BadRequest(new { message = $"Sadece HESAPLANDI olanlar onaylanabilir." });
+            if (fatura.Durum.ToString() != FaturaDurumu.HESAPLANDI) return BadRequest(new { message = $"Sadece HESAPLANDI olanlar onaylanabilir." });
 
-            fatura.Durum = FaturaDurumu.ONAYLANDI;
+            fatura.Durum.ToString() = FaturaDurumu.ONAYLANDI;
             fatura.UpdatedAt = DateTime.UtcNow;
 
             var outboxKargosu = new EntegrasyonOutbox
             {
                 FaturaId = fatura.FaturaId,
-                HedefSistem = "GIB_EFATURA",
-                Durum = "BEKLIYOR",
+                HedefSistem = HedefSistem.GIB_EFATURA,
+                Durum = OutboxDurumu.BEKLIYOR,
                 IdempotencyKey = Guid.NewGuid().ToString(),
                 Payload = JsonSerializer.Serialize(new { faturaNo = fatura.FaturaNo, tutar = fatura.ToplamTutar }),
                 CreatedAt = DateTime.UtcNow
@@ -394,7 +394,7 @@ namespace KcetasAboneApi.Controllers
                 return BadRequest(new { message = "Fatura zaten gönderilmiş veya iptal edilmiş!" });
 
             fatura.Durum = FaturaDurumu.IPTAL;
-            fatura.Status = "PASIF"; 
+            fatura.Status = BaglantiDurumu.PASIF.ToString(); 
             fatura.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -413,7 +413,7 @@ namespace KcetasAboneApi.Controllers
                     .Include(e => e.Sozlesme).ThenInclude(s => s.TuketimNoktasi) 
                     .Include(e => e.Sozlesme).ThenInclude(s => s.Tarife)
                     .Include(e => e.Sayac)
-                    .Where(e => e.DogrulamaDurumu == "ONAYLANDI")
+                    .Where(e => e.DogrulamaDurumu == DogrulamaDurumu.ONAYLANDI)
                     .ToListAsync();
 
                 if (!okunmusEndeksler.Any())
@@ -447,7 +447,7 @@ namespace KcetasAboneApi.Controllers
                         FaturaNo = $"{faturaPrefix}{faturaSira:D5}",
                         SozlesmeId = endeks.SozlesmeId.Value,
                         TekilKod = endeks.Sozlesme.TuketimNoktasi!.TekilKod, 
-                        FaturaTipi = "DONEM",
+                        FaturaTipi = FaturaTipi.DONEM,
                         Donem = endeks.Donem,
                         FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
                         SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
@@ -470,15 +470,15 @@ namespace KcetasAboneApi.Controllers
 
                         FaturaKalemis = new List<FaturaKalemi>
                         {
-                            new FaturaKalemi { KalemTipi = "ENERJI_BEDELI", Miktar = gercekTuketimKwh, BirimFiyat = tarife.GunduzBirimFiyat, Tutar = Math.Round(enerjiBedeli, 2), Aciklama = "Aktif Enerji Bedeli" },
-                            new FaturaKalemi { KalemTipi = "DAGITIM_BEDELI", Miktar = gercekTuketimKwh, BirimFiyat = tarife.DagitimBedeli, Tutar = Math.Round(dagitimBedeli, 2), Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
+                            new FaturaKalemi { KalemTipi = KalemTipi.ENERJI, Miktar = gercekTuketimKwh, BirimFiyat = tarife.GunduzBirimFiyat, Tutar = Math.Round(enerjiBedeli, 2), Aciklama = "Aktif Enerji Bedeli" },
+                            new FaturaKalemi { KalemTipi = KalemTipi.DAGITIM_BEDELI, Miktar = gercekTuketimKwh, BirimFiyat = tarife.DagitimBedeli, Tutar = Math.Round(dagitimBedeli, 2), Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
                             new FaturaKalemi { KalemTipi = "HIZMET_BEDELI", Miktar = 1, BirimFiyat = hizmetBedeli, Tutar = hizmetBedeli, Aciklama = "Sabit Hizmet Bedeli" },
-                            new FaturaKalemi { KalemTipi = "VERGI_FON", Miktar = 1, BirimFiyat = Math.Round(vergiFon, 2), Tutar = Math.Round(vergiFon, 2), Aciklama = "KDV ve Diğer Fonlar" }
+                            new FaturaKalemi { KalemTipi = KalemTipi.VERGI_FON, Miktar = 1, BirimFiyat = Math.Round(vergiFon, 2), Tutar = Math.Round(vergiFon, 2), Aciklama = "KDV ve Diğer Fonlar" }
                         }
                     };
 
                     yeniFaturalar.Add(yeniFatura);
-                    endeks.DogrulamaDurumu = "TAHAKKUKA_AKTARILDI";
+                    endeks.DogrulamaDurumu = DogrulamaDurumu.TAHAKKUKA_AKTARILDI;
                     faturaSira++;
                 }
 

@@ -120,7 +120,7 @@ public class TuketimNoktasiController : ControllerBase
             KoordinatLon = dto.KoordinatLon,
             BaglantiGucuKw = dto.BaglantiGucuKw,
             TuketiciGrubu = dto.TuketiciGrubu,
-            BaglantiDurumu = string.IsNullOrEmpty(dto.BaglantiDurumu) ? "PASIF" : dto.BaglantiDurumu,
+            BaglantiDurumu = dto.BaglantiDurumu == null ? BaglantiDurumu.PASIF : dto.BaglantiDurumu,
             Status = "AKTIF",
             CreatedAt = DateTime.UtcNow
         };
@@ -152,7 +152,7 @@ public class TuketimNoktasiController : ControllerBase
         mevcut.KoordinatLon = nokta.KoordinatLon;
         mevcut.BaglantiGucuKw = nokta.BaglantiGucuKw;
         mevcut.TuketiciGrubu = nokta.TuketiciGrubu;
-        mevcut.BaglantiDurumu = nokta.BaglantiDurumu;
+        mevcut.BaglantiDurumu = nokta.BaglantiDurumu.ToString();
         mevcut.Status = nokta.Status;
         mevcut.UpdatedAt = DateTime.UtcNow;
 
@@ -217,7 +217,7 @@ public async Task<IActionResult> GenerateFakeTuketimNoktalari()
 
         .RuleFor(t => t.BaglantiGucuKw, f => Math.Round(f.Random.Decimal(5.5m, 22.0m), 1))
         .RuleFor(t => t.TuketiciGrubu, f => f.PickRandom(new[] { "MESKEN", "TICARETHANE" }))
-        .RuleFor(t => t.BaglantiDurumu, "PASIF")
+        .RuleFor(t => t.BaglantiDurumu, BaglantiDurumu.PASIF)
         .RuleFor(t => t.Status, "AKTIF")
         .RuleFor(t => t.CreatedAt, DateTime.UtcNow);
 

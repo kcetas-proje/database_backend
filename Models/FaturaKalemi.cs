@@ -9,7 +9,7 @@ public partial class FaturaKalemi
 
     public long FaturaId { get; set; }
 
-    public string KalemTipi { get; set; } = null!;
+    public KalemTipi KalemTipi { get; set; }
 
     public string? Aciklama { get; set; }
 

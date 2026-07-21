@@ -29,7 +29,7 @@ public partial class Kullanicilar
     public string SifreHash { get; set; } = null!;
 
     [Column("durum")]
-    public string Durum { get; set; } = "AKTIF";
+    public KullaniciDurumu Durum { get; set; } = KullaniciDurumu.AKTIF;
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }

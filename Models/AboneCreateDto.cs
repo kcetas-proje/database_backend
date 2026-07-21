@@ -5,7 +5,7 @@ namespace KcetasAboneApi.Models;
 
 public class AboneCreateDto
 {
-    public string AboneTipi { get; set; } = null!; 
+    public AboneTipi AboneTipi { get; set; } 
 
     public string? Ad { get; set; }
     public string? Soyad { get; set; }

@@ -44,7 +44,7 @@ public partial class TuketimNoktasi
     public string TuketiciGrubu { get; set; } = null!;
 
     [Column("baglanti_durumu")]
-    public string BaglantiDurumu { get; set; } = null!;
+    public BaglantiDurumu BaglantiDurumu { get; set; }
 
     [Column("status")]
     public string Status { get; set; } = "AKTIF";

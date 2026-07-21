@@ -11,7 +11,7 @@ public partial class AuditLog
 
     public long VarlikId { get; set; }
 
-    public string IslemTipi { get; set; } = null!;
+    public IslemTipi IslemTipi { get; set; }
 
     public string? EskiDeger { get; set; }
 

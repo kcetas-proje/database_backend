@@ -6,7 +6,7 @@ public class AboneResponseDto
 
     public string AboneNo { get; set; } = string.Empty;
 
-    public string AboneTipi { get; set; } = string.Empty;
+    public AboneTipi AboneTipi { get; set; }
 
     public string? Ad { get; set; }
 

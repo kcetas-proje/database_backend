@@ -17,7 +17,7 @@ public partial class Aboneler
     public string AboneNo { get; set; } = null!;
     
     [Column("abone_tipi")]
-    public string AboneTipi { get; set; } = null!;
+    public AboneTipi AboneTipi { get; set; }
     
     [Column("ad")]
     public string? Ad { get; set; }

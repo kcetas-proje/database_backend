@@ -11,7 +11,7 @@ public class AboneCreateDtoValidator : AbstractValidator<AboneCreateDto>
         RuleFor(x => x.Telefon).NotEmpty().WithMessage("Telefon numarası zorunludur.")
                                .Matches(@"^\d+$").WithMessage("Telefon numarası sadece rakamlardan oluşabilir.");
 
-        When(x => x.AboneTipi == "BIREYSEL", () =>
+        When(x => x.AboneTipi == AboneTipi.BIREYSEL, () =>
         {
             RuleFor(x => x.Ad).NotEmpty().WithMessage("Bireysel abonelerde Ad zorunludur.");
             RuleFor(x => x.Soyad).NotEmpty().WithMessage("Bireysel abonelerde Soyad zorunludur.");
@@ -19,7 +19,7 @@ public class AboneCreateDtoValidator : AbstractValidator<AboneCreateDto>
                                 .Length(11).WithMessage("TCKN 11 haneli olmalıdır.");
         });
 
-        When(x => x.AboneTipi == "KURUMSAL", () =>
+        When(x => x.AboneTipi == AboneTipi.KURUMSAL, () =>
         {
             RuleFor(x => x.Unvan).NotEmpty().WithMessage("Kurumsal abonelerde Ünvan zorunludur.");
             RuleFor(x => x.Vkn).NotEmpty().WithMessage("Kurumsal abonelerde VKN zorunludur.")

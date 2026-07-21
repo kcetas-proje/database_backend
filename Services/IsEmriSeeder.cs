@@ -79,18 +79,18 @@ public class IsEmriSeeder
 
 
 
-        string[] tipler =
+        IsEmriTipi[] tipler =
         {
-            "DEGISTIRME",
-            "SOKME",
-            "KESME",
-            "ACMA",
-            "ENDEKS_OKUMA",
-            "SAYAC_ARIZA",
-            "MUHURLEME",
-            "KESIF_INCELEME",
-            "YENI_BAGLANTI",
-            "ENERJI_ACMA"
+            IsEmriTipi.DEGISTIRME,
+            IsEmriTipi.SOKME,
+            IsEmriTipi.KESME,
+            IsEmriTipi.ACMA,
+            IsEmriTipi.ENDEKS_OKUMA,
+            IsEmriTipi.SAYAC_ARIZA,
+            IsEmriTipi.MUHURLEME,
+            IsEmriTipi.KESIF_INCELEME,
+            IsEmriTipi.YENI_BAGLANTI,
+            IsEmriTipi.ENERJI_ACMA
         };
 
 
@@ -131,13 +131,13 @@ public class IsEmriSeeder
 
             var durum =
                 _faker.PickRandom(
-                    "ACIK",
-                    "ATANDI",
-                    "YOLDA",
-                    "SAHADA",
-                    "TAMAMLANDI",
-                    "IPTAL",
-                    "BASARISIZ");
+                    IsEmriDurumu.ACIK,
+                    IsEmriDurumu.ATANDI,
+                    IsEmriDurumu.YOLDA,
+                    IsEmriDurumu.SAHADA,
+                    IsEmriDurumu.TAMAMLANDI,
+                    IsEmriDurumu.IPTAL,
+                    IsEmriDurumu.BASARISIZ);
 
 
 
@@ -161,7 +161,7 @@ public class IsEmriSeeder
 
 
                     Oncelik =
-                        tip == "ACIL"
+                        tip == IsEmriTipi.ARIZA
                         ? "YUKSEK"
                         : "NORMAL",
 
@@ -189,7 +189,7 @@ public class IsEmriSeeder
 
 
                     UpdatedAt =
-                        durum == "TAMAMLANDI"
+                        durum == IsEmriDurumu.TAMAMLANDI
                         ? created.AddDays(3)
                         : null,
 
@@ -251,7 +251,7 @@ public class IsEmriSeeder
 
 
                     isEmri.SahaSonucu =
-                        durum == "TAMAMLANDI"
+                        durum == IsEmriDurumu.TAMAMLANDI
                         ?
                         "Arıza giderildi."
                         :
@@ -303,7 +303,7 @@ public class IsEmriSeeder
 
 
 
-                case "ACMA":
+                case IsEmriTipi.ACMA:
 
 
                     isEmri.AcmaNoktasi =
@@ -327,7 +327,7 @@ public class IsEmriSeeder
 
 
 
-                case "KESME":
+                case IsEmriTipi.KESME:
 
 
                     isEmri.KesmeNoktasi =
@@ -402,7 +402,7 @@ public class IsEmriSeeder
 
 
 
-                case "ENDEKS_OKUMA":
+                case IsEmriTipi.ENDEKS_OKUMA:
 
 
 

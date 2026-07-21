@@ -13,7 +13,7 @@ public partial class Fatura
 
     public string TekilKod { get; set; } = null!;
 
-    public string FaturaTipi { get; set; } = null!;
+    public FaturaTipi FaturaTipi { get; set; }
 
     public string Donem { get; set; } = null!;
 

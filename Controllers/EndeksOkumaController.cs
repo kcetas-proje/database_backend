@@ -87,13 +87,13 @@ public class EndeksOkumaController : ControllerBase
             YeniEndeks = dto.YeniEndeks,
             OncekiEndeks = dto.OncekiEndeks,
             
-            OkumaTipi = string.IsNullOrEmpty(dto.OkumaTipi) ? "RUTIN_DONEM" : dto.OkumaTipi,
-            OkumaKaynagi = string.IsNullOrEmpty(dto.OkumaKaynagi) ? "MANUEL" : dto.OkumaKaynagi,
+            OkumaTipi = dto.OkumaTipi ?? OkumaTipi.RUTIN_DONEM,
+            OkumaKaynagi = dto.OkumaKaynagi ?? OkumaKaynagi.MANUEL,
             Donem = string.IsNullOrEmpty(dto.Donem) ? DateTime.Now.ToString("yyyy-MM") : dto.Donem,
             OkumaZamani = dto.OkumaZamani ?? DateTime.UtcNow,
             KullaniciId = dto.KullaniciId,
 
-            DogrulamaDurumu = "DOGRULAMA_BEKLIYOR", 
+            DogrulamaDurumu = DogrulamaDurumu.DOGRULAMA_BEKLIYOR, 
             AnomaliMi = false, 
             Status = "AKTIF",
             CreatedAt = DateTime.UtcNow
@@ -112,7 +112,7 @@ public async Task<IActionResult> Update(long id, [FromBody] EndeksOkumaUpdateDto
     if (endeks == null) return NotFound();
 
     endeks.YeniEndeks = dto.Deger; 
-    endeks.OkumaTipi = dto.OkumaTipi;
+    endeks.OkumaTipi = System.Enum.Parse<OkumaTipi>(dto.OkumaTipi.ToString());
 
     await _context.SaveChangesAsync();
     return NoContent();
@@ -124,7 +124,7 @@ public async Task<IActionResult> Delete(long id)
     var endeks = await _context.EndeksOkumas.FindAsync(id);
     if (endeks == null) return NotFound();
 
-    endeks.Status = "PASIF";
+    endeks.Status = BaglantiDurumu.PASIF.ToString();
 
     await _context.SaveChangesAsync();
     return NoContent(); 
@@ -164,11 +164,11 @@ public async Task<IActionResult> GenerateFakeEndeksler()
             SayacId = sayac.SayacId,
             SozlesmeId = sozlesme.SozlesmeId,
             IsEmriId = ilgiliIsEmri?.IsEmriId,
-            OkumaKaynagi = "MANUEL",
+            OkumaKaynagi = OkumaKaynagi.MANUEL,
             Donem = $"{DateTime.UtcNow:yyyy/MM}",
             OkumaZamani = DateTime.UtcNow,
             KullaniciId = _context.MevcutKullaniciId,
-            DogrulamaDurumu = "ONAYLANDI",
+            DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
             AnomaliMi = false,
             Status = "AKTIF",
             CreatedAt = DateTime.UtcNow
@@ -177,14 +177,14 @@ public async Task<IActionResult> GenerateFakeEndeksler()
         if (sonOkuma == null)
         {
 
-            yeniEndeks.OkumaTipi = "ILK_OKUMA";
+            yeniEndeks.OkumaTipi = OkumaTipi.ILK_OKUMA;
             yeniEndeks.OncekiEndeks = 0m;
             yeniEndeks.YeniEndeks = Math.Round(f.Random.Decimal(50m, 150m), 3);
         }
         else
         {
 
-            yeniEndeks.OkumaTipi = "RUTIN_DONEM";
+            yeniEndeks.OkumaTipi = OkumaTipi.RUTIN_DONEM;
             yeniEndeks.OncekiEndeks = sonOkuma.YeniEndeks;
             yeniEndeks.YeniEndeks = sonOkuma.YeniEndeks + Math.Round(f.Random.Decimal(100m, 400m), 3);
         }

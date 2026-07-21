@@ -91,7 +91,7 @@ public class FaturaSeeder
 
                 TekilKod = okuma.Sozlesme.TuketimNoktasi!.TekilKod,
 
-                FaturaTipi = "DONEM",
+                FaturaTipi = FaturaTipi.DONEM,
 
                 Donem = okuma.Donem!,
 
@@ -146,7 +146,7 @@ public class FaturaSeeder
                     kalemler.Add(new FaturaKalemi
                     {
                         FaturaId = f.FaturaId,
-                        KalemTipi = "ENERJI",
+                        KalemTipi = KalemTipi.ENERJI,
                         Aciklama = "Enerji Bedeli",
                         Miktar = f.TuketimKwh ?? 0m,
                         BirimFiyat = (f.TuketimKwh ?? 0m) == 0
@@ -172,7 +172,7 @@ public class FaturaSeeder
                     kalemler.Add(new FaturaKalemi
                     {
                         FaturaId = f.FaturaId,
-                        KalemTipi = "HIZMET",
+                        KalemTipi = KalemTipi.HIZMET,
                         Aciklama = "Hizmet Bedeli",
                         Miktar = 1m,
                         BirimFiyat = f.HizmetBedeli,
@@ -183,7 +183,7 @@ public class FaturaSeeder
                     kalemler.Add(new FaturaKalemi
                     {
                         FaturaId = f.FaturaId,
-                        KalemTipi = "VERGI_FON",
+                        KalemTipi = KalemTipi.VERGI_FON,
                         Aciklama = "Vergi ve Fonlar",
                         Miktar = 1m,
                         BirimFiyat = f.VergiFonToplam,
@@ -216,7 +216,7 @@ public class FaturaSeeder
                 kalemler.Add(new FaturaKalemi
                 {
                     FaturaId = f.FaturaId,
-                    KalemTipi = "ENERJI",
+                    KalemTipi = KalemTipi.ENERJI,
                     Aciklama = "Enerji Bedeli",
                     Miktar = f.TuketimKwh ?? 0m,
 
@@ -248,7 +248,7 @@ public class FaturaSeeder
                 kalemler.Add(new FaturaKalemi
                 {
                     FaturaId = f.FaturaId,
-                    KalemTipi = "HIZMET",
+                    KalemTipi = KalemTipi.HIZMET,
                     Aciklama = "Hizmet Bedeli",
                     Miktar = 1,
                     BirimFiyat = f.HizmetBedeli,
@@ -259,7 +259,7 @@ public class FaturaSeeder
                 kalemler.Add(new FaturaKalemi
                 {
                     FaturaId = f.FaturaId,
-                    KalemTipi = "VERGI_FON",
+                    KalemTipi = KalemTipi.VERGI_FON,
                     Aciklama = "Vergi ve Fonlar",
                     Miktar = 1m,
                     BirimFiyat = f.VergiFonToplam,

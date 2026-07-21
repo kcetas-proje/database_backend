@@ -28,5 +28,5 @@ public class TuketimNoktasiCreateDto
     [Required]
     public string TuketiciGrubu { get; set; } = null!; // "MESKEN", "TICARETHANE" vs.
 
-    public string BaglantiDurumu { get; set; } = "BAGLI";
+    public BaglantiDurumu BaglantiDurumu { get; set; } = BaglantiDurumu.BAGLANABILIR;
 }

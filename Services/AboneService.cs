@@ -1,5 +1,4 @@
 using KcetasAboneApi.Models;
-using KcetasAboneApi.Models.Dtos;
 using KcetasAboneApi.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,75 +11,52 @@ public class AboneService : IAboneService
         _context = context;
     }
 
-    public async Task<AboneFaturaResponseDto> GetFaturalar(
+    public async Task<AboneListResponseDto> GetAboneler(
         string? isim,
         int page,
         int pageSize)
     {
-        if (page < 1)
-            page = 1;
-
-        if (pageSize < 1)
-            pageSize = 10;
-
-        var query = _context.Faturas
-            .Include(f => f.Sozlesme)
-                .ThenInclude(s => s.Abone)
-            .Where(f => f.Sozlesme.Abone != null)
-            .AsQueryable();
+        var query = _context.Abonelers.AsQueryable();
 
         // İsim ile filtreleme
         if (!string.IsNullOrWhiteSpace(isim))
         {
-            isim = isim.Trim();
+            isim = isim.Trim().ToLower();
 
-            query = query.Where(f =>
-
-                EF.Functions.ILike(f.Sozlesme.Abone!.Ad ?? "", $"%{isim}%")
-
+            query = query.Where(a =>
+                (
+                    ((a.Ad ?? "") + " " + (a.Soyad ?? ""))
+                        .ToLower()
+                        .Contains(isim)
+                )
                 ||
-
-                EF.Functions.ILike(f.Sozlesme.Abone.Soyad ?? "", $"%{isim}%")
-
-                ||
-
-                EF.Functions.ILike(
-                    (f.Sozlesme.Abone.Ad ?? "") + " " + (f.Sozlesme.Abone.Soyad ?? ""),
-                    $"%{isim}%")
-
-                ||
-
-                EF.Functions.ILike(f.Sozlesme.Abone.Unvan ?? "", $"%{isim}%")
-            );
+                (
+                    (a.Unvan ?? "")
+                        .ToLower()
+                        .Contains(isim)
+                ));
         }
 
         var totalCount = await query.CountAsync();
 
         var liste = await query
-            .OrderByDescending(f => f.FaturaTarihi)
+            .OrderBy(a => a.AboneId)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(f => new AboneFaturaDto
+            .Select(a => new AboneResponseDto
             {
-                AboneNo = f.Sozlesme.Abone!.AboneNo,
-
-                AdSoyad = !string.IsNullOrWhiteSpace(f.Sozlesme.Abone.Ad)
-                    ? $"{f.Sozlesme.Abone.Ad} {f.Sozlesme.Abone.Soyad}"
-                    : f.Sozlesme.Abone.Unvan ?? "",
-
-                FaturaNo = f.FaturaNo,
-
-                Donem = f.Donem,
-
-                FaturaTarihi = f.FaturaTarihi,
-
-                ToplamTutar = f.ToplamTutar,
-
-                Durum = f.Durum.ToString()
+                AboneId = a.AboneId,
+                AboneNo = a.AboneNo,
+                AboneTipi = a.AboneTipi,
+                Ad = a.Ad ?? "",
+                Soyad = a.Soyad ?? "",
+                Unvan = a.Unvan ?? "",
+                Telefon = a.Telefon ?? "",
+                EPosta = a.EPosta ?? ""
             })
             .ToListAsync();
 
-        return new AboneFaturaResponseDto
+        return new AboneListResponseDto
         {
             TotalCount = totalCount,
             CurrentPage = page,

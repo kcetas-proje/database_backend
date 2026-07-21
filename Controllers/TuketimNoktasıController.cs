@@ -54,7 +54,7 @@ public class TuketimNoktasiController : ControllerBase
                 IlceAdi = t.Ilce != null ? t.Ilce.IlceAdi : "Bilinmiyor",
 
                 AktifSayacSeriNo = t.Sayaclars
-                    .Where(s => s.Durum == "TAKILI")
+                    .Where(s => s.Durum == SayacDurumu.TAKILI)
                     .Select(s => s.SeriNo)
                     .FirstOrDefault() ?? "SAYAÇ YOK",
 

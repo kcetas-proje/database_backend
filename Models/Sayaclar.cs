@@ -37,7 +37,7 @@ public partial class Sayaclar
     public string? MuhurNo { get; set; }
 
     [Column("durum")]
-    public string Durum { get; set; } = "DEPODA";
+    public SayacDurumu Durum { get; set; } = SayacDurumu.DEPODA;
 
 
 

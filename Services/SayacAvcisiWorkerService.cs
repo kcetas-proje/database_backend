@@ -34,7 +34,7 @@ namespace KcetasAboneApi.Services
 
                     var yasliSayaclar = await context.Sayaclars
                         .Where(s => s.TuketimNoktasiId != null 
-                                 && s.Durum != "IPTAL" 
+                                 && s.Durum != SayacDurumu.IPTAL 
                                  && (currentYear - s.UretimYili) >= 5)
                         .ToListAsync(stoppingToken);
 

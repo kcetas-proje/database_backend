@@ -33,7 +33,7 @@ public class SayaclarController : ControllerBase
     public async Task<ActionResult<IEnumerable<object>>> GetDepodakiSayaclar()
     {
         var depodakiSayaclar = await _context.Sayaclars
-            .Where(s => s.Durum == "DEPODA")
+            .Where(s => s.Durum == SayacDurumu.DEPODA)
             .Select(s => new 
             {
                 s.SayacId,
@@ -99,7 +99,7 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
         Faz = string.IsNullOrEmpty(dto.Faz) ? "TEK_FAZ" : dto.Faz,
         Carpan = dto.Carpan == 0 ? 1 : dto.Carpan,
         MuhurNo = dto.MuhurNo,
-        Durum = string.IsNullOrEmpty(dto.Durum) ? "DEPODA" : dto.Durum,
+        Durum = dto.Durum,
         
         CreatedAt = DateTime.UtcNow,
         CreatedBy = 1 
@@ -182,7 +182,7 @@ public async Task<IActionResult> GenerateFakeSayaclar()
         .RuleFor(s => s.Carpan, 1m) 
         .RuleFor(s => s.MuhurNo, f => $"MHR-{f.Random.Number(100000, 999999)}")
         
-        .RuleFor(s => s.Durum, "DEPODA") 
+        .RuleFor(s => s.Durum, SayacDurumu.DEPODA) 
         .RuleFor(s => s.CreatedAt, DateTime.UtcNow)
         .RuleFor(s => s.CreatedBy, 1); 
 

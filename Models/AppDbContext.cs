@@ -279,6 +279,11 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.RolAdi).HasMaxLength(50).HasColumnName("rol_adi");
         });
 
+        modelBuilder.Entity<Sayaclar>(entity =>
+        {
+            entity.Property(e => e.Durum).HasConversion<string>();
+        });
+
         modelBuilder.Entity<Sozlesmeler>(entity =>
         {
             entity.Property(e => e.Durum).HasConversion<string>();

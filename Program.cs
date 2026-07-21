@@ -109,9 +109,15 @@ app.MapGet("/api/test-error", () =>
     throw new Exception("Bu bilerek fırlatılan bir test hatasıdır!");
 });
 
+// 🔥 VERİTABANINDAKİ GEÇERSİZ SAYAÇ DURUMLARINI DÜZELT
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.ExecuteSqlRaw("UPDATE sayaclar SET durum = 'TAKILI' WHERE durum = 'AKTIF';");
+}
+
 // 🔥 WEB API BURADA ATEŞLENİYOR
 app.Run();
-
 
 // ========================================================================
 // 🏗️ ŞANTİYE TOHUMLAMA (SEEDER) METODU 

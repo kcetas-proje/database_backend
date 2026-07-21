@@ -1,4 +1,4 @@
-﻿using Bogus;
+using Bogus;
 using KcetasAboneApi.Models;
 using KcetasSeeder.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -90,13 +90,13 @@ public class SayacSeeder
                 MuhurNo = $"MHR-{faker.Random.Number(100000, 999999)}",
 
                 Durum = faker.PickRandom(
-                    "TAKILI",
-                    "TAKILI",
-                    "TAKILI",
-                    "TAKILI",
-                    "TAKILI",
-                    "DEPODA",
-                    "ARIZALI"),
+                    SayacDurumu.TAKILI,
+                    SayacDurumu.TAKILI,
+                    SayacDurumu.TAKILI,
+                    SayacDurumu.TAKILI,
+                    SayacDurumu.TAKILI,
+                    SayacDurumu.DEPODA,
+                    SayacDurumu.ARIZALI),
 
                 CreatedAt = DateTime.UtcNow
             });

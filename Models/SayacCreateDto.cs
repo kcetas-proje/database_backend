@@ -10,5 +10,5 @@ public class SayacCreateDto
     public string? Faz { get; set; } 
     public decimal Carpan { get; set; } 
     public string? MuhurNo { get; set; }
-    public string Durum { get; set; } = null!; 
+    public SayacDurumu Durum { get; set; } = SayacDurumu.DEPODA; 
 }

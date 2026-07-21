@@ -135,7 +135,7 @@ public async Task<IActionResult> GenerateFakeEndeksler()
 {
     var sozlesmeler = await _context.Sozlesmelers.ToListAsync();
     var takiliSayaclar = await _context.Sayaclars
-        .Where(s => s.Durum == "TAKILI" && s.TuketimNoktasiId != null)
+        .Where(s => s.Durum == SayacDurumu.TAKILI && s.TuketimNoktasiId != null)
         .ToListAsync();
 
     if (!sozlesmeler.Any() || !takiliSayaclar.Any())

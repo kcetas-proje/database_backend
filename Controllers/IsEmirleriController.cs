@@ -166,7 +166,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         {
             // Eğer sayaç ID gönderilmemişse ve yeni bağlantı değilse, o tüketim noktasındaki takılı sayacı otomatik bul.
             var takiliSayac = await _context.Sayaclars
-                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == dto.TuketimNoktasiId && (s.Durum == "TAKILI" || s.Durum == "AKTIF"));
+                .FirstOrDefaultAsync(s => s.TuketimNoktasiId == dto.TuketimNoktasiId && (s.Durum == SayacDurumu.TAKILI));
             
             if (takiliSayac != null)
             {
@@ -299,7 +299,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             return BadRequest(new { message = "Böyle bir açık iş emri yok." });
 
         var sayac = await _context.Sayaclars.FindAsync(sayacId);
-        if (sayac == null || sayac.Durum != "DEPODA")
+        if (sayac == null || sayac.Durum != SayacDurumu.DEPODA)
             return BadRequest(new { message = "Bu sayaç depoda değil." });
 
         isEmri.SayacId = sayac.SayacId; 
@@ -308,7 +308,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         isEmri.UpdatedAt = DateTime.UtcNow; 
 
         sayac.TuketimNoktasiId = isEmri.TuketimNoktasiId;
-        sayac.Durum = "TAKILI";
+        sayac.Durum = SayacDurumu.TAKILI;
         sayac.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -328,7 +328,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             .ToListAsync();
 
         var depodakiSayaclar = await _context.Sayaclars
-            .Where(s => s.Durum == "DEPODA")
+            .Where(s => s.Durum == SayacDurumu.DEPODA)
             .ToListAsync();
 
         int islemKapasitesi = Math.Min(acikIsEmirleri.Count, depodakiSayaclar.Count);
@@ -345,7 +345,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             isEmri.Durum = "TAMAMLANDI";
 
             sayac.TuketimNoktasiId = isEmri.TuketimNoktasiId;
-            sayac.Durum = "TAKILI";
+            sayac.Durum = SayacDurumu.TAKILI;
         }
 
         await _context.SaveChangesAsync();
@@ -362,7 +362,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     {
 
         var takiliSayaclar = await _context.Sayaclars
-            .Where(s => s.Durum == "TAKILI" && s.TuketimNoktasiId != null)
+            .Where(s => s.Durum == SayacDurumu.TAKILI && s.TuketimNoktasiId != null)
             .ToListAsync();
 
         if (!takiliSayaclar.Any())
@@ -506,9 +506,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
                 isEmri.Sayac.Durum = isEmri.Tip switch
                 {
-                    "SOKME" => "SOKULMUS",
-                    "DEGISTIRME" => "SOKULMUS",
-                    "SAYAC_ARIZA" => "ARIZALI",
+                    "SOKME" => SayacDurumu.SOKULMUS,
+                    "DEGISTIRME" => SayacDurumu.SOKULMUS,
+                    "SAYAC_ARIZA" => SayacDurumu.ARIZALI,
                     _ => isEmri.Sayac.Durum 
                 };
 
@@ -610,7 +610,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             var eskiSayac = await _context.Sayaclars.FirstOrDefaultAsync(s => s.SeriNo == dto.SokulenSeriNo);
             if (eskiSayac != null)
             {
-                eskiSayac.Durum = "SOKULMUS";
+                eskiSayac.Durum = SayacDurumu.SOKULMUS;
                 eskiSayac.TuketimNoktasiId = null;
                 eskiSayac.UpdatedAt = DateTime.UtcNow;
 
@@ -638,7 +638,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             }
 
             yeniSayac.TuketimNoktasiId = isEmri.TuketimNoktasiId;
-            yeniSayac.Durum = "TAKILI";
+            yeniSayac.Durum = SayacDurumu.TAKILI;
             yeniSayac.MuhurNo = dto.YeniMuhurNo;
             yeniSayac.UpdatedAt = DateTime.UtcNow;
 
@@ -771,7 +771,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             // 4. Sayaç işlemleri (Bağlantı sağlandıysa)
             if (isEmri.Sayac != null)
             {
-                isEmri.Sayac.Durum = "ARIZALI"; 
+                isEmri.Sayac.Durum = SayacDurumu.ARIZALI; 
                 isEmri.Sayac.UpdatedAt = DateTime.UtcNow;
 
                 var arizaOkumasi = new EndeksOkuma
@@ -906,7 +906,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
                 return BadRequest(new { message = $" {dto.SeriNo} numaralı sayaç sistemde (depoda) bulunamadı!" });
 
             // Veritabanı raconuna tam uyum: Durumu "TAKILI" yapıyoruz
-            sayac.Durum = "TAKILI";
+            sayac.Durum = SayacDurumu.TAKILI;
             sayac.TuketimNoktasiId = isEmri.TuketimNoktasiId; // Sayacı mekana (Tüketim Noktasına) bağlıyoruz
             sayac.MuhurNo = dto.YeniMuhurNo;
             sayac.UpdatedAt = DateTime.UtcNow;

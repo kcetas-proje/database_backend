@@ -6,6 +6,7 @@ using Bogus;
 
 namespace KcetasAboneApi.Controllers;
 using KcetasAboneApi.Models.Dtos;
+using KcetasAboneApi.Services;
 
 //[Authorize(Roles = "1,2")]
 [Route("api/[controller]")]
@@ -13,10 +14,14 @@ using KcetasAboneApi.Models.Dtos;
 public class AbonelerController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IAboneService _aboneService;
 
-    public AbonelerController(AppDbContext context)
+    public AbonelerController(
+        AppDbContext context,
+        IAboneService aboneService)
     {
         _context = context;
+        _aboneService = aboneService;
     }
 
     // GET: api/Aboneler/All (Sayfalamasız tüm veriler)
@@ -299,45 +304,25 @@ public class AbonelerController : ControllerBase
         }
     }
     [HttpGet("faturalar")]
-    public async Task<IActionResult> GetSon10Fatura([FromQuery] string prefix)
+    public async Task<IActionResult> GetFaturalar(
+    [FromQuery] string? isim,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
     {
-        if (string.IsNullOrWhiteSpace(prefix))
-            return BadRequest("Abone numarasının ilk 3 hanesini giriniz.");
+        if (page < 1)
+            page = 1;
 
-        if (prefix.Length != 3)
-            return BadRequest("İlk 3 hane girilmelidir.");
+        if (pageSize < 1)
+            pageSize = 10;
 
-        var faturalar = await _context.Faturas
-            .Include(f => f.Sozlesme)
-                .ThenInclude(s => s.Abone)
-            .Where(f => f.Sozlesme.Abone != null &&
-                        f.Sozlesme.Abone.AboneNo.StartsWith(prefix))
-            .OrderByDescending(f => f.FaturaTarihi)
-            .Take(10)
-            .Select(f => new
-            {
-                AboneNo = f.Sozlesme.Abone!.AboneNo,
-                AdSoyad = f.Sozlesme.Abone.AboneTipi == "BIREYSEL"
-                    ? $"{f.Sozlesme.Abone.Ad} {f.Sozlesme.Abone.Soyad}"
-                    : f.Sozlesme.Abone.Unvan,
+        if (pageSize > 100)
+            pageSize = 100;
 
-                FaturaNo = f.FaturaNo,
-                Donem = f.Donem,
-                FaturaTarihi = f.FaturaTarihi,
-                SonOdemeTarihi = f.SonOdemeTarihi,
-                ToplamTutar = f.ToplamTutar,
-                Durum = f.Durum
-            })
-            .ToListAsync();
+        var sonuc = await _aboneService.GetFaturalar(
+            isim,
+            page,
+            pageSize);
 
-        if (!faturalar.Any())
-        {
-            return NotFound(new
-            {
-                message = "Bu ön eke sahip abone bulunamadı."
-            });
-        }
-
-        return Ok(faturalar);
+        return Ok(sonuc);
     }
 }

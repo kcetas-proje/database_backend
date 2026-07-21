@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
 
 namespace KcetasAboneApi.Controllers;
@@ -20,9 +20,8 @@ public class SozlesmelerController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Sozlesmeler>>> GetSozlesmeler()
     {
-        return await _context.Sozlesmelers
-            .OrderBy(s => s.SozlesmeId)
-            .ToListAsync();
+        var result = await _context.Sozlesmelers.ToListAsync();
+        return result.OrderBy(s => s.SozlesmeId).ToList();
     }
 
     // GET: api/Sozlesmeler/5

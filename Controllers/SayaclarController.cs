@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using KcetasAboneApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace KcetasAboneApi.Controllers;
 

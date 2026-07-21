@@ -13,38 +13,49 @@ public class AboneService : IAboneService
     }
 
     public async Task<AboneFaturaResponseDto> GetFaturalar(
-        string? ad,
+        string? isim,
         int page,
         int pageSize)
     {
+        if (page < 1)
+            page = 1;
+
+        if (pageSize < 1)
+            pageSize = 10;
+
         var query = _context.Faturas
             .Include(f => f.Sozlesme)
                 .ThenInclude(s => s.Abone)
+            .Where(f => f.Sozlesme.Abone != null)
             .AsQueryable();
 
         // İsim ile filtreleme
-        if (!string.IsNullOrWhiteSpace(ad))
+        if (!string.IsNullOrWhiteSpace(isim))
         {
-            ad = ad.Trim().ToLower();
+            isim = isim.Trim();
 
             query = query.Where(f =>
-                (
-                    ((f.Sozlesme.Abone!.Ad ?? "") + " " + (f.Sozlesme.Abone.Soyad ?? ""))
-                        .ToLower()
-                        .Contains(ad)
-                )
+
+                EF.Functions.ILike(f.Sozlesme.Abone!.Ad ?? "", $"%{isim}%")
+
                 ||
-                (
-                    (f.Sozlesme.Abone.Unvan ?? "")
-                        .ToLower()
-                        .Contains(ad)
-                ));
+
+                EF.Functions.ILike(f.Sozlesme.Abone.Soyad ?? "", $"%{isim}%")
+
+                ||
+
+                EF.Functions.ILike(
+                    (f.Sozlesme.Abone.Ad ?? "") + " " + (f.Sozlesme.Abone.Soyad ?? ""),
+                    $"%{isim}%")
+
+                ||
+
+                EF.Functions.ILike(f.Sozlesme.Abone.Unvan ?? "", $"%{isim}%")
+            );
         }
 
-        // Toplam kayıt sayısı
         var totalCount = await query.CountAsync();
 
-        // İstenen sayfadaki kayıtlar
         var liste = await query
             .OrderByDescending(f => f.FaturaTarihi)
             .Skip((page - 1) * pageSize)
@@ -53,9 +64,9 @@ public class AboneService : IAboneService
             {
                 AboneNo = f.Sozlesme.Abone!.AboneNo,
 
-                AdSoyad = f.Sozlesme.Abone.AboneTipi == "BIREYSEL"
+                AdSoyad = !string.IsNullOrWhiteSpace(f.Sozlesme.Abone.Ad)
                     ? $"{f.Sozlesme.Abone.Ad} {f.Sozlesme.Abone.Soyad}"
-                    : f.Sozlesme.Abone.Unvan,
+                    : f.Sozlesme.Abone.Unvan ?? "",
 
                 FaturaNo = f.FaturaNo,
 
@@ -69,7 +80,6 @@ public class AboneService : IAboneService
             })
             .ToListAsync();
 
-        // Response
         return new AboneFaturaResponseDto
         {
             TotalCount = totalCount,

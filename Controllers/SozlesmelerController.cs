@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+
 using KcetasAboneApi.Models;
 
 namespace KcetasAboneApi.Controllers;

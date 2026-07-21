@@ -982,10 +982,10 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     [HttpPost("atama-yap")]
-    public async Task<IActionResult> UstayaIsAta([FromQuery] long isEmriId, [FromQuery] long ustaId)
+    public async Task<IActionResult> UstayaIsAta([FromBody] IsEmriAtamaRequestDto request)
     {
         // DB'den iş emrini çek.
-        var isEmri = await _context.IsEmirleris.FindAsync(isEmriId);
+        var isEmri = await _context.IsEmirleris.FindAsync(request.IsEmriId);
         if (isEmri == null) 
             return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
 
@@ -993,7 +993,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             return BadRequest(new { message = "Tamamlanmış işe personel atanamaz." });
 
         // Usta ata ve durumu güncelle.
-        isEmri.AtananKullaniciId = ustaId;
+        isEmri.AtananKullaniciId = request.UstaId;
         isEmri.Durum = "ATANDI";
         isEmri.UpdatedAt = DateTime.UtcNow;
 
@@ -1002,7 +1002,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         
         var yeniBildirim = new Bildirim
         {
-            KullaniciId = (int)ustaId, 
+            KullaniciId = (int)request.UstaId, 
             Baslik = "Yeni Görev",
             Icerik = mesaj
         };
@@ -1011,7 +1011,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         await _context.SaveChangesAsync();
 
         // SignalR ile anlık füzeyi ateşle.
-        await _hubContext.Clients.User(ustaId.ToString()).SendAsync("YeniBildirimGeldi", "Yeni Görev", mesaj);
+        await _hubContext.Clients.User(request.UstaId.ToString()).SendAsync("YeniBildirimGeldi", "Yeni Görev", mesaj);
 
         return Ok(new { message = "İş atandı ve personele bildirim gönderildi.", isEmriNo = isEmri.IsEmriNo });
     }

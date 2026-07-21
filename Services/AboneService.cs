@@ -1,5 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using KcetasAboneApi.Models;
+using KcetasAboneApi.Models.Dtos;
+using KcetasAboneApi.Services;
+using Microsoft.EntityFrameworkCore;
 
 public class AboneService : IAboneService
 {
@@ -10,40 +12,71 @@ public class AboneService : IAboneService
         _context = context;
     }
 
-    public async Task<List<AboneFaturaDto>> GetSon10Fatura(string ilkUcHane)
+    public async Task<AboneFaturaResponseDto> GetFaturalar(
+        string? ad,
+        int page,
+        int pageSize)
     {
-        return await _context.Faturas
+        var query = _context.Faturas
+            .Include(f => f.Sozlesme)
+                .ThenInclude(s => s.Abone)
+            .AsQueryable();
 
-            .Include(x => x.Sozlesme)
-            .ThenInclude(x => x.Abone)
+        // İsim ile filtreleme
+        if (!string.IsNullOrWhiteSpace(ad))
+        {
+            ad = ad.Trim().ToLower();
 
-            .Where(x =>
-                x.Sozlesme.Abone.AboneNo.StartsWith(ilkUcHane))
+            query = query.Where(f =>
+                (
+                    ((f.Sozlesme.Abone!.Ad ?? "") + " " + (f.Sozlesme.Abone.Soyad ?? ""))
+                        .ToLower()
+                        .Contains(ad)
+                )
+                ||
+                (
+                    (f.Sozlesme.Abone.Unvan ?? "")
+                        .ToLower()
+                        .Contains(ad)
+                ));
+        }
 
-            .OrderByDescending(x => x.FaturaTarihi)
+        // Toplam kayıt sayısı
+        var totalCount = await query.CountAsync();
 
-            .Take(10)
-
-            .Select(x => new AboneFaturaDto
+        // İstenen sayfadaki kayıtlar
+        var liste = await query
+            .OrderByDescending(f => f.FaturaTarihi)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(f => new AboneFaturaDto
             {
-                AboneNo = x.Sozlesme.Abone.AboneNo,
+                AboneNo = f.Sozlesme.Abone!.AboneNo,
 
-                AdSoyad =
-                    x.Sozlesme.Abone.AboneTipi == "GERCEK"
-                    ? x.Sozlesme.Abone.Ad + " " + x.Sozlesme.Abone.Soyad
-                    : x.Sozlesme.Abone.Unvan,
+                AdSoyad = f.Sozlesme.Abone.AboneTipi == "BIREYSEL"
+                    ? $"{f.Sozlesme.Abone.Ad} {f.Sozlesme.Abone.Soyad}"
+                    : f.Sozlesme.Abone.Unvan,
 
-                FaturaNo = x.FaturaNo,
+                FaturaNo = f.FaturaNo,
 
-                Donem = x.Donem,
+                Donem = f.Donem,
 
-                FaturaTarihi = x.FaturaTarihi,
+                FaturaTarihi = f.FaturaTarihi,
 
-                ToplamTutar = x.ToplamTutar,
+                ToplamTutar = f.ToplamTutar,
 
-                Durum = x.Durum.ToString()
+                Durum = f.Durum.ToString()
             })
-
             .ToListAsync();
+
+        // Response
+        return new AboneFaturaResponseDto
+        {
+            TotalCount = totalCount,
+            CurrentPage = page,
+            PageSize = pageSize,
+            HasNextPage = page * pageSize < totalCount,
+            Data = liste
+        };
     }
 }

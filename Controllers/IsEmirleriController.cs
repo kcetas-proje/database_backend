@@ -984,7 +984,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     [HttpPost("atama-yap")]
     public async Task<IActionResult> UstayaIsAta([FromBody] IsEmriAtamaRequestDto request)
     {
-        // DB'den iş emrini çek.
+        // DB'den işi çek
         var isEmri = await _context.IsEmirleris.FindAsync(request.IsEmriId);
         if (isEmri == null) 
             return NotFound(new { message = "Böyle bir iş emri bulunamadı." });
@@ -992,14 +992,13 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         if (isEmri.Durum == "TAMAMLANDI") 
             return BadRequest(new { message = "Tamamlanmış işe personel atanamaz." });
 
-        // Usta ata ve durumu güncelle.
+        // Ustaya kitle
         isEmri.AtananKullaniciId = request.UstaId;
         isEmri.Durum = "ATANDI";
         isEmri.UpdatedAt = DateTime.UtcNow;
 
-        // Bildirimi DB'ye logla.
+        // Bildirimi DB'ye çak
         var mesaj = $"{isEmri.IsEmriNo} numaralı iş emri atandı.";
-        
         var yeniBildirim = new Bildirim
         {
             KullaniciId = (int)request.UstaId, 
@@ -1010,16 +1009,16 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         _context.Bildirimler.Add(yeniBildirim);
         await _context.SaveChangesAsync();
 
-        // SignalR ile anlık füzeyi ateşle.
+        // SignalR füzesi yolla
         await _hubContext.Clients.User(request.UstaId.ToString()).SendAsync("YeniBildirimGeldi", "Yeni Görev", mesaj);
 
-        return Ok(new { message = "İş atandı ve personele bildirim gönderildi.", isEmriNo = isEmri.IsEmriNo });
+        return Ok(new { message = "İş atandı, bildirim gönderildi.", isEmriNo = isEmri.IsEmriNo });
     }
 
     [HttpPost("otomatik-atama")]
     public async Task<IActionResult> OtomatikAtamaYap()
     {
-
+        // Sahipsiz işleri ve aktif ekipleri topla
         var sahipsizIsEmirleri = await _context.IsEmirleris
             .Where(i => i.AtananKullaniciId == null && i.Durum == "ACIK")
             .ToListAsync();
@@ -1029,25 +1028,50 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             .ToListAsync();
 
         if (!sahipsizIsEmirleri.Any() || !sahaEkipleri.Any())
-            return BadRequest(new { message = "Atanacak iş emri veya atanacak kullanıcı kalmamış!" });
+            return BadRequest(new { message = "Atanacak iş veya personel kalmadı." });
 
         int atananSayisi = 0;
         int ekipIndex = 0;
 
+        var atananBildirimler = new List<Bildirim>();
+
         foreach (var isEmri in sahipsizIsEmirleri)
         {
-            isEmri.AtananKullaniciId = sahaEkipleri[ekipIndex].KullaniciId;
-            isEmri.Durum = "ATANDI";
+            var secilenUstaId = sahaEkipleri[ekipIndex].KullaniciId;
             
+            // İşi ustaya zimmetle
+            isEmri.AtananKullaniciId = secilenUstaId;
+            isEmri.Durum = "ATANDI";
+            isEmri.UpdatedAt = DateTime.UtcNow;
+            
+            // Bildirim paketini hazırla
+            var mesaj = $"{isEmri.IsEmriNo} numaralı görev otomatik atama ile atandı.";
+            atananBildirimler.Add(new Bildirim
+            {
+                KullaniciId = (int)secilenUstaId,
+                Baslik = "Otomatik Görev",
+                Icerik = mesaj
+            });
+
+            // Sıradaki ekibe geç
             ekipIndex++;
             if (ekipIndex >= sahaEkipleri.Count) ekipIndex = 0; 
             
             atananSayisi++;
         }
 
+        // 1. Önce tüm bildirimleri DB'ye tek seferde kaydet (Performans W)
+        _context.Bildirimler.AddRange(atananBildirimler);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = $"{atananSayisi} adet iş emri ekiplere başarıyla atandı." });
+        // 2. Döngüyle herkese ayrı ayrı SignalR pop-up füzesi at
+        foreach (var bildirim in atananBildirimler)
+        {
+            await _hubContext.Clients.User(bildirim.KullaniciId.ToString())
+                .SendAsync("YeniBildirimGeldi", bildirim.Baslik, bildirim.Icerik);
+        }
+
+        return Ok(new { message = $"{atananSayisi} iş emri ekiplere dağıtıldı ve bildirim gönderildi." });
     }
 
     [HttpPost("planlanan-tarihleri-dagit")]

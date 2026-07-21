@@ -303,8 +303,8 @@ public class AbonelerController : ControllerBase
             return StatusCode(500, new { message = "Bir hata oluştu.", error = ex.Message });
         }
     }
-    [HttpGet("faturalar")]
-    public async Task<IActionResult> GetFaturalar(
+    [HttpGet("arama")]
+    public async Task<IActionResult> GetAboneler(
     [FromQuery] string? isim,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
@@ -318,7 +318,7 @@ public class AbonelerController : ControllerBase
         if (pageSize > 100)
             pageSize = 100;
 
-        var sonuc = await _aboneService.GetFaturalar(
+        var sonuc = await _aboneService.GetAboneler(
             isim,
             page,
             pageSize);

@@ -1049,4 +1049,42 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
         return Ok(new { message = $"{atananSayisi} adet iş emri ekiplere başarıyla atandı." });
     }
+
+    [HttpPost("planlanan-tarihleri-dagit")]
+    public async Task<IActionResult> PlanlananTarihleriDagit()
+    {
+        // 1. Durumu "ATANDI" olan ama tarihi hala boş olan amele işlerini topla
+        var isEmirleri = await _context.IsEmirleris
+            .Where(i => i.Durum == "ATANDI" && i.PlanlananTarih == null)
+            .ToListAsync();
+
+        if (!isEmirleri.Any())
+            return BadRequest(new { message = "Planlanan tarihi boş olan iş emri kalmadı." });
+
+        var random = new Random();
+        var bugun = DateTime.UtcNow; // The Matrix'in anlık saati
+
+        foreach (var isEmri in isEmirleri)
+        {
+            // 1 ile 7 gün sonrasına rastgele atıyoruz
+            int rastgeleGun = random.Next(1, 8); 
+
+
+            // Tarihi oluştur ve iş emrine zımbala
+            var yeniTarih = bugun.AddDays(rastgeleGun).Date;
+            
+            // Veritabanının saat dilimi sorun çıkarmasın diye UTC'ye çeviriyoruz
+            isEmri.PlanlananTarih = DateTime.SpecifyKind(yeniTarih, DateTimeKind.Utc);
+            isEmri.UpdatedAt = DateTime.UtcNow;
+        }
+
+        // 3. Harcı veritabanına dök!
+        await _context.SaveChangesAsync();
+
+        return Ok(new 
+        { 
+            message = $"{isEmirleri.Count} adet iş emrinin planlanan tarihi önümüzdeki 1 haftaya dağıtıldı!",
+            guncellenenKayit = isEmirleri.Count
+        });
+    }
 }

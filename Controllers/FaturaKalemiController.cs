@@ -77,7 +77,7 @@ public async Task<IActionResult> Update(long id, [FromBody] FaturaKalemiUpdateDt
 }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(long id)
+    public async Task<IActionResult> SILME(long id)
     {
         var kalem = await _context.FaturaKalemis.FindAsync(id);
 

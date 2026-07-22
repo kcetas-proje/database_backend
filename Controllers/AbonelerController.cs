@@ -152,9 +152,9 @@ public class AbonelerController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/Aboneler/5
+    // SILME: api/Aboneler/5
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteAbone(long id)
+    public async Task<IActionResult> SILMEAbone(long id)
     {
         var abone = await _context.Abonelers.FindAsync(id);
 

@@ -152,9 +152,9 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
         return NoContent();
     }
 
-    // DELETE: api/Sozlesmeler/5
+    // SILME: api/Sozlesmeler/5
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteSozlesme(long id)
+    public async Task<IActionResult> SILMESozlesme(long id)
     {
         var sozlesme = await _context.Sozlesmelers.FindAsync(id);
 

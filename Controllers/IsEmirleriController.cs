@@ -259,9 +259,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return NoContent();
     }
 
-    // DELETE: api/IsEmirleri/5
+    // SILME: api/IsEmirleri/5
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteIsEmri(long id)
+    public async Task<IActionResult> SILMEIsEmri(long id)
     {
         var isEmri = await _context.IsEmirleris.FindAsync(id);
 

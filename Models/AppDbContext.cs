@@ -37,6 +37,11 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Tarifeler> Tarifelers { get; set; }
     public DbSet<Bildirim> Bildirimler { get; set; }
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<Enum>().HaveConversion<string>();
+    }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
 {
     var degisenler = ChangeTracker.Entries()
@@ -55,10 +60,10 @@ public partial class AppDbContext : DbContext
             // 💥 GIGACHAD FIX: String yerine direkt Enum değerlerini atıyoruz sheesh!
             IslemTipi = entry.State switch
             {
-                EntityState.Added => IslemTipi.INSERT,
-                EntityState.Modified => IslemTipi.UPDATE,
-                EntityState.Deleted => IslemTipi.DELETE,
-                _ => IslemTipi.STATUS_CHANGE 
+                EntityState.Added => IslemTipi.EKLEME,
+                EntityState.Modified => IslemTipi.GUNCELLEME,
+                EntityState.Deleted => IslemTipi.SILME,
+                _ => IslemTipi.DURUM_DEGISIKLIGI 
             },
             
             IslemZamani = DateTime.UtcNow,
@@ -125,7 +130,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.AuditId).HasColumnName("audit_id");
             entity.Property(e => e.EskiDeger).HasColumnType("jsonb").HasColumnName("eski_deger");
             entity.Property(e => e.IslemGerekcesi).HasMaxLength(255).HasColumnName("islem_gerekcesi");
-            entity.Property(e => e.IslemTipi).HasMaxLength(20).HasColumnName("islem_tipi");
+            entity.Property(e => e.IslemTipi).HasConversion<string>().HasMaxLength(20).HasColumnName("islem_tipi");
             entity.Property(e => e.IslemZamani).HasDefaultValueSql("now()").HasColumnName("islem_zamani");
             entity.Property(e => e.KullaniciId).HasColumnName("kullanici_id");
             entity.Property(e => e.VarlikId).HasColumnName("varlik_id");

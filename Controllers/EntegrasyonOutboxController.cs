@@ -84,7 +84,7 @@ namespace KcetasAboneApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEntegrasyonOutbox(long id)
+        public async Task<IActionResult> SILMEEntegrasyonOutbox(long id)
         {
             var outbox = await _context.EntegrasyonOutboxes.FindAsync(id);
 

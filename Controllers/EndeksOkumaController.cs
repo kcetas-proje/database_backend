@@ -119,7 +119,7 @@ public async Task<IActionResult> Update(long id, [FromBody] EndeksOkumaUpdateDto
 }
 
     [HttpDelete("{id}")]
-public async Task<IActionResult> Delete(long id)
+public async Task<IActionResult> SILME(long id)
 {
     var endeks = await _context.EndeksOkumas.FindAsync(id);
     if (endeks == null) return NotFound();

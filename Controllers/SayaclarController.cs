@@ -137,9 +137,9 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
         return NoContent();
     }
 
-    // DELETE
+    // SILME
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteSayac(long id)
+    public async Task<IActionResult> SILMESayac(long id)
     {
         var sayac = await _context.Sayaclars.FindAsync(id);
 

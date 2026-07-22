@@ -120,9 +120,9 @@ public class TarifelerController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/Tarifeler/5
+    // SILME: api/Tarifeler/5
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTarife(long id)
+    public async Task<IActionResult> SILMETarife(long id)
     {
         var tarife = await _context.Tarifelers.FindAsync(id);
 

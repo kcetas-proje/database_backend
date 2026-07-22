@@ -161,9 +161,9 @@ public class TuketimNoktasiController : ControllerBase
         return NoContent();
     }
 
-    // DELETE
+    // SILME
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTuketimNoktasi(long id)
+    public async Task<IActionResult> SILMETuketimNoktasi(long id)
     {
         var nokta = await _context.TuketimNoktasis.FindAsync(id);
 

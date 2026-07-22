@@ -50,7 +50,6 @@ for path in glob.glob('**/*.cs', recursive=True):
     # Fix error CS0029: 'string' to Enum conversions
     c = c.replace('Tip = "KESME"', 'Tip = IsEmriTipi.KESME')
     c = c.replace('Tip = "ACMA"', 'Tip = IsEmriTipi.ACMA')
-    c = c.replace('Tip = "BAGLAMA"', 'Tip = IsEmriTipi.BAGLAMA')
     c = c.replace('Tip = "DEGISTIRME"', 'Tip = IsEmriTipi.DEGISTIRME')
     c = c.replace('Tip = "SOKME"', 'Tip = IsEmriTipi.SOKME')
     

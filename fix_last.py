@@ -25,7 +25,6 @@ fix('Services/IsEmriSeeder.cs', [
     ('isEmri.Tip == "SOKME"', 'isEmri.Tip == IsEmriTipi.SOKME'),
     ('isEmri.Tip == "KESME"', 'isEmri.Tip == IsEmriTipi.KESME'),
     ('isEmri.Tip == "ACMA"', 'isEmri.Tip == IsEmriTipi.ACMA'),
-    ('Tip = "BAGLAMA"', 'Tip = IsEmriTipi.BAGLAMA'),
     ('Tip = "DEGISTIRME"', 'Tip = IsEmriTipi.DEGISTIRME'),
     ('Tip = "SOKME"', 'Tip = IsEmriTipi.SOKME'),
     ('Tip = "KESME"', 'Tip = IsEmriTipi.KESME'),

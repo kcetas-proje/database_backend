@@ -285,18 +285,57 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.RolAdi).HasMaxLength(50).HasColumnName("rol_adi");
         });
 
-        modelBuilder.Entity<Sayaclar>(entity =>
-        {
-            entity.Property(e => e.Durum);
+        // 💥 ABONELER & KULLANICILAR
+        modelBuilder.Entity<Aboneler>(entity => {
+            entity.Property(e => e.AboneTipi).HasConversion<string>();
         });
 
-        modelBuilder.Entity<Sozlesmeler>(entity =>
-        {
-            entity.Property(e => e.Durum);
+        modelBuilder.Entity<Kullanicilar>(entity => {
+            entity.Property(e => e.Durum).HasConversion<string>(); // KullaniciDurumu
+        });
+
+        // 💥 FATURA & FATURA KALEMİ
+        modelBuilder.Entity<Fatura>(entity => {
+            entity.Property(e => e.FaturaTipi).HasConversion<string>();
+            entity.Property(e => e.Durum).HasConversion<string>(); // FaturaDurumu
+        });
+
+        modelBuilder.Entity<FaturaKalemi>(entity => {
+            entity.Property(e => e.KalemTipi).HasConversion<string>();
+        });
+
+        // 💥 İŞ EMİRLERİ
+        modelBuilder.Entity<IsEmirleri>(entity => {
+            entity.Property(e => e.Tip).HasConversion<string>();
+            entity.Property(e => e.Durum).HasConversion<string>(); // IsEmriDurumu
+        });
+
+        // 💥 SAYAÇLAR & SÖZLEŞMELER
+        modelBuilder.Entity<Sayaclar>(entity => {
+            entity.Property(e => e.Durum).HasConversion<string>();
+            entity.Property(e => e.Faz).HasConversion<string>(); 
+        });
+
+        modelBuilder.Entity<Sozlesmeler>(entity => {
+            entity.Property(e => e.Durum).HasConversion<string>(); // SozlesmeDurumu
+        });
+
+        // 💥 ENDEKS OKUMA
+        modelBuilder.Entity<EndeksOkuma>(entity => {
+            entity.Property(e => e.OkumaTipi).HasConversion<string>();
+            entity.Property(e => e.OkumaKaynagi).HasConversion<string>();
+            entity.Property(e => e.DogrulamaDurumu).HasConversion<string>();
+        });
+
+        // 💥 ENTEGRASYON OUTBOX (GİB vs.)
+        modelBuilder.Entity<EntegrasyonOutbox>(entity => {
+            entity.Property(e => e.Durum).HasConversion<string>(); // OutboxDurumu
+            entity.Property(e => e.HedefSistem).HasConversion<string>();
         });
 
         OnModelCreatingPartial(modelBuilder);
     }
+    
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

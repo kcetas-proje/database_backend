@@ -2,18 +2,15 @@ namespace KcetasAboneApi.Models
 {
     public enum IsEmriTipi
     {
-        BAGLAMA = 1,
-        DEGISTIRME = 2,
-        SOKME = 3,
-        KESME = 4,
-        ACMA = 5,
-        ENDEKS_OKUMA = 6,
-        SAYAC_ARIZA = 7,
-        MUHURLEME = 8,
-        KESIF_INCELEME = 9,
-        YENI_BAGLANTI = 10,
-        ENERJI_ACMA = 11,
-        SAYAC_DEGISIM = 12,
-        ARIZA = 13
+        DEGISTIRME = 1,
+        SOKME = 2,
+        KESME = 3,
+        ACMA = 4,
+        ENDEKS_OKUMA = 5,
+        SAYAC_ARIZA = 6,
+        MUHURLEME = 7,
+        KESIF_INCELEME = 8,
+        YENI_BAGLANTI = 9,
+        ENERJI_ACMA = 10
     }
 }

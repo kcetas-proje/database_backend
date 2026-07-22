@@ -75,7 +75,4 @@ fix_file('Controllers/SayaclarController.cs', [
     (r'\.RuleFor\(s => s\.Faz, f => f\.PickRandom<Faz>\(\)\)', '.RuleFor(s => s.Faz, f => f.PickRandom<Faz>())') # if bogus pickRandom is broken
 ])
 
-# Fix IsEmriSeeder.cs
-fix_file('Services/IsEmriSeeder.cs', [
-    (r'IsEmriTipi\.BAGLAMA', '"BAGLAMA"'), # Wait! BAGLAMA was removed from Enum earlier, but now we restored ALL 14 enums. Did we include BAGLAMA? Yes, "BAGLAMA = 1" is in regen_all.py! Wait, in regen_all.py: IsEmriTipi: "DEGISTIRME = 2, SOKME = 3...". Ah! I didn't include BAGLAMA in regen_all.py!!
-])
+

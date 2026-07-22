@@ -48,7 +48,7 @@ fix('Controllers/IsEmirleriController.cs', [
 
 fix('Services/IsEmriSeeder.cs', [
     ('IsEmriTipi.SAYAC_DEGISIM', 'IsEmriTipi.DEGISTIRME'),
-    ('IsEmriTipi.BAGLAMA', 'IsEmriTipi.YENI_BAGLANTI')
+    ('IsEmriTipi.YENI_BAGLANTI')
 ])
 
 fix('Services/FaturaSeeder.cs', [

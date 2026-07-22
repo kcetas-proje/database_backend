@@ -161,7 +161,7 @@ public class IsEmriSeeder
 
 
                     Oncelik =
-                        tip == IsEmriTipi.ARIZA
+                        tip == IsEmriTipi.SAYAC_ARIZA
                         ? "YUKSEK"
                         : "NORMAL",
 

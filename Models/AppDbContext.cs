@@ -38,69 +38,75 @@ public partial class AppDbContext : DbContext
     public DbSet<Bildirim> Bildirimler { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+{
+    var degisenler = ChangeTracker.Entries()
+        .Where(e => e.Entity is not AuditLog && 
+                   (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
+        .ToList();
+
+    var auditListesi = new List<(EntityEntry Entry, AuditLog Log)>();
+
+    foreach (var entry in degisenler)
     {
-        var degisenler = ChangeTracker.Entries()
-            .Where(e => e.Entity is not AuditLog && 
-                       (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
-            .ToList();
-
-        var auditListesi = new List<(EntityEntry Entry, AuditLog Log)>();
-
-        foreach (var entry in degisenler)
+        var auditLog = new AuditLog
         {
-            var auditLog = new AuditLog
-            {
-                VarlikTipi = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name,
-                IslemTipi = entry.State switch
-                {
-                    EntityState.Added => "EKLEME",
-                    EntityState.Modified => "GUNCELLEME",
-                    EntityState.Deleted => "SILME",
-                    _ => "DIGER"
-                },
-                IslemZamani = DateTime.UtcNow,
-                KullaniciId = this.MevcutKullaniciId,
-                IslemGerekcesi = "Sistem Otomasyon İşlemi"
-            };
-
-            if (entry.State == EntityState.Added)
-            {
-                auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
-            }
-            else if (entry.State == EntityState.Deleted)
-            {
-                auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
-            }
-            else if (entry.State == EntityState.Modified)
-            {
-                auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
-                auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
-            }
-
-            auditListesi.Add((entry, auditLog));
-        }
-
-        var sonuc = await base.SaveChangesAsync(cancellationToken);
-
-        foreach (var item in auditListesi)
-        {
-            var pkName = item.Entry.Metadata.FindPrimaryKey()?.Properties.Select(p => p.Name).FirstOrDefault();
+            VarlikTipi = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name,
             
-            if (pkName != null)
+            // 💥 GIGACHAD FIX: String yerine direkt Enum değerlerini atıyoruz sheesh!
+            IslemTipi = entry.State switch
             {
-                item.Log.VarlikId = Convert.ToInt64(item.Entry.Property(pkName).CurrentValue);
-            }
+                EntityState.Added => IslemTipi.INSERT,
+                EntityState.Modified => IslemTipi.UPDATE,
+                EntityState.Deleted => IslemTipi.DELETE,
+                _ => IslemTipi.STATUS_CHANGE 
+            },
             
-            AuditLogs.Add(item.Log);
-        }
+            IslemZamani = DateTime.UtcNow,
+            KullaniciId = this.MevcutKullaniciId,
+            IslemGerekcesi = "Sistem Otomasyon İşlemi"
+        };
 
-        if (auditListesi.Any())
+        if (entry.State == EntityState.Added)
         {
-            await base.SaveChangesAsync(cancellationToken);
+            auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
+        }
+        else if (entry.State == EntityState.Deleted)
+        {
+            auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
+        }
+        else if (entry.State == EntityState.Modified)
+        {
+            auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
+            auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
         }
 
-        return sonuc;
+        auditListesi.Add((entry, auditLog));
     }
+
+    // Önce asıl değişiklikleri kaydet (Id'ler oluşsun)
+    var sonuc = await base.SaveChangesAsync(cancellationToken);
+
+    // Sonra oluşan Id'leri log'a zımbala
+    foreach (var item in auditListesi)
+    {
+        var pkName = item.Entry.Metadata.FindPrimaryKey()?.Properties.Select(p => p.Name).FirstOrDefault();
+        
+        if (pkName != null)
+        {
+            item.Log.VarlikId = Convert.ToInt64(item.Entry.Property(pkName).CurrentValue);
+        }
+        
+        AuditLogs.Add(item.Log);
+    }
+
+    // Logları veritabanına mermi gibi çak
+    if (auditListesi.Any())
+    {
+        await base.SaveChangesAsync(cancellationToken);
+    }
+
+    return sonuc;
+}
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

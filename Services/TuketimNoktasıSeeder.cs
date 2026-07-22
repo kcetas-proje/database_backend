@@ -62,7 +62,7 @@ public class TuketimNoktasiSeeder
                     ? "MESKEN"
                     : "TICARETHANE",
 
-                BaglantiDurumu = "AKTIF",
+                BaglantiDurumu = BaglantiDurumu.AKTIF,
 
                 Status = "AKTIF",
 

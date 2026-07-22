@@ -159,7 +159,7 @@ public class FaturaSeeder
                     kalemler.Add(new FaturaKalemi
                     {
                         FaturaId = f.FaturaId,
-                        KalemTipi = "DAGITIM",
+                        KalemTipi = KalemTipi.DAGITIM_BEDELI,
                         Aciklama = "Dağıtım Bedeli",
                         Miktar = f.TuketimKwh ?? 0m,
                         BirimFiyat = (f.TuketimKwh ?? 0m) == 0
@@ -232,7 +232,7 @@ public class FaturaSeeder
                 kalemler.Add(new FaturaKalemi
                 {
                     FaturaId = f.FaturaId,
-                    KalemTipi = "DAGITIM",
+                    KalemTipi = KalemTipi.DAGITIM_BEDELI,
                     Aciklama = "Dağıtım Bedeli",
                     Miktar = f.TuketimKwh ?? 0m,
 

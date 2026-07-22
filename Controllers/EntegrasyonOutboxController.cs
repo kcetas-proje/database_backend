@@ -74,7 +74,7 @@ namespace KcetasAboneApi.Controllers
             var log = await _context.EntegrasyonOutboxes.FindAsync(id);
             if (log == null) return NotFound();
 
-            log.Durum = System.Enum.Parse<IsEmriDurumu>(dto.Durum);
+            log.Durum = System.Enum.Parse<OutboxDurumu>(dto.Durum);
             log.RetryCount = dto.RetryCount;
             log.HataMesaji = dto.HataMesaji;
             log.SonDenemeTarihi = DateTime.UtcNow;

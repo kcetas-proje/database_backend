@@ -17,9 +17,10 @@ public class IsEmirleriController : ControllerBase
     private readonly AppDbContext _context; 
     private readonly IHubContext<BildirimHub> _hubContext;
 
-    public IsEmirleriController(AppDbContext context) 
+    public IsEmirleriController(AppDbContext context, IHubContext<BildirimHub> hubContext) 
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     // GET: api/IsEmirleri/All
@@ -391,7 +392,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         for (int j = 0; j < 30; j++)
         {
             var secilenSayac = takiliSayaclar[random.Next(takiliSayaclar.Count)];
-            string secilenTip = isEmriTipleri[random.Next(isEmriTipleri.Length)];
+            IsEmriTipi secilenTip = isEmriTipleri[random.Next(isEmriTipleri.Length)];
 
             var yeniIsEmri = new IsEmirleri
             {

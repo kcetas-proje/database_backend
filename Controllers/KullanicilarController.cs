@@ -88,7 +88,7 @@ namespace KcetasAboneApi.Controllers
                 return NotFound("Böyle bir kullanıcı bulunamadı.");
             }
 
-            dbKullanici.Durum = BaglantiDurumu.PASIF;
+            dbKullanici.Durum = KullaniciDurumu.PASIF;
             dbKullanici.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

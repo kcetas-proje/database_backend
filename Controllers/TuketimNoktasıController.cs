@@ -152,7 +152,7 @@ public class TuketimNoktasiController : ControllerBase
         mevcut.KoordinatLon = nokta.KoordinatLon;
         mevcut.BaglantiGucuKw = nokta.BaglantiGucuKw;
         mevcut.TuketiciGrubu = nokta.TuketiciGrubu;
-        mevcut.BaglantiDurumu = nokta.BaglantiDurumu.ToString();
+        mevcut.BaglantiDurumu = nokta.BaglantiDurumu;
         mevcut.Status = nokta.Status;
         mevcut.UpdatedAt = DateTime.UtcNow;
 

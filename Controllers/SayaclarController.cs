@@ -129,7 +129,7 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
         mevcut.Faz = sayac.Faz;
         mevcut.Carpan = sayac.Carpan;
         mevcut.MuhurNo = sayac.MuhurNo;
-        mevcut.Durum = System.Enum.Parse<IsEmriDurumu>(sayac.Durum.ToString());
+        mevcut.Durum = System.Enum.Parse<SayacDurumu>(sayac.Durum.ToString());
         mevcut.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

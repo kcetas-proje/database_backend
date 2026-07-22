@@ -80,8 +80,8 @@ public class SozlesmeSeeder
                 TarifeId = tarife.TarifeId,
 
                 SozlesmeTipi = FakerHelper.Bool()
-                    ? AboneTipi.BIREYSEL
-                    : AboneTipi.KURUMSAL,
+                    ? AboneTipi.BIREYSEL.ToString()
+                    : AboneTipi.KURUMSAL.ToString(),
 
                 Durum = SozlesmeDurumu.AKTIF,
 

@@ -233,7 +233,7 @@ public class IsEmriSeeder
             {
 
 
-                case "ARIZA":
+                case IsEmriTipi.SAYAC_ARIZA:
 
 
                     isEmri.ArizaTipi =
@@ -264,7 +264,7 @@ public class IsEmriSeeder
 
 
 
-                case "KESIF":
+                case IsEmriTipi.KESIF_INCELEME:
 
 
                     isEmri.KesifSonucu =
@@ -360,7 +360,7 @@ public class IsEmriSeeder
 
 
 
-                case "SAYAC_DEGISIM":
+                case IsEmriTipi.DEGISTIRME:
 
 
 

@@ -144,7 +144,7 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
         mevcut.BaslangicTarihi = sozlesme.BaslangicTarihi;
         mevcut.BitisTarihi = sozlesme.BitisTarihi;
         mevcut.GuvenceBedeli = sozlesme.GuvenceBedeli;
-        mevcut.Durum = System.Enum.Parse<IsEmriDurumu>(sozlesme.Durum.ToString());
+        mevcut.Durum = System.Enum.Parse<SozlesmeDurumu>(sozlesme.Durum.ToString());
         mevcut.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

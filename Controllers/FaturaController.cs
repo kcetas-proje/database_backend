@@ -248,7 +248,7 @@ namespace KcetasAboneApi.Controllers
                     OkumaId = yeniOkuma.OkumaId,
                     FaturaNo = rasgeleFaturaNo,
                     TekilKod = rasgeleTekilKod,
-                    FaturaTipi = string.IsNullOrEmpty(System.Enum.Parse<FaturaTipi>(dto.FaturaTipi.ToString())) ? FaturaTipi.DONEM : System.Enum.Parse<FaturaTipi>(dto.FaturaTipi.ToString()),
+                    FaturaTipi = dto.FaturaTipi == 0 ? FaturaTipi.DONEM : dto.FaturaTipi,
                     Donem = string.IsNullOrEmpty(dto.Donem) ? DateTime.Now.ToString("yyyy-MM") : dto.Donem,
                     FaturaTarihi = DateOnly.FromDateTime(DateTime.UtcNow),
                     SonOdemeTarihi = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
@@ -357,16 +357,17 @@ namespace KcetasAboneApi.Controllers
             return Ok(new { mesaj = $"{dbFatura.FaturaNo} numaralı fatura başarıyla iptal duruma alındı." });
         }
 
-        // 🔓 FATURA ONAYLAMA (Outbox Postacısını Tetikler)
-        [HttpPost("{faturaId}/onayla")]
-        public async Task<IActionResult> FaturaOnayla(long faturaId)
-        {
-            var fatura = await _context.Faturas.FindAsync(faturaId);
-            if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
-            if (fatura.Durum.ToString() != FaturaDurumu.HESAPLANDI) return BadRequest(new { message = $"Sadece HESAPLANDI olanlar onaylanabilir." });
+    [HttpPost("{faturaId}/onayla")]
+    public async Task<IActionResult> FaturaOnayla(long faturaId)
+    {
+        var fatura = await _context.Faturas.FindAsync(faturaId);
+        if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
 
-            fatura.Durum.ToString() = FaturaDurumu.ONAYLANDI;
-            fatura.UpdatedAt = DateTime.UtcNow;
+        if (fatura.Durum != FaturaDurumu.HESAPLANDI) return BadRequest(new { message = $"Sadece HESAPLANDI olanlar onaylanabilir." });
+
+        fatura.Durum = FaturaDurumu.ONAYLANDI;
+        fatura.UpdatedAt = DateTime.UtcNow;
+
 
             var outboxKargosu = new EntegrasyonOutbox
             {
@@ -472,7 +473,7 @@ namespace KcetasAboneApi.Controllers
                         {
                             new FaturaKalemi { KalemTipi = KalemTipi.ENERJI, Miktar = gercekTuketimKwh, BirimFiyat = tarife.GunduzBirimFiyat, Tutar = Math.Round(enerjiBedeli, 2), Aciklama = "Aktif Enerji Bedeli" },
                             new FaturaKalemi { KalemTipi = KalemTipi.DAGITIM_BEDELI, Miktar = gercekTuketimKwh, BirimFiyat = tarife.DagitimBedeli, Tutar = Math.Round(dagitimBedeli, 2), Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
-                            new FaturaKalemi { KalemTipi = "HIZMET_BEDELI", Miktar = 1, BirimFiyat = hizmetBedeli, Tutar = hizmetBedeli, Aciklama = "Sabit Hizmet Bedeli" },
+                            new FaturaKalemi { KalemTipi = KalemTipi.HIZMET, Miktar = 1, BirimFiyat = hizmetBedeli, Tutar = hizmetBedeli, Aciklama = "Sabit Hizmet Bedeli" },
                             new FaturaKalemi { KalemTipi = KalemTipi.VERGI_FON, Miktar = 1, BirimFiyat = Math.Round(vergiFon, 2), Tutar = Math.Round(vergiFon, 2), Aciklama = "KDV ve Diğer Fonlar" }
                         }
                     };

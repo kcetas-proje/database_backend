@@ -71,7 +71,7 @@ public class EndeksOkumaSeeder
 
                     OkumaTipi = OkumaTipi.RUTIN_DONEM,
 
-                    OkumaKaynagi = OkumaKaynagi.MANUEL,
+                    OkumaKaynagi = OkumaKaynagi.OSOS,
 
                     OncekiEndeks = mevcutEndeks,
 
@@ -91,7 +91,7 @@ public class EndeksOkumaSeeder
 
                     Status = "AKTIF",
 
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = okumaTarihi.ToUniversalTime()
                 });
 
                 mevcutEndeks = yeniEndeks;

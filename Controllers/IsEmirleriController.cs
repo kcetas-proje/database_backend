@@ -1004,14 +1004,16 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         {
             KullaniciId = (int)request.UstaId, 
             Baslik = "Yeni Görev",
-            Icerik = mesaj
+            Icerik = mesaj,
+            IsEmriId = isEmri.IsEmriId,
+            CreatedAt = DateTime.UtcNow
         };
         
         _context.Bildirimler.Add(yeniBildirim);
         await _context.SaveChangesAsync();
 
-        // SignalR füzesi yolla
-        await _hubContext.Clients.User(request.UstaId.ToString()).SendAsync("YeniBildirimGeldi", "Yeni Görev", mesaj);
+        await _hubContext.Clients.User(request.UstaId.ToString())
+            .SendAsync("YeniBildirimGeldi", "Yeni Görev", mesaj, isEmri.IsEmriId); 
 
         return Ok(new { message = "İş atandı, bildirim gönderildi.", isEmriNo = isEmri.IsEmriNo });
     }
@@ -1051,7 +1053,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             {
                 KullaniciId = (int)secilenUstaId,
                 Baslik = "Otomatik Görev",
-                Icerik = mesaj
+                Icerik = mesaj,
+                IsEmriId = isEmri.IsEmriId, 
+                CreatedAt = DateTime.UtcNow
             });
 
             // Sıradaki ekibe geç
@@ -1061,15 +1065,16 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             atananSayisi++;
         }
 
-        // 1. Önce tüm bildirimleri DB'ye tek seferde kaydet (Performans W)
+        // 1. Önce tüm bildirimleri DB'ye tek seferde kaydet
         _context.Bildirimler.AddRange(atananBildirimler);
         await _context.SaveChangesAsync();
 
         // 2. Döngüyle herkese ayrı ayrı SignalR pop-up füzesi at
         foreach (var bildirim in atananBildirimler)
         {
+
             await _hubContext.Clients.User(bildirim.KullaniciId.ToString())
-                .SendAsync("YeniBildirimGeldi", bildirim.Baslik, bildirim.Icerik);
+                .SendAsync("YeniBildirimGeldi", bildirim.Baslik, bildirim.Icerik, bildirim.IsEmriId);
         }
 
         return Ok(new { message = $"{atananSayisi} iş emri ekiplere dağıtıldı ve bildirim gönderildi." });
@@ -1078,7 +1083,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     [HttpPost("planlanan-tarihleri-dagit")]
     public async Task<IActionResult> PlanlananTarihleriDagit()
     {
-        // 1. Durumu IsEmriDurumu.ATANDI olan ama tarihi hala boş olan amele işlerini topla
+
         var isEmirleri = await _context.IsEmirleris
             .Where(i => i.Durum == IsEmriDurumu.ATANDI && i.PlanlananTarih == null)
             .ToListAsync();
@@ -1087,7 +1092,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             return BadRequest(new { message = "Planlanan tarihi boş olan iş emri kalmadı." });
 
         var random = new Random();
-        var bugun = DateTime.UtcNow; // The Matrix'in anlık saati
+        var bugun = DateTime.UtcNow; 
 
         foreach (var isEmri in isEmirleri)
         {
@@ -1097,8 +1102,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
             // Tarihi oluştur ve iş emrine zımbala
             var yeniTarih = bugun.AddDays(rastgeleGun).Date;
-            
-            // Veritabanının saat dilimi sorun çıkarmasın diye UTC'ye çeviriyoruz
+
             isEmri.PlanlananTarih = DateTime.SpecifyKind(yeniTarih, DateTimeKind.Utc);
             isEmri.UpdatedAt = DateTime.UtcNow;
         }

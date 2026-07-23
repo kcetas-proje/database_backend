@@ -27,5 +27,8 @@ namespace KcetasAboneApi.Models
 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+            
+        [Column("is_emri_id")]
+        public long? IsEmriId { get; set; }
     }
 }

@@ -22,13 +22,18 @@ public class BildirimlerController : ControllerBase
 
     // 1. ŞEFİN GÖREVİ: Bildirim Gönderme / Kaydetme Fonksiyonu
     [HttpPost("Send")]
-    public async Task<IActionResult> SendNotification([FromQuery] int userId, [FromQuery] string baslik, [FromQuery] string icerik)
+    public async Task<IActionResult> SendNotification(
+        [FromQuery] int userId, 
+        [FromQuery] string baslik, 
+        [FromQuery] string icerik,
+        [FromQuery] long? isEmriId = null) 
     {
         var yeniBildirim = new Bildirim
         {
             KullaniciId = userId,
             Baslik = baslik,
             Icerik = icerik,
+            IsEmriId = isEmriId,
             OkunduMu = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -36,8 +41,7 @@ public class BildirimlerController : ControllerBase
         _context.Bildirimler.Add(yeniBildirim);
         await _context.SaveChangesAsync();
 
-
-        await _hubContext.Clients.User(userId.ToString()).SendAsync("YeniBildirimGeldi", baslik, icerik);
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("YeniBildirimGeldi", baslik, icerik, isEmriId);
 
         return Ok(new { mesaj = "Bildirim başarıyla kaydedildi ve gönderildi.", data = yeniBildirim });
     }

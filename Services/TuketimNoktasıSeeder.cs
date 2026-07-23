@@ -40,7 +40,7 @@ public class TuketimNoktasiSeeder
 
             liste.Add(new TuketimNoktasi
             {
-                TekilKod = $"TN-38-{sonTekilKod:D6}",
+                TekilKod = $"TK-{DateTime.UtcNow:yyyyMM}-{sonTekilKod:D4}",
 
                 IlceId = ilce.IlceId,
 

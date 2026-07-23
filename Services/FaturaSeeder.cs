@@ -95,11 +95,9 @@ public class FaturaSeeder
 
                 Donem = okuma.Donem!,
 
-                FaturaTarihi =
-                    DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                FaturaTarihi = DateOnly.FromDateTime(okuma.OkumaZamani),
 
-                SonOdemeTarihi =
-                    DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(15)),
+                SonOdemeTarihi = DateOnly.FromDateTime(okuma.OkumaZamani.AddDays(15)),
 
                 OkumaId = okuma.OkumaId,
 

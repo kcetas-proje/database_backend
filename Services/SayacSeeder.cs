@@ -95,8 +95,7 @@ public class SayacSeeder
                     SayacDurumu.TAKILI,
                     SayacDurumu.TAKILI,
                     SayacDurumu.TAKILI,
-                    SayacDurumu.DEPODA,
-                    SayacDurumu.ARIZALI),
+                    SayacDurumu.ARIZALI), 
 
                 CreatedAt = DateTime.UtcNow
             });

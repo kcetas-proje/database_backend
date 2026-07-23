@@ -42,11 +42,10 @@ public class IsEmriSeeder
 
 
 
-        var kullanicilar =
-            await _context.Kullanicilars
+        var kullanicilar = await _context.Kullanicilars
+            .Where(k => k.RolId == 1) 
             .AsNoTracking()
             .ToListAsync();
-
 
 
         if (!tuketimNoktalari.Any())
@@ -122,108 +121,48 @@ public class IsEmriSeeder
 
 
 
-            var created =
-                _faker.Date
-                .Past(1)
-                .ToUniversalTime();
+            var created = _faker.Date.Past(1).ToUniversalTime();
+
+            var durum = _faker.PickRandom(
+                IsEmriDurumu.ACIK,
+                IsEmriDurumu.ATANDI,
+                IsEmriDurumu.YOLDA,
+                IsEmriDurumu.SAHADA,
+                IsEmriDurumu.TAMAMLANDI,
+                IsEmriDurumu.IPTAL,
+                IsEmriDurumu.BASARISIZ);
 
 
-
-            var durum =
-                _faker.PickRandom(
-                    IsEmriDurumu.ACIK,
-                    IsEmriDurumu.ATANDI,
-                    IsEmriDurumu.YOLDA,
-                    IsEmriDurumu.SAHADA,
-                    IsEmriDurumu.TAMAMLANDI,
-                    IsEmriDurumu.IPTAL,
-                    IsEmriDurumu.BASARISIZ);
+            var planlanan = created.AddDays(_faker.Random.Int(1, 5));
 
 
+            DateTime? guncellemeTarihi = null;
+            if (durum == IsEmriDurumu.TAMAMLANDI || durum == IsEmriDurumu.IPTAL || durum == IsEmriDurumu.BASARISIZ)
+            {
+                guncellemeTarihi = planlanan.AddDays(_faker.Random.Int(0, 3));
+            }
 
-            var isEmri =
-                new IsEmirleri
-                {
+            var isEmri = new IsEmirleri
+            {
+                IsEmriNo = $"ISEM-{sonNo:D5}",
+                TuketimNoktasiId = tuketim.TuketimNoktasiId,
+                SayacId = sayac?.SayacId,
+                Tip = tip,
+                Oncelik = tip == IsEmriTipi.SAYAC_ARIZA ? "YUKSEK" : "NORMAL",
+                Durum = durum,
+                AtananKullaniciId = _faker.PickRandom(kullanicilar).KullaniciId, 
 
-                    IsEmriNo =
-                        $"ISEM-{sonNo:D5}",
+                CreatedAt = created,
+                PlanlananTarih = planlanan,
+                UpdatedAt = guncellemeTarihi,
 
-
-                    TuketimNoktasiId =
-                        tuketim.TuketimNoktasiId,
-
-
-                    SayacId =
-                        sayac?.SayacId,
-
-
-                    Tip = tip,
-
-
-                    Oncelik =
-                        tip == IsEmriTipi.SAYAC_ARIZA
-                        ? "YUKSEK"
-                        : "NORMAL",
-
-
-
-                    Durum = durum,
-
-
-                    AtananKullaniciId =
-                        _faker
-                        .PickRandom(kullanicilar)
-                        .KullaniciId,
-
-
-
-                    CreatedAt = created,
-
-
-
-                    PlanlananTarih =
-                        created
-                        .AddDays(
-                            _faker.Random.Int(1, 10)),
-
-
-
-                    UpdatedAt =
-                        durum == IsEmriDurumu.TAMAMLANDI
-                        ? created.AddDays(3)
-                        : null,
-
-
-
-                    PanoDirekNo =
-                        $"PD-{_faker.Random.Number(1000, 9999)}",
-
-
-
-                    MuhurNo =
-                        $"MHR-{_faker.Random.Number(100000, 999999)}",
-
-
-
-                    TutanakNo =
-                        $"TTK-{_faker.Random.Number(10000, 99999)}",
-
-
-
-                    AboneDurumu =
-                        "AKTIF",
-
-
-
-                    SayacDurumu =
-                        "NORMAL",
-
-
-
-                    IncelemeNotu =
-                        "Saha kontrolü gerçekleştirildi."
-
-                };
+                PanoDirekNo = $"PD-{_faker.Random.Number(1000, 9999)}",
+                MuhurNo = $"MHR-{_faker.Random.Number(100000, 999999)}",
+                TutanakNo = $"TTK-{_faker.Random.Number(10000, 99999)}",
+                AboneDurumu = "AKTIF",
+                SayacDurumu = "NORMAL",
+                IncelemeNotu = "Saha kontrolü gerçekleştirildi."
+            };
 
 
 

@@ -65,7 +65,6 @@ namespace KcetasAboneApi.Controllers
             });
         }
 
-        // ⚡ TEKLİ FATURA KESİMİ (Transaction + Outbox + Kalemler)
         [HttpPost("FaturaKes")]
         public async Task<IActionResult> FaturaKes([FromBody] FaturaKesRequestDto request)
         {
@@ -165,12 +164,10 @@ namespace KcetasAboneApi.Controllers
         [HttpPost("{faturaId}/tahsil-et")]
         public async Task<IActionResult> FaturaTahsilEt(long faturaId)
         {
-            // 1. Faturayı bul
+
             var fatura = await _context.Faturas.FindAsync(faturaId);
             if (fatura == null) return NotFound(new { message = "Fatura bulunamadı!" });
 
-            // 2. İş mantığı: Sadece 'ODENMEDI' veya 'GONDERILDI' durumundakiler tahsil edilebilir
-            // (İhtiyacına göre bu kontrolü esnetebilirsin)
             if (fatura.Durum == FaturaDurumu.ODENDI) 
                 return BadRequest(new { message = "Bu fatura zaten daha önce tahsil edilmiş!" });
             
@@ -268,7 +265,6 @@ namespace KcetasAboneApi.Controllers
                     Status = "AKTIF",
                     CreatedAt = DateTime.UtcNow,
 
-                    // 🚀 FAT-REQ-02: Fatura Kalemleri otomatik doğuyor
                     FaturaKalemis = new List<FaturaKalemi>
                     {
                         new FaturaKalemi { KalemTipi = KalemTipi.ENERJI, Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(enerjiBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
@@ -279,7 +275,6 @@ namespace KcetasAboneApi.Controllers
 
                 _context.Faturas.Add(yeniFatura);
 
-                // 4. İş Emri Varsa Kapat
                 if (dto.IsEmriId.HasValue) 
                 {
                     var isEmri = await _context.IsEmirleris.FindAsync(dto.IsEmriId.Value);
@@ -402,7 +397,6 @@ namespace KcetasAboneApi.Controllers
             return Ok(new { message = "Fatura iptal edildi!", faturaNo = fatura.FaturaNo });
         }
 
-        // 🏭 TOPLU FATURA MOTORU (Transaction + FaturaKalemi listeleri)
         [HttpPost("generate-faturalar")]
         public async Task<IActionResult> GenerateFaturalar()
         {

@@ -94,7 +94,6 @@ public class TuketimNoktasiController : ControllerBase
         if (!await _context.Ilces.AnyAsync(x => x.IlceId == dto.IlceId))
             return BadRequest(new { message = "Böyle bir ilçe bulunamadı." });
 
-        // Format: TK-202607-0001
         string prefix = $"TK-{DateTime.UtcNow:yyyyMM}-";
         var sonNokta = await _context.TuketimNoktasis
             .Where(x => x.TekilKod.StartsWith(prefix))

@@ -17,7 +17,7 @@ public class AboneService : IAboneService
         int page,
         int pageSize)
     {
-        // 🚀 1. GIGACHAD MERMİSİ: AsNoTracking() eklendi! RAM tüketimi bitti.
+
         var query = _context.Abonelers.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(isim))
@@ -72,8 +72,7 @@ public class AboneService : IAboneService
     int page,
     int pageSize)
     {
-        // 🚀 3. GIGACHAD MERMİSİ: Fatura çekerken de AsNoTracking zımbaladık.
-        // Include kullandığın yerlerde AsNoTracking HAYAT KURTARIR fr fr!
+
         var query = _context.Faturas
             .AsNoTracking() 
             .Include(f => f.Sozlesme)

@@ -43,16 +43,13 @@ public class AbonelerController : ControllerBase
         // Güvenlik kontrolleri: Sayfa 1'den, istenen kayıt sayısı 1'den küçük olamaz.
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
-        if (pageSize > 100) pageSize = 100; // API yorulmasın diye tek seferde en fazla 100 kayıt veriyoruz.
+        if (pageSize > 100) pageSize = 100; 
 
-        // 1. Veritabanındaki TOPLAM abone sayısını buluyoruz (Sayfa sayısını hesaplamak için)
         var totalCount = await _context.Abonelers.CountAsync();
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-        // 2. Kullanıcının istediği sayfanın verilerini (sadece o kısmı) çekiyoruz
         var query = _context.Abonelers.AsNoTracking();
 
-        // Keyset Pagination (İleri gitme) veya Offset Pagination (Geri gitme / İlk sayfa)
         if (lastId.HasValue && lastId.Value > 0)
         {
             query = query.Where(a => a.AboneId > lastId.Value);
@@ -81,7 +78,7 @@ public class AbonelerController : ControllerBase
 
         long? nextCursor = aboneler.Any() ? aboneler.Last().AboneId : null;
 
-        // 3. Veriyi ve sayfalama bilgilerini güzel bir JSON paketi halinde geri dönüyoruz
+
         var response = new PagedResultDto<AboneListDto>
         {
             TotalCount = totalCount,

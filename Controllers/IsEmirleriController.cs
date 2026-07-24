@@ -66,39 +66,47 @@ public class IsEmirleriController : ControllerBase
         [FromQuery] bool includeCompleted = false)
     {
         var query = _context.IsEmirleris
-    .AsNoTracking()
-    .Where(i =>
-        i.AtananKullaniciId == kullaniciId &&
-        i.Durum != IsEmriDurumu.IPTAL);
+            .AsNoTracking()
+            .Where(i => i.AtananKullaniciId == kullaniciId && i.Durum != IsEmriDurumu.IPTAL);
+
         if (!includeCompleted)
         {
             query = query.Where(i => i.Durum != IsEmriDurumu.TAMAMLANDI);
         }
 
         var isEmirleri = await query
-    .Include(i => i.Sayac)
-    .Include(i => i.TuketimNoktasi)
-    .OrderBy(i => i.IsEmriId)
-    .Select(i => new IsEmriListDto
-    {
-        IsEmriId = i.IsEmriId,
-        IsEmriNo = i.IsEmriNo,
-        Tip = i.Tip,
-        Durum = i.Durum,
-        TuketimNoktasiId = i.TuketimNoktasiId,
-        SayacId = i.SayacId,
-        AtananKullaniciId = i.AtananKullaniciId,
-        PlanlananTarih = i.PlanlananTarih,
-        CreatedAt = i.CreatedAt,
+            .OrderBy(i => i.IsEmriId)
+            .Select(i => new IsEmriListDto
+            {
+                IsEmriId = i.IsEmriId,
+                IsEmriNo = i.IsEmriNo,
+                Tip = i.Tip,
+                Durum = i.Durum,
+                TuketimNoktasiId = i.TuketimNoktasiId,
+                SayacId = i.SayacId,
+                AtananKullaniciId = i.AtananKullaniciId,
+                PlanlananTarih = i.PlanlananTarih,
+                CreatedAt = i.CreatedAt,
 
-        SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
-        Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
+                SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
+                Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
 
-        SozlesmeNo = null,
-        AboneAdi = null,
-        AboneNo = null
-    })
-    .ToListAsync();
+                SozlesmeNo = _context.Sozlesmelers
+                    .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
+                    .Select(s => s.SozlesmeNo)
+                    .FirstOrDefault(),
+
+                AboneNo = _context.Sozlesmelers
+                    .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
+                    .Select(s => s.Abone.AboneNo)
+                    .FirstOrDefault(),
+
+                AboneAdi = _context.Sozlesmelers
+                    .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
+                    .Select(s => s.Abone.Ad + " " + s.Abone.Soyad)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
 
         return Ok(isEmirleri);
     }

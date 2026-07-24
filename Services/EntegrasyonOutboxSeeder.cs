@@ -2,7 +2,7 @@ using Bogus;
 using KcetasAboneApi.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace KcetasSeeder.Seeders;
+namespace KcetasAboneApi.Services;
 
 public class EntegrasyonOutboxSeeder
 {

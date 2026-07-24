@@ -21,6 +21,7 @@ namespace KcetasAboneApi.Controllers
         public async Task<IActionResult> GetKullanicilar()
         {
             var kullanicilar = await _context.Kullanicilars
+                .AsNoTracking() 
                 .Where(k => k.Durum == KullaniciDurumu.AKTIF)
                 .ToListAsync();
 
@@ -35,7 +36,7 @@ namespace KcetasAboneApi.Controllers
                 AdSoyad = dto.AdSoyad,
                 KullaniciAdi = dto.KullaniciAdi,
                 EPosta = dto.EPosta,
-                SifreHash = BCrypt.Net.BCrypt.HashPassword(dto.Sifre), 
+                SifreHash = BCrypt.Net.BCrypt.HashPassword(dto.Sifre),
                 RolId = dto.RolId,
                 Durum = KullaniciDurumu.AKTIF,
                 CreatedAt = DateTime.UtcNow
@@ -68,9 +69,13 @@ namespace KcetasAboneApi.Controllers
             dbKullanici.AdSoyad = guncelKullanici.AdSoyad;
             dbKullanici.KullaniciAdi = guncelKullanici.KullaniciAdi;
             dbKullanici.EPosta = guncelKullanici.EPosta;
-            dbKullanici.SifreHash = guncelKullanici.SifreHash;
             dbKullanici.RolId = guncelKullanici.RolId;
             dbKullanici.UpdatedAt = DateTime.UtcNow;
+
+            if (!string.IsNullOrWhiteSpace(guncelKullanici.SifreHash) && !guncelKullanici.SifreHash.StartsWith("$2"))
+            {
+                dbKullanici.SifreHash = BCrypt.Net.BCrypt.HashPassword(guncelKullanici.SifreHash);
+            }
 
             await _context.SaveChangesAsync();
 
@@ -100,4 +105,3 @@ namespace KcetasAboneApi.Controllers
         }
     }
 }
-

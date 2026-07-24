@@ -1,11 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using KcetasAboneApi.Models;
-using Microsoft.AspNetCore.Authorization;
-using KcetasAboneApi.Models.Dtos;
-using Bogus;
-using Microsoft.AspNetCore.SignalR;
+using KcetasAboneApi.DTOs.IsEmirleri;
 using KcetasAboneApi.Hubs;
+using KcetasAboneApi.Models;
+using KcetasAboneApi.Models.Dtos;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace KcetasAboneApi.Controllers;
 
@@ -25,7 +24,7 @@ public class IsEmirleriController : ControllerBase
 
     // GET: api/IsEmirleri/All
     [HttpGet("All")]
-    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetAllIsEmirleri([FromQuery] bool includeCompleted = false)
+    public async Task<ActionResult<IEnumerable<IsEmriListDto>>> GetAllIsEmirleri([FromQuery] bool includeCompleted = false)
     {
 
         var query = _context.IsEmirleris.AsQueryable();
@@ -36,14 +35,33 @@ public class IsEmirleriController : ControllerBase
         }
 
         return await query
-            .Include(i => i.Sayac)
-            .Include(i => i.TuketimNoktasi)
-            .OrderBy(i => i.IsEmriId)
-            .ToListAsync();
+    .Include(i => i.Sayac)
+    .Include(i => i.TuketimNoktasi)
+    .OrderBy(i => i.IsEmriId)
+    .Select(i => new IsEmriListDto
+    {
+        IsEmriId = i.IsEmriId,
+        IsEmriNo = i.IsEmriNo,
+        Tip = i.Tip,
+        Durum = i.Durum,
+        TuketimNoktasiId = i.TuketimNoktasiId,
+        SayacId = i.SayacId,
+        AtananKullaniciId = i.AtananKullaniciId,
+        PlanlananTarih = i.PlanlananTarih,
+        CreatedAt = i.CreatedAt,
+
+        SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
+        Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
+
+        SozlesmeNo = null,
+        AboneAdi = null,
+        AboneNo = null
+    })
+    .ToListAsync();
     }
     // GET: api/IsEmirleri/Kullanici/5
     [HttpGet("Kullanici/{kullaniciId}")]
-    public async Task<ActionResult<IEnumerable<IsEmirleri>>> GetKullaniciIsEmirleri(
+    public async Task<ActionResult<IEnumerable<IsEmriListDto>>> GetKullaniciIsEmirleri(
         long kullaniciId,
         [FromQuery] bool includeCompleted = false)
     {
@@ -58,10 +76,29 @@ public class IsEmirleriController : ControllerBase
         }
 
         var isEmirleri = await query
-            .Include(i => i.Sayac)
-            .Include(i => i.TuketimNoktasi)
-            .OrderBy(i => i.IsEmriId)
-            .ToListAsync();
+    .Include(i => i.Sayac)
+    .Include(i => i.TuketimNoktasi)
+    .OrderBy(i => i.IsEmriId)
+    .Select(i => new IsEmriListDto
+    {
+        IsEmriId = i.IsEmriId,
+        IsEmriNo = i.IsEmriNo,
+        Tip = i.Tip,
+        Durum = i.Durum,
+        TuketimNoktasiId = i.TuketimNoktasiId,
+        SayacId = i.SayacId,
+        AtananKullaniciId = i.AtananKullaniciId,
+        PlanlananTarih = i.PlanlananTarih,
+        CreatedAt = i.CreatedAt,
+
+        SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
+        Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
+
+        SozlesmeNo = null,
+        AboneAdi = null,
+        AboneNo = null
+    })
+    .ToListAsync();
 
         return Ok(isEmirleri);
     }
@@ -85,12 +122,32 @@ public class IsEmirleriController : ControllerBase
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
         var isEmirleri = await query
-            .Include(i => i.Sayac)
-            .Include(i => i.TuketimNoktasi)
-            .OrderBy(i => i.IsEmriId)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+    .Include(i => i.Sayac)
+    .Include(i => i.TuketimNoktasi)
+    .OrderBy(i => i.IsEmriId)
+    .Skip((page - 1) * pageSize)
+    .Take(pageSize)
+    .Select(i => new IsEmriListDto
+    {
+        IsEmriId = i.IsEmriId,
+        IsEmriNo = i.IsEmriNo,
+        Tip = i.Tip,
+        Durum = i.Durum,
+        TuketimNoktasiId = i.TuketimNoktasiId,
+        SayacId = i.SayacId,
+        AtananKullaniciId = i.AtananKullaniciId,
+        PlanlananTarih = i.PlanlananTarih,
+        CreatedAt = i.CreatedAt,
+
+        SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
+        Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
+
+        // Bunları sonraki adımda dolduracağız
+        SozlesmeNo = null,
+        AboneAdi = null,
+        AboneNo = null
+    })
+    .ToListAsync();
 
         var response = new
         {
@@ -110,12 +167,32 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
     string temizlenmisNo = isEmriNo.Trim();
 
-    var isEmri = await _context.IsEmirleris
+        var isEmri = await _context.IsEmirleris
         .Include(x => x.Sayac)
         .Include(x => x.TuketimNoktasi)
-        .FirstOrDefaultAsync(x => x.IsEmriNo == temizlenmisNo);
+        .Where(x => x.IsEmriNo == temizlenmisNo)
+        .Select(i => new IsEmriListDto
+        {
+            IsEmriId = i.IsEmriId,
+            IsEmriNo = i.IsEmriNo,
+            Tip = i.Tip,
+            Durum = i.Durum,
+            TuketimNoktasiId = i.TuketimNoktasiId,
+            SayacId = i.SayacId,
+            AtananKullaniciId = i.AtananKullaniciId,
+            PlanlananTarih = i.PlanlananTarih,
+            CreatedAt = i.CreatedAt,
 
-    if (isEmri == null)
+            SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
+            Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
+
+            SozlesmeNo = null,
+            AboneAdi = null,
+            AboneNo = null
+        })
+        .FirstOrDefaultAsync();
+
+        if (isEmri == null)
     {
         return NotFound(new 
         { 
@@ -128,19 +205,39 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 
     // GET: api/IsEmirleri/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<IsEmirleri>> GetIsEmri(long id)
+    public async Task<ActionResult<IsEmriListDto>> GetIsEmri(long id)
     {
         var isEmri = await _context.IsEmirleris
-            .Include(i => i.Sayac)
-            .Include(i => i.TuketimNoktasi)
-            .FirstOrDefaultAsync(i => i.IsEmriId == id);
+    .Include(i => i.Sayac)
+    .Include(i => i.TuketimNoktasi)
+    .Where(i => i.IsEmriId == id)
+    .Select(i => new IsEmriListDto
+    {
+        IsEmriId = i.IsEmriId,
+        IsEmriNo = i.IsEmriNo,
+        Tip = i.Tip,
+        Durum = i.Durum,
+        TuketimNoktasiId = i.TuketimNoktasiId,
+        SayacId = i.SayacId,
+        AtananKullaniciId = i.AtananKullaniciId,
+        PlanlananTarih = i.PlanlananTarih,
+        CreatedAt = i.CreatedAt,
+
+        SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
+        Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
+
+        SozlesmeNo = null,
+        AboneAdi = null,
+        AboneNo = null
+    })
+    .FirstOrDefaultAsync();
 
         if (isEmri == null)
         {
             return NotFound(new { message = "İş emri bulunamadı." });
         }
 
-        return isEmri;
+        return Ok(isEmri);
     }
 
     // POST: api/IsEmirleri

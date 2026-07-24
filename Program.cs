@@ -1,13 +1,14 @@
-using Microsoft.EntityFrameworkCore;
-using KcetasAboneApi.Models;
-using KcetasAboneApi.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
-using Microsoft.IdentityModel.Tokens; 
-using System.Text;
-using Microsoft.OpenApi;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using KcetasAboneApi.Hubs;
+using KcetasAboneApi.Models;
+using KcetasAboneApi.Services;
+using KcetasSeeder.Seeders;
+using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens; 
+using Microsoft.OpenApi;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -141,6 +142,7 @@ static async Task RunSeederMenu(IServiceProvider services)
         Console.WriteLine("5 - Endeks Okuma");
         Console.WriteLine("6 - Faturalar");
         Console.WriteLine("7 - İş Emirleri");
+        Console.WriteLine("8 - Entegrasyon Outbox");
         Console.WriteLine("0 - Çıkış");
         Console.WriteLine();
         Console.Write("Seçiminiz : ");
@@ -215,8 +217,22 @@ static async Task RunSeederMenu(IServiceProvider services)
             await new IsEmriSeeder(context).Generate(adet);
 
             break;
+            case "8":
+                Console.Write("Kaç adet Entegrasyon Outbox üretilecek : ");
 
-        default: 
+                if (int.TryParse(Console.ReadLine(), out adet) && adet > 0)
+                {
+                    Console.WriteLine("\nEntegrasyon Outbox kayıtları oluşturuluyor...\n");
+                    await new EntegrasyonOutboxSeeder(context).SeedAsync(adet);
+                }
+                else
+                {
+                    Console.WriteLine("Geçerli bir sayı giriniz.");
+                }
+
+                break;
+
+            default: 
             Console.WriteLine("Geçersiz seçim yaptınız."); 
             Console.ReadKey(); 
             continue; 

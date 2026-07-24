@@ -24,15 +24,15 @@ public class AbonelerController : ControllerBase
         _aboneService = aboneService;
     }
 
-    // GET: api/Aboneler/All (Sayfalamasız tüm veriler)
     [HttpGet("All")]
     public async Task<ActionResult<IEnumerable<Aboneler>>> GetAllAboneler()
     {
         return await _context.Abonelers
+            .AsNoTracking()
             .OrderBy(a => a.AboneId)
+            .Take(500)
             .ToListAsync();
     }
-
     // GET: api/Aboneler
     [HttpGet]
     public async Task<IActionResult> GetAboneler([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -48,9 +48,10 @@ public class AbonelerController : ControllerBase
 
         // 2. Kullanıcının istediği sayfanın verilerini (sadece o kısmı) çekiyoruz
         var aboneler = await _context.Abonelers
+            .AsNoTracking() 
             .OrderBy(a => a.AboneId)
-            .Skip((page - 1) * pageSize) // Önceki sayfaların verilerini atla
-            .Take(pageSize)              // Kalanlardan istenen miktar (pageSize) kadar al
+            .Skip((page - 1) * pageSize) 
+            .Take(pageSize)              
             .ToListAsync();
 
         // 3. Veriyi ve sayfalama bilgilerini güzel bir JSON paketi halinde geri dönüyoruz

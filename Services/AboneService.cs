@@ -1,6 +1,7 @@
 using KcetasAboneApi.Models;
 using KcetasAboneApi.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 public class AboneService : IAboneService
 {
@@ -16,9 +17,9 @@ public class AboneService : IAboneService
         int page,
         int pageSize)
     {
-        var query = _context.Abonelers.AsQueryable();
+        // 🚀 1. GIGACHAD MERMİSİ: AsNoTracking() eklendi! RAM tüketimi bitti.
+        var query = _context.Abonelers.AsNoTracking().AsQueryable();
 
-        // İsim ile filtreleme
         if (!string.IsNullOrWhiteSpace(isim))
         {
             isim = isim.Trim().ToLower();
@@ -65,12 +66,16 @@ public class AboneService : IAboneService
             Data = liste
         };
     }
+
     public async Task<AboneFaturaResponseDto> GetAboneFaturalari(
     long aboneId,
     int page,
     int pageSize)
     {
+        // 🚀 3. GIGACHAD MERMİSİ: Fatura çekerken de AsNoTracking zımbaladık.
+        // Include kullandığın yerlerde AsNoTracking HAYAT KURTARIR fr fr!
         var query = _context.Faturas
+            .AsNoTracking() 
             .Include(f => f.Sozlesme)
             .Where(f => f.Sozlesme.AboneId == aboneId);
 

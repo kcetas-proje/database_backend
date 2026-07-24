@@ -3,6 +3,7 @@ using System;
 using KcetasAboneApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KcetasAboneApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723122714_AbonelerIndexEklendi")]
+    partial class AbonelerIndexEklendi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -265,11 +268,9 @@ namespace KcetasAboneApi.Migrations
 
                     b.HasIndex("KullaniciId");
 
-                    b.HasIndex(new[] { "Donem" }, "idx_endeks_donem");
+                    b.HasIndex("SayacId");
 
-                    b.HasIndex(new[] { "SayacId" }, "idx_endeks_sayac_id");
-
-                    b.HasIndex(new[] { "SozlesmeId" }, "idx_endeks_sozlesme_id");
+                    b.HasIndex("SozlesmeId");
 
                     b.ToTable("endeks_okuma");
                 });
@@ -777,16 +778,11 @@ namespace KcetasAboneApi.Migrations
 
                     b.HasKey("IsEmriId");
 
+                    b.HasIndex("AtananKullaniciId");
+
                     b.HasIndex("SayacId");
 
-                    b.HasIndex(new[] { "AtananKullaniciId" }, "idx_isemirleri_atanan_id");
-
-                    b.HasIndex(new[] { "Durum" }, "idx_isemirleri_durum");
-
-                    b.HasIndex(new[] { "TuketimNoktasiId" }, "idx_isemirleri_tuketim_id");
-
-                    b.HasIndex(new[] { "IsEmriNo" }, "uq_isemirleri_no")
-                        .IsUnique();
+                    b.HasIndex("TuketimNoktasiId");
 
                     b.ToTable("is_emirleri");
                 });
@@ -962,12 +958,9 @@ namespace KcetasAboneApi.Migrations
 
                     b.HasIndex("CreatedBy");
 
+                    b.HasIndex("TuketimNoktasiId");
+
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex(new[] { "TuketimNoktasiId" }, "idx_sayaclar_tuketim_id");
-
-                    b.HasIndex(new[] { "SeriNo" }, "uq_sayaclar_seri_no")
-                        .IsUnique();
 
                     b.ToTable("sayaclar");
                 });
@@ -1030,16 +1023,11 @@ namespace KcetasAboneApi.Migrations
 
                     b.HasKey("SozlesmeId");
 
+                    b.HasIndex("AboneId");
+
                     b.HasIndex("TarifeId");
 
-                    b.HasIndex(new[] { "AboneId" }, "idx_sozlesmeler_abone_id");
-
-                    b.HasIndex(new[] { "Durum" }, "idx_sozlesmeler_durum");
-
-                    b.HasIndex(new[] { "TuketimNoktasiId" }, "idx_sozlesmeler_tuketim_id");
-
-                    b.HasIndex(new[] { "SozlesmeNo" }, "uq_sozlesmeler_sozlesme_no")
-                        .IsUnique();
+                    b.HasIndex("TuketimNoktasiId");
 
                     b.ToTable("sozlesmeler");
                 });

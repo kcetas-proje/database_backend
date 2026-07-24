@@ -290,9 +290,15 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.RolAdi).HasMaxLength(50).HasColumnName("rol_adi");
         });
 
-        // 💥 ABONELER & KULLANICILAR
         modelBuilder.Entity<Aboneler>(entity => {
             entity.Property(e => e.AboneTipi).HasConversion<string>();
+
+            entity.HasIndex(e => e.AboneNo, "uq_aboneler_abone_no").IsUnique();
+
+            entity.HasIndex(e => e.Tckn, "uq_aboneler_tckn").IsUnique();
+            entity.HasIndex(e => e.Vkn, "uq_aboneler_vkn").IsUnique();
+            
+            entity.HasIndex(e => e.Telefon, "idx_aboneler_telefon");
         });
 
         modelBuilder.Entity<Kullanicilar>(entity => {
@@ -313,26 +319,42 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<IsEmirleri>(entity => {
             entity.Property(e => e.Tip).HasConversion<string>();
             entity.Property(e => e.Durum).HasConversion<string>(); // IsEmriDurumu
+
+            entity.HasIndex(e => e.IsEmriNo, "uq_isemirleri_no").IsUnique();
+            entity.HasIndex(e => e.TuketimNoktasiId, "idx_isemirleri_tuketim_id");
+            entity.HasIndex(e => e.Durum, "idx_isemirleri_durum"); 
+            entity.HasIndex(e => e.AtananKullaniciId, "idx_isemirleri_atanan_id");
         });
 
         // 💥 SAYAÇLAR & SÖZLEŞMELER
         modelBuilder.Entity<Sayaclar>(entity => {
             entity.Property(e => e.Durum).HasConversion<string>();
             entity.Property(e => e.Faz).HasConversion<string>(); 
+
+            entity.HasIndex(e => e.SeriNo, "uq_sayaclar_seri_no").IsUnique();
+            entity.HasIndex(e => e.TuketimNoktasiId, "idx_sayaclar_tuketim_id");
         });
 
         modelBuilder.Entity<Sozlesmeler>(entity => {
             entity.Property(e => e.Durum).HasConversion<string>(); // SozlesmeDurumu
+
+            entity.HasIndex(e => e.SozlesmeNo, "uq_sozlesmeler_sozlesme_no").IsUnique();
+            entity.HasIndex(e => e.AboneId, "idx_sozlesmeler_abone_id");
+            entity.HasIndex(e => e.TuketimNoktasiId, "idx_sozlesmeler_tuketim_id");
+            entity.HasIndex(e => e.Durum, "idx_sozlesmeler_durum");
         });
 
-        // 💥 ENDEKS OKUMA
+
         modelBuilder.Entity<EndeksOkuma>(entity => {
             entity.Property(e => e.OkumaTipi).HasConversion<string>();
             entity.Property(e => e.OkumaKaynagi).HasConversion<string>();
             entity.Property(e => e.DogrulamaDurumu).HasConversion<string>();
+
+            entity.HasIndex(e => e.SayacId, "idx_endeks_sayac_id");
+            entity.HasIndex(e => e.SozlesmeId, "idx_endeks_sozlesme_id");
+            entity.HasIndex(e => e.Donem, "idx_endeks_donem");
         });
 
-        // 💥 ENTEGRASYON OUTBOX (GİB vs.)
         modelBuilder.Entity<EntegrasyonOutbox>(entity => {
             entity.Property(e => e.Durum).HasConversion<string>(); // OutboxDurumu
             entity.Property(e => e.HedefSistem).HasConversion<string>();

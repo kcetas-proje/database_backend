@@ -33,9 +33,11 @@ namespace KcetasAboneApi.Services
                     int currentYear = 2026; 
 
                     var yasliSayaclar = await context.Sayaclars
+                        .AsNoTracking()
                         .Where(s => s.TuketimNoktasiId != null 
                                  && s.Durum != SayacDurumu.IPTAL 
                                  && (currentYear - s.UretimYili) >= 5)
+                        .Take(500)
                         .ToListAsync(stoppingToken);
 
                     if (yasliSayaclar.Any())

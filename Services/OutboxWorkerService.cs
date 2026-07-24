@@ -36,6 +36,7 @@ namespace KcetasAboneApi.Services
 
                     var bekleyenKayitlar = context.EntegrasyonOutboxes
                         .Where(o => o.Durum == OutboxDurumu.BEKLIYOR && o.RetryCount < 3)
+                        .Take(100)
                         .ToList();
 
                     foreach (var kayit in bekleyenKayitlar)

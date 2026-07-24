@@ -150,7 +150,7 @@ public class IsEmriSeeder
                 Tip = tip,
                 Oncelik = tip == IsEmriTipi.SAYAC_ARIZA ? "YUKSEK" : "NORMAL",
                 Durum = durum,
-                AtananKullaniciId = _faker.PickRandom(kullanicilar).KullaniciId, 
+                AtananKullaniciId = _faker.PickRandom(kullanicilar).KullaniciId,
 
                 CreatedAt = created,
                 PlanlananTarih = planlanan,
@@ -359,50 +359,29 @@ public class IsEmriSeeder
             }
 
 
-
-
-
             liste.Add(isEmri);
-
-
-
 
             if (liste.Count >= BatchSize)
             {
-
                 _context.IsEmirleris.AddRange(liste);
-
-
                 await _context.SaveChangesAsync();
 
+                await BildirimleriOlusturAsync(liste);
 
                 _context.ChangeTracker.Clear();
-
-
                 liste.Clear();
-
             }
 
         }
-
-
-
-
-        if (liste.Any())
+            if (liste.Any())
         {
-
             _context.IsEmirleris.AddRange(liste);
-
-
             await _context.SaveChangesAsync();
+            await BildirimleriOlusturAsync(liste);
 
 
             _context.ChangeTracker.Clear();
-
         }
-
-
-
 
         _context.ChangeTracker.AutoDetectChangesEnabled = true;
 
@@ -411,5 +390,26 @@ public class IsEmriSeeder
         Console.WriteLine(
             $"{adet} adet iş emri oluşturuldu.");
 
+    }
+    private async Task BildirimleriOlusturAsync(IEnumerable<IsEmirleri> isEmirleri)
+    {
+        var bildirimler = isEmirleri
+    .Where(x => x.AtananKullaniciId.HasValue)
+    .Select(x => new Bildirim
+    {
+        KullaniciId = (int)x.AtananKullaniciId!.Value,
+        Baslik = "Yeni İş Emri",
+                Icerik = $"{x.IsEmriNo} numaralı iş emri atandı.",
+                IsEmriId = x.IsEmriId,
+                OkunduMu = false,
+                CreatedAt = x.CreatedAt
+            })
+            .ToList();
+
+        if (bildirimler.Any())
+        {
+            _context.Bildirimler.AddRange(bildirimler);
+            await _context.SaveChangesAsync();
+        }
     }
 }

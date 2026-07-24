@@ -35,8 +35,11 @@ public class AbonelerController : ControllerBase
     }
     // GET: api/Aboneler
     [HttpGet]
-    public async Task<IActionResult> GetAboneler([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetAboneler([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] long? lastId = null, [FromQuery] int? limit = null)
     {
+        // Web ekibinden gelen limit parametresi varsa onu pageSize olarak kullan
+        if (limit.HasValue) pageSize = limit.Value;
+
         // Güvenlik kontrolleri: Sayfa 1'den, istenen kayıt sayısı 1'den küçük olamaz.
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
@@ -47,20 +50,45 @@ public class AbonelerController : ControllerBase
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
         // 2. Kullanıcının istediği sayfanın verilerini (sadece o kısmı) çekiyoruz
-        var aboneler = await _context.Abonelers
-            .AsNoTracking() 
+        var query = _context.Abonelers.AsNoTracking();
+
+        // Keyset Pagination (İleri gitme) veya Offset Pagination (Geri gitme / İlk sayfa)
+        if (lastId.HasValue && lastId.Value > 0)
+        {
+            query = query.Where(a => a.AboneId > lastId.Value);
+        }
+        else
+        {
+            query = query.Skip((page - 1) * pageSize);
+        }
+
+        var aboneler = await query
             .OrderBy(a => a.AboneId)
-            .Skip((page - 1) * pageSize) 
-            .Take(pageSize)              
+            .Take(pageSize)
+            .Select(a => new AboneListDto
+            {
+                AboneId = a.AboneId,
+                AboneNo = a.AboneNo,
+                Ad = a.Ad,
+                Soyad = a.Soyad,
+                Unvan = a.Unvan,
+                Tckn = a.Tckn,
+                Vkn = a.Vkn,
+                Telefon = a.Telefon,
+                AboneTipi = a.AboneTipi
+            })
             .ToListAsync();
 
+        long? nextCursor = aboneler.Any() ? aboneler.Last().AboneId : null;
+
         // 3. Veriyi ve sayfalama bilgilerini güzel bir JSON paketi halinde geri dönüyoruz
-        var response = new
+        var response = new PagedResultDto<AboneListDto>
         {
             TotalCount = totalCount,
             TotalPages = totalPages,
             CurrentPage = page,
             PageSize = pageSize,
+            NextCursor = nextCursor,
             Data = aboneler
         };
 

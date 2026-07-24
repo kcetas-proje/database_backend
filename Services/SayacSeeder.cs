@@ -20,20 +20,18 @@ public class SayacSeeder
 
         _context.ChangeTracker.AutoDetectChangesEnabled = false;
 
-        // Sadece sayacı olmayan tüketim noktaları
         var tuketimNoktalari = await _context.TuketimNoktasis
-            .Where(t => !_context.Sayaclars
-                .Any(s => s.TuketimNoktasiId == t.TuketimNoktasiId))
-            .OrderBy(t => t.TuketimNoktasiId)
+            .Include(x => x.Sayaclars)
             .ToListAsync();
 
         if (!tuketimNoktalari.Any())
         {
-            Console.WriteLine("Sayaç oluşturulacak tüketim noktası bulunamadı.");
+            Console.WriteLine("Önce tüketim noktaları oluşturulmalıdır.");
             return;
         }
 
-        int sonSeriNo = await NumaraGenerator.GetLastSayacNumber(_context);
+        int sonSeriNo =
+            await NumaraGenerator.GetLastSayacNumber(_context);
 
         var faker = new Faker("tr");
 
@@ -62,13 +60,27 @@ public class SayacSeeder
 
         foreach (var nokta in tuketimNoktalari)
         {
+            if (nokta.Sayaclars.Any())
+                continue;
+
             sonSeriNo++;
+
+            var durum = faker.PickRandom(
+                "TAKILI",
+                "TAKILI",
+                "TAKILI",
+                "TAKILI",
+                "TAKILI",
+                "DEPODA",
+                "ARIZALI");
 
             liste.Add(new Sayaclar
             {
-                SeriNo = $"SYC{DateTime.Now.Year}{sonSeriNo:D8}",
+                SeriNo = sonSeriNo.ToString(),
 
-                TuketimNoktasiId = nokta.TuketimNoktasiId,
+                TuketimNoktasiId = durum == "TAKILI"
+                    ? nokta.TuketimNoktasiId
+                    : null,
 
                 Marka = faker.PickRandom(markalar),
 
@@ -82,22 +94,27 @@ public class SayacSeeder
 
                 Carpan = faker.PickRandom(new decimal[]
                 {
-                    1,
-                    5,
-                    10
+            1,
+            5,
+            10
                 }),
 
                 MuhurNo = $"MHR-{faker.Random.Number(100000, 999999)}",
 
-                Durum = faker.PickRandom(
-                    SayacDurumu.TAKILI,
-                    SayacDurumu.TAKILI,
-                    SayacDurumu.TAKILI,
-                    SayacDurumu.TAKILI,
-                    SayacDurumu.TAKILI,
-                    SayacDurumu.ARIZALI), 
+                Durum = durum switch
+                {
+                    "TAKILI" => SayacDurumu.TAKILI,
+                    "DEPODA" => SayacDurumu.DEPODA,
+                    _ => SayacDurumu.ARIZALI
+                },
 
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+
+                CreatedBy = null,
+
+                UpdatedAt = null,
+
+                UpdatedBy = null
             });
 
             if (liste.Count >= batchSize)

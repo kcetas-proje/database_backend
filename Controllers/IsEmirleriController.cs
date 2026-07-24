@@ -75,38 +75,38 @@ public class IsEmirleriController : ControllerBase
         }
 
         var isEmirleri = await query
-            .OrderBy(i => i.IsEmriId)
-            .Select(i => new IsEmriListDto
-            {
-                IsEmriId = i.IsEmriId,
-                IsEmriNo = i.IsEmriNo,
-                Tip = i.Tip,
-                Durum = i.Durum,
-                TuketimNoktasiId = i.TuketimNoktasiId,
-                SayacId = i.SayacId,
-                AtananKullaniciId = i.AtananKullaniciId,
-                PlanlananTarih = i.PlanlananTarih,
-                CreatedAt = i.CreatedAt,
+        .OrderBy(i => i.IsEmriId)
+        .Select(i => new IsEmriListDto
+        {
+            IsEmriId = i.IsEmriId,
+            IsEmriNo = i.IsEmriNo,
+            Tip = i.Tip,
+            Durum = i.Durum,
+            TuketimNoktasiId = i.TuketimNoktasiId,
+            SayacId = i.SayacId,
+            AtananKullaniciId = i.AtananKullaniciId,
+            PlanlananTarih = i.PlanlananTarih,
+            CreatedAt = i.CreatedAt,
 
-                SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
-                Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
+            SayacSeriNo = i.Sayac != null ? i.Sayac.SeriNo : null,
+            Adres = i.TuketimNoktasi != null ? i.TuketimNoktasi.AcikAdres : null,
 
-                SozlesmeNo = _context.Sozlesmelers
-                    .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
-                    .Select(s => s.SozlesmeNo)
-                    .FirstOrDefault(),
+            SozlesmeNo = _context.Sozlesmelers
+                .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
+                .Select(s => s.SozlesmeNo)
+                .FirstOrDefault(),
 
-                AboneNo = _context.Sozlesmelers
-                    .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
-                    .Select(s => s.Abone.AboneNo)
-                    .FirstOrDefault(),
+            AboneNo = _context.Sozlesmelers
+                .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
+                .Select(s => s.Abone.AboneNo)
+                .FirstOrDefault(),
 
-                AboneAdi = _context.Sozlesmelers
-                    .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
-                    .Select(s => s.Abone.Ad + " " + s.Abone.Soyad)
-                    .FirstOrDefault()
-            })
-            .ToListAsync();
+            AboneAdi = _context.Sozlesmelers
+                .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
+                .Select(s => string.IsNullOrEmpty(s.Abone.Ad) ? s.Abone.Unvan : (s.Abone.Ad + " " + s.Abone.Soyad))
+                .FirstOrDefault()
+        })
+        .ToListAsync();
 
         return Ok(isEmirleri);
     }

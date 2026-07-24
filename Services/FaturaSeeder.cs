@@ -95,9 +95,11 @@ public class FaturaSeeder
 
                 Donem = okuma.Donem!,
 
-                FaturaTarihi = DateOnly.FromDateTime(okuma.OkumaZamani),
+                FaturaTarihi =
+                    DateOnly.FromDateTime(DateTime.UtcNow.Date),
 
-                SonOdemeTarihi = DateOnly.FromDateTime(okuma.OkumaZamani.AddDays(15)),
+                SonOdemeTarihi =
+                    DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(15)),
 
                 OkumaId = okuma.OkumaId,
 
@@ -214,7 +216,7 @@ public class FaturaSeeder
                 kalemler.Add(new FaturaKalemi
                 {
                     FaturaId = f.FaturaId,
-                    KalemTipi = KalemTipi.ENERJI,
+                    KalemTipi =KalemTipi.ENERJI,
                     Aciklama = "Enerji Bedeli",
                     Miktar = f.TuketimKwh ?? 0m,
 
@@ -246,7 +248,7 @@ public class FaturaSeeder
                 kalemler.Add(new FaturaKalemi
                 {
                     FaturaId = f.FaturaId,
-                    KalemTipi = KalemTipi.HIZMET,
+                    KalemTipi =KalemTipi.HIZMET,
                     Aciklama = "Hizmet Bedeli",
                     Miktar = 1,
                     BirimFiyat = f.HizmetBedeli,

@@ -25,9 +25,16 @@ namespace KcetasAboneApi.Controllers
 
             var user = await _context.Kullanicilars
                 .Include(k => k.Rol)
-                .FirstOrDefaultAsync(k => k.KullaniciAdi == dto.KullaniciAdi && k.SifreHash == dto.Sifre); 
+                .FirstOrDefaultAsync(k => k.KullaniciAdi == dto.KullaniciAdi); 
 
             if (user == null)
+            {
+                return Unauthorized("Kullanıcı adı veya şifre hatalı.");
+            }
+
+            bool sifreDogruMu = BCrypt.Net.BCrypt.Verify(dto.Sifre, user.SifreHash);
+
+            if (!sifreDogruMu)
             {
                 return Unauthorized("Kullanıcı adı veya şifre hatalı.");
             }

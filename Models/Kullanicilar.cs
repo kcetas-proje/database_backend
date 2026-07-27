@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -25,6 +25,7 @@ public partial class Kullanicilar
     [Column("kullanici_adi")]
     public string KullaniciAdi { get; set; } = null!;
 
+    [JsonIgnore]
     [Column("sifre_hash")]
     public string SifreHash { get; set; } = null!;
 

@@ -3,7 +3,7 @@ namespace KcetasAboneApi.Models
     public enum KalemTipi
     {
         ENERJI_BEDELI = 1,
-        DAGITIM_BEDELI = 2,
+        DAGITIM = 2,
         VERGI_FON = 3,
         GECIKME_ZAMMI = 4,
         ENERJI = 5,

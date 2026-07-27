@@ -45,7 +45,7 @@ public partial class AppDbContext : DbContext
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
 {
     var degisenler = ChangeTracker.Entries()
-        .Where(e => e.Entity is not AuditLog && 
+        .Where(e => e.Entity is not AuditLog && e.Entity is not EntegrasyonOutbox && 
                    (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
         .ToList();
 
@@ -60,10 +60,10 @@ public partial class AppDbContext : DbContext
             // 💥 GIGACHAD FIX: String yerine direkt Enum değerlerini atıyoruz sheesh!
             IslemTipi = entry.State switch
             {
-                EntityState.Added => IslemTipi.EKLEME,
-                EntityState.Modified => IslemTipi.GUNCELLEME,
-                EntityState.Deleted => IslemTipi.SILME,
-                _ => IslemTipi.DURUM_DEGISIKLIGI 
+                EntityState.Added => IslemTipi.INSERT,
+                EntityState.Modified => IslemTipi.UPDATE,
+                EntityState.Deleted => IslemTipi.DELETE,
+                _ => IslemTipi.STATUS_CHANGE 
             },
             
             IslemZamani = DateTime.UtcNow,
@@ -91,6 +91,13 @@ public partial class AppDbContext : DbContext
     // Önce asıl değişiklikleri kaydet (Id'ler oluşsun)
     var sonuc = await base.SaveChangesAsync(cancellationToken);
 
+    var yeniFaturalar = degisenler
+        .Where(e => e.Entity is Fatura && e.State == EntityState.Added)
+        .Select(e => (Fatura)e.Entity)
+        .ToList();
+
+    bool ekIslemGerekiyor = false;
+
     // Sonra oluşan Id'leri log'a zımbala
     foreach (var item in auditListesi)
     {
@@ -102,10 +109,30 @@ public partial class AppDbContext : DbContext
         }
         
         AuditLogs.Add(item.Log);
+        ekIslemGerekiyor = true;
     }
 
-    // Logları veritabanına mermi gibi çak
-    if (auditListesi.Any())
+    // 🔥 FATURA KESİLDİĞİNDE OTOMATİK OUTBOX KAYDI OLUŞTURMA
+    foreach (var fatura in yeniFaturalar)
+    {
+        // 1. GIB_EFATURA İçin
+        EntegrasyonOutboxes.Add(new EntegrasyonOutbox
+        {
+            FaturaId = fatura.FaturaId,
+            HedefSistem = HedefSistem.GIB_EFATURA,
+            IdempotencyKey = Guid.NewGuid().ToString(),
+            CorrelationId = Guid.NewGuid().ToString(),
+            Payload = System.Text.Json.JsonSerializer.Serialize(new { FaturaId = fatura.FaturaId, OlusturmaTarihi = DateTime.UtcNow }),
+            Durum = OutboxDurumu.BEKLIYOR,
+            RetryCount = 0,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        ekIslemGerekiyor = true;
+    }
+
+    // Logları ve outbox kayıtlarını veritabanına mermi gibi çak
+    if (ekIslemGerekiyor)
     {
         await base.SaveChangesAsync(cancellationToken);
     }

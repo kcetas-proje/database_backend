@@ -2,8 +2,8 @@ namespace KcetasAboneApi.Models;
 
 public enum IslemTipi
 {
-    EKLEME = 1,
-    GUNCELLEME = 2,
-    SILME = 3,
-    DURUM_DEGISIKLIGI = 4
+    INSERT = 1,
+    UPDATE = 2,
+    DELETE = 3,
+    STATUS_CHANGE = 4
 }

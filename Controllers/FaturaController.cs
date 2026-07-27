@@ -128,7 +128,7 @@ namespace KcetasAboneApi.Controllers
                 var kalemler = new List<FaturaKalemi>
                 {
                     new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = KalemTipi.ENERJI, Miktar = tuketimKwh, BirimFiyat = enerjiBirimFiyat, Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
-                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = KalemTipi.DAGITIM_BEDELI, Miktar = tuketimKwh, BirimFiyat = dagitimBirimFiyat, Tutar = dagitimBedeli, Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
+                    new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = KalemTipi.DAGITIM, Miktar = tuketimKwh, BirimFiyat = dagitimBirimFiyat, Tutar = dagitimBedeli, Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
                     new FaturaKalemi { FaturaId = fatura.FaturaId, KalemTipi = KalemTipi.VERGI_FON, Miktar = 1, BirimFiyat = vergiFonToplam, Tutar = vergiFonToplam, Aciklama = "KDV ve Diğer Fonlar" }
                 };
                 
@@ -268,7 +268,7 @@ namespace KcetasAboneApi.Controllers
                     FaturaKalemis = new List<FaturaKalemi>
                     {
                         new FaturaKalemi { KalemTipi = KalemTipi.ENERJI, Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(enerjiBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = enerjiBedeli, Aciklama = "Aktif Enerji Bedeli" },
-                        new FaturaKalemi { KalemTipi = KalemTipi.DAGITIM_BEDELI, Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(dagitimBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = dagitimBedeli, Aciklama = "Dağıtım Bedeli" },
+                        new FaturaKalemi { KalemTipi = KalemTipi.DAGITIM, Miktar = dto.TuketimKwh, BirimFiyat = Math.Round(dagitimBedeli / (dto.TuketimKwh > 0 ? dto.TuketimKwh : 1), 4), Tutar = dagitimBedeli, Aciklama = "Dağıtım Bedeli" },
                         new FaturaKalemi { KalemTipi = KalemTipi.VERGI_FON, Miktar = 1, BirimFiyat = vergiFonBedeli, Tutar = vergiFonBedeli, Aciklama = "Yasal Vergiler ve Fonlar" }
                     }
                 };
@@ -466,7 +466,7 @@ namespace KcetasAboneApi.Controllers
                         FaturaKalemis = new List<FaturaKalemi>
                         {
                             new FaturaKalemi { KalemTipi = KalemTipi.ENERJI, Miktar = gercekTuketimKwh, BirimFiyat = tarife.GunduzBirimFiyat, Tutar = Math.Round(enerjiBedeli, 2), Aciklama = "Aktif Enerji Bedeli" },
-                            new FaturaKalemi { KalemTipi = KalemTipi.DAGITIM_BEDELI, Miktar = gercekTuketimKwh, BirimFiyat = tarife.DagitimBedeli, Tutar = Math.Round(dagitimBedeli, 2), Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
+                            new FaturaKalemi { KalemTipi = KalemTipi.DAGITIM, Miktar = gercekTuketimKwh, BirimFiyat = tarife.DagitimBedeli, Tutar = Math.Round(dagitimBedeli, 2), Aciklama = "Dağıtım Sistemi Kullanım Bedeli" },
                             new FaturaKalemi { KalemTipi = KalemTipi.HIZMET, Miktar = 1, BirimFiyat = hizmetBedeli, Tutar = hizmetBedeli, Aciklama = "Sabit Hizmet Bedeli" },
                             new FaturaKalemi { KalemTipi = KalemTipi.VERGI_FON, Miktar = 1, BirimFiyat = Math.Round(vergiFon, 2), Tutar = Math.Round(vergiFon, 2), Aciklama = "KDV ve Diğer Fonlar" }
                         }

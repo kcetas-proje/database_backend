@@ -15,11 +15,13 @@ public class EntegrasyonOutboxSeeder
 
     public async Task SeedAsync(int adet = 500)
     {
+        /*
         if (await _context.EntegrasyonOutboxes.AnyAsync())
         {
             Console.WriteLine("EntegrasyonOutbox tablosunda kayıt bulunduğu için yeni kayıt üretilmedi.");
             return;
         }
+        */
 
         var faturalar = await _context.Faturas.ToListAsync();
 
@@ -58,7 +60,7 @@ public class EntegrasyonOutboxSeeder
                 }
                 """)
 
-            .RuleFor(x => x.CreatedAt, f => f.Date.Past(1))
+            .RuleFor(x => x.CreatedAt, f => f.Date.Past(1).ToUniversalTime())
 
             .RuleFor(x => x.Durum, f =>
             {

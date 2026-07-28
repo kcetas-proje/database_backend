@@ -43,7 +43,9 @@ builder.Services.AddHttpClient();
 builder.Services.AddHostedService<OutboxWorkerService>(); 
 builder.Services.AddHostedService<SayacAvcisiWorkerService>();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddMemoryCache(); // RAM bazlı önbellek servisi aktif edildi
+
+builder.Services.AddDbContextPool<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddEndpointsApiExplorer();

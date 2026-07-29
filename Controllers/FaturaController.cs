@@ -33,34 +33,46 @@ namespace KcetasAboneApi.Controllers
                 .ToListAsync();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetFaturalar([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        [HttpGet("Paged")]
+        public async Task<IActionResult> GetPaged(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 50,
+            [FromQuery] string? faturaNo = null,
+            [FromQuery] FaturaDurumu? durum = null,
+            [FromQuery] long? sozlesmeId = null)
         {
             if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
-            if (pageSize > 100) pageSize = 100;
+            if (pageSize < 1) pageSize = 50;
 
             var query = _context.Faturas.AsNoTracking().Where(f => f.Status == "AKTIF");
 
+            if (!string.IsNullOrEmpty(faturaNo))
+            {
+                query = query.Where(f => f.FaturaNo.Contains(faturaNo));
+            }
+
+            if (durum.HasValue)
+            {
+                query = query.Where(f => f.Durum == durum.Value);
+            }
+
+            if (sozlesmeId.HasValue)
+            {
+                query = query.Where(f => f.SozlesmeId == sozlesmeId.Value);
+            }
+
             var totalCount = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
             var faturalar = await query
-                .OrderBy(f => f.FaturaId)
+                .OrderByDescending(f => f.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            if (totalCount == 0)
-            {
-                return NotFound("Sistemde aktif fatura bulunamadı.");
-            }
-
             return Ok(new
             {
                 TotalCount = totalCount,
-                TotalPages = totalPages,
-                CurrentPage = page,
+                Page = page,
                 PageSize = pageSize,
                 Data = faturalar
             });

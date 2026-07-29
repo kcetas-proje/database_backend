@@ -28,6 +28,45 @@ public class SayaclarController : ControllerBase
             .ToListAsync();
     }
 
+    [HttpGet("Paged")]
+    public async Task<IActionResult> GetPaged(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? seriNo = null,
+        [FromQuery] SayacDurumu? durum = null)
+    {
+        var query = _context.Sayaclars
+            .Include(x => x.TuketimNoktasi)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(seriNo))
+        {
+            query = query.Where(x => x.SeriNo.Contains(seriNo));
+        }
+
+        if (durum.HasValue)
+        {
+            query = query.Where(x => x.Durum == durum.Value);
+        }
+
+        var total = await query.CountAsync();
+
+        var data = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize,
+            Data = data
+        });
+    }
+
     // GET: /api/Sayaclar/depodakiler
     [HttpGet("depodakiler")]
     public async Task<ActionResult<IEnumerable<object>>> GetDepodakiSayaclar()

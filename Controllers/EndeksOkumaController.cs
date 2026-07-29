@@ -124,6 +124,30 @@ public class EndeksOkumaController : ControllerBase
         });
     }
 
+    [HttpGet("Stats")]
+    public async Task<IActionResult> GetStats([FromQuery] string? donem = null)
+    {
+        var query = _context.EndeksOkumas.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrEmpty(donem))
+        {
+            query = query.Where(x => x.Donem == donem);
+        }
+
+        var toplam = await query.CountAsync();
+        var osos = await query.CountAsync(x => x.OkumaKaynagi == OkumaKaynagi.OSOS);
+        var manuel = await query.CountAsync(x => x.OkumaKaynagi == OkumaKaynagi.MANUEL);
+        var duzeltme = await query.CountAsync(x => x.OkumaKaynagi == OkumaKaynagi.DUZELTME);
+
+        return Ok(new
+        {
+            ToplamOkuma = toplam,
+            OsosOkuma = osos,
+            ManuelOkuma = manuel,
+            Duzeltme = duzeltme
+        });
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<EndeksOkuma>> Get(long id)
     {

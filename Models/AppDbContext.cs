@@ -71,18 +71,9 @@ public partial class AppDbContext : DbContext
             IslemGerekcesi = "Sistem Otomasyon İşlemi"
         };
 
-        if (entry.State == EntityState.Added)
-        {
-            auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
-        }
-        else if (entry.State == EntityState.Deleted)
+        if (entry.State == EntityState.Deleted || entry.State == EntityState.Modified)
         {
             auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
-        }
-        else if (entry.State == EntityState.Modified)
-        {
-            auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
-            auditLog.YeniDeger = System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject());
         }
 
         auditListesi.Add((entry, auditLog));
@@ -106,6 +97,11 @@ public partial class AppDbContext : DbContext
         if (pkName != null)
         {
             item.Log.VarlikId = Convert.ToInt64(item.Entry.Property(pkName).CurrentValue);
+        }
+        
+        if (item.Log.IslemTipi == IslemTipi.INSERT || item.Log.IslemTipi == IslemTipi.UPDATE)
+        {
+            item.Log.YeniDeger = System.Text.Json.JsonSerializer.Serialize(item.Entry.CurrentValues.ToObject());
         }
         
         AuditLogs.Add(item.Log);

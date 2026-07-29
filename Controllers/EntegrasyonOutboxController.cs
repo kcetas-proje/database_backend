@@ -22,12 +22,46 @@ namespace KcetasAboneApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EntegrasyonOutbox>>> GetEntegrasyonOutboxes()
+        public async Task<IActionResult> GetEntegrasyonOutboxes(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 50,
+            [FromQuery] OutboxDurumu? durum = null,
+            [FromQuery] HedefSistem? hedefSistem = null,
+            [FromQuery] string? faturaNo = null)
         {
-            return await _context.EntegrasyonOutboxes
+            var query = _context.EntegrasyonOutboxes.AsNoTracking().AsQueryable();
+
+            if (durum.HasValue)
+            {
+                query = query.Where(x => x.Durum == durum.Value);
+            }
+
+            if (hedefSistem.HasValue)
+            {
+                query = query.Where(x => x.HedefSistem == hedefSistem.Value);
+            }
+
+            if (!string.IsNullOrEmpty(faturaNo))
+            {
+                query = query.Where(x => x.Fatura != null && x.Fatura.FaturaNo == faturaNo);
+            }
+
+            var total = await query.CountAsync();
+
+            var data = await query
                 .Include(e => e.Fatura)
                 .OrderByDescending(e => e.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return Ok(new 
+            {
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize,
+                Data = data
+            });
         }
 
         [HttpGet("{id}")]

@@ -63,6 +63,67 @@ public class EndeksOkumaController : ControllerBase
         return Ok(list);
     }
 
+    [HttpGet("Paged")]
+    public async Task<IActionResult> GetPaged(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? donem = null,
+        [FromQuery] string? seriNo = null)
+    {
+        var query = _context.EndeksOkumas
+            .Include(e => e.Sayac)
+                .ThenInclude(s => s.TuketimNoktasi)
+            .Include(e => e.Sozlesme)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(donem))
+        {
+            query = query.Where(x => x.Donem == donem);
+        }
+
+        if (!string.IsNullOrEmpty(seriNo))
+        {
+            query = query.Where(x => x.Sayac != null && x.Sayac.SeriNo.Contains(seriNo));
+        }
+
+        var total = await query.CountAsync();
+
+        var data = await query
+            .OrderByDescending(e => e.OkumaZamani)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(e => new EndeksOkumaDetailDto
+            {
+                OkumaId = e.OkumaId, 
+                SayacId = e.SayacId,
+                IsEmriId = e.IsEmriId,
+                SozlesmeId = e.SozlesmeId,
+                OkumaTipi = e.OkumaTipi,
+                OkumaKaynagi = e.OkumaKaynagi,
+                OncekiEndeks = e.OncekiEndeks,
+                YeniEndeks = e.YeniEndeks,
+                Donem = e.Donem,
+                OkumaZamani = e.OkumaZamani,
+                KullaniciId = e.KullaniciId,
+                AboneId = e.Sozlesme != null ? e.Sozlesme.AboneId : null, 
+                SeriNo = e.Sayac != null ? e.Sayac.SeriNo : "-",
+                MarkaModel = e.Sayac != null ? $"{e.Sayac.Marka} {e.Sayac.Model}" : "-",
+                Mahalle = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.Mahalle : "-",
+                AcikAdres = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.AcikAdres : "Adres Tanımsız",
+                TuketiciGrubu = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.TuketiciGrubu : "MESKEN"
+            })
+            .ToListAsync();
+
+        return Ok(new 
+        {
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize,
+            Data = data
+        });
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<EndeksOkuma>> Get(long id)
     {

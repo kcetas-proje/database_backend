@@ -20,13 +20,16 @@ public class AuditLogController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAuditLogs([FromQuery] int sayfa = 1, [FromQuery] int limit = 50)
+    public async Task<IActionResult> GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
-        var loglar = await _context.AuditLogs
+        var query = _context.AuditLogs.AsNoTracking();
+        var total = await query.CountAsync();
+
+        var loglar = await query
             .Include(a => a.Kullanici)
             .OrderByDescending(a => a.IslemZamani)
-            .Skip((sayfa - 1) * limit)
-            .Take(limit) 
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize) 
             .Select(a => new 
             {
                 a.AuditId,
@@ -43,8 +46,9 @@ public class AuditLogController : ControllerBase
 
         return Ok(new 
         {
-            Sayfa = sayfa,
-            Limit = limit,
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize,
             Data = loglar
         });
     }

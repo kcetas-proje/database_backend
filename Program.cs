@@ -75,6 +75,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy => { policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
 });
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 var app = builder.Build();
 
 // Veritabanı yoksa oluştur
@@ -96,6 +101,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors("AllowAll");
+app.UseResponseCompression();
 app.UseHttpsRedirection();
 
 // Global Exception Handler Middleware

@@ -27,6 +27,7 @@ namespace KcetasAboneApi.Controllers
         public async Task<ActionResult<IEnumerable<Fatura>>> GetAllFaturalar()
         {
             return await _context.Faturas
+                .AsNoTracking()
                 .Where(f => f.Status == "AKTIF")
                 .OrderBy(f => f.FaturaId)
                 .ToListAsync();
@@ -39,7 +40,7 @@ namespace KcetasAboneApi.Controllers
             if (pageSize < 1) pageSize = 10;
             if (pageSize > 100) pageSize = 100;
 
-            var query = _context.Faturas.Where(f => f.Status == "AKTIF");
+            var query = _context.Faturas.AsNoTracking().Where(f => f.Status == "AKTIF");
 
             var totalCount = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);

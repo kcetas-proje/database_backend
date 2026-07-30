@@ -20,4 +20,5 @@ public class EndeksOkumaDetailDto
     public string Mahalle { get; set; } = null!;
     public string AcikAdres { get; set; } = null!;
     public string TuketiciGrubu { get; set; } = null!;
+    public DogrulamaDurumu? DogrulamaDurumu { get; set; }
 }

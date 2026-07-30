@@ -56,7 +56,8 @@ public class EndeksOkumaController : ControllerBase
                 MarkaModel = e.Sayac != null ? $"{e.Sayac.Marka} {e.Sayac.Model}" : "-",
                 Mahalle = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.Mahalle : "-",
                 AcikAdres = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.AcikAdres : "Adres Tanımsız",
-                TuketiciGrubu = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.TuketiciGrubu : "MESKEN"
+                TuketiciGrubu = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.TuketiciGrubu : "MESKEN",
+                DogrulamaDurumu = e.DogrulamaDurumu
             })
             .ToListAsync();
 
@@ -68,7 +69,8 @@ public class EndeksOkumaController : ControllerBase
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 50,
         [FromQuery] string? donem = null,
-        [FromQuery] string? seriNo = null)
+        [FromQuery] string? seriNo = null,
+        [FromQuery] DogrulamaDurumu? dogrulamaDurumu = null)
     {
         var query = _context.EndeksOkumas
             .Include(e => e.Sayac)
@@ -85,6 +87,11 @@ public class EndeksOkumaController : ControllerBase
         if (!string.IsNullOrEmpty(seriNo))
         {
             query = query.Where(x => x.Sayac != null && x.Sayac.SeriNo.Contains(seriNo));
+        }
+
+        if (dogrulamaDurumu.HasValue)
+        {
+            query = query.Where(x => x.DogrulamaDurumu == dogrulamaDurumu.Value);
         }
 
         var total = await query.CountAsync();
@@ -111,7 +118,8 @@ public class EndeksOkumaController : ControllerBase
                 MarkaModel = e.Sayac != null ? $"{e.Sayac.Marka} {e.Sayac.Model}" : "-",
                 Mahalle = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.Mahalle : "-",
                 AcikAdres = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.AcikAdres : "Adres Tanımsız",
-                TuketiciGrubu = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.TuketiciGrubu : "MESKEN"
+                TuketiciGrubu = (e.Sayac != null && e.Sayac.TuketimNoktasi != null) ? e.Sayac.TuketimNoktasi.TuketiciGrubu : "MESKEN",
+                DogrulamaDurumu = e.DogrulamaDurumu
             })
             .ToListAsync();
 

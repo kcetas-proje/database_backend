@@ -207,6 +207,17 @@ namespace KcetasAboneApi.Controllers
             try 
             {
 
+                if (!dto.OkumaId.HasValue)
+                {
+                    return BadRequest(new { message = "Fatura kesilebilmesi için geçerli bir OkumaId zorunludur." });
+                }
+                
+                var okuma = await _context.EndeksOkumas.FindAsync(dto.OkumaId.Value);
+                if (okuma == null)
+                {
+                    return NotFound(new { message = "Belirtilen okuma kaydı bulunamadı." });
+                }
+
                 if (dto.IlkEndeks > dto.SonEndeks)
                 {
                     return BadRequest(new { message = "İlk endeks, son endeksten büyük olamaz." });
@@ -224,27 +235,6 @@ namespace KcetasAboneApi.Controllers
                 if (sayac == null) 
                     return BadRequest("Bu sözleşmeye bağlı aktif sayaç yok!");
 
-                var yeniOkuma = new EndeksOkuma
-                {
-                    SayacId = sayac.SayacId,
-                    IsEmriId = dto.IsEmriId,
-                    SozlesmeId = dto.SozlesmeId,
-                    OkumaTipi = OkumaTipi.RUTIN_DONEM,
-                    OkumaKaynagi = OkumaKaynagi.OSOS,
-                    OncekiEndeks = dto.IlkEndeks,
-                    YeniEndeks = dto.SonEndeks,
-                    Donem = dto.Donem,
-                    OkumaZamani = dto.OkumaZamani != default ? dto.OkumaZamani : DateTime.UtcNow,
-                    KullaniciId = dto.KullaniciId,
-                    DogrulamaDurumu = DogrulamaDurumu.ONAYLANDI,
-                    AnomaliMi = false,
-                    Status = "AKTIF",
-                    CreatedAt = DateTime.UtcNow
-                };
-                
-                _context.EndeksOkumas.Add(yeniOkuma);
-                await _context.SaveChangesAsync(); 
-
                 string rasgeleFaturaNo = "FAT" + DateTime.Now.ToString("yyyyMMddHHmmss");
                 string rasgeleTekilKod = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
 
@@ -255,7 +245,7 @@ namespace KcetasAboneApi.Controllers
                 var yeniFatura = new Fatura
                 {
                     SozlesmeId = dto.SozlesmeId,
-                    OkumaId = yeniOkuma.OkumaId,
+                    OkumaId = okuma.OkumaId,
                     FaturaNo = rasgeleFaturaNo,
                     TekilKod = rasgeleTekilKod,
                     FaturaTipi = dto.FaturaTipi == 0 ? FaturaTipi.DONEM : dto.FaturaTipi,

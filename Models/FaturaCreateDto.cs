@@ -3,6 +3,7 @@ namespace KcetasAboneApi.Models;
 public class FaturaCreateDto
 {
     public long SozlesmeId { get; set; }
+    public long? OkumaId { get; set; }
     public long? IsEmriId { get; set; } 
     public FaturaTipi FaturaTipi { get; set; }
     public string Donem { get; set; }

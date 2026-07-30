@@ -187,21 +187,27 @@ public class EndeksOkumaController : ControllerBase
         _context.EndeksOkumas.Add(yeniEndeks);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Get), new { id = yeniEndeks.OkumaId }, yeniEndeks);
+        return StatusCode(201, yeniEndeks);
     }
 
     [HttpPut("{id}")]
-public async Task<IActionResult> Update(long id, [FromBody] EndeksOkumaUpdateDto dto)
-{
-    var endeks = await _context.EndeksOkumas.FindAsync(id);
-    if (endeks == null) return NotFound();
+    public async Task<IActionResult> Update(long id, [FromBody] EndeksOkumaUpdateDto dto)
+    {
+        var endeks = await _context.EndeksOkumas.FindAsync(id);
+        if (endeks == null) return NotFound();
 
-    endeks.YeniEndeks = dto.Deger; 
-    endeks.OkumaTipi = System.Enum.Parse<OkumaTipi>(dto.OkumaTipi.ToString());
+        if (dto.Deger.HasValue) 
+            endeks.YeniEndeks = dto.Deger.Value; 
+            
+        if (dto.OkumaTipi.HasValue) 
+            endeks.OkumaTipi = dto.OkumaTipi.Value;
 
-    await _context.SaveChangesAsync();
-    return NoContent();
-}
+        if (dto.DogrulamaDurumu.HasValue) 
+            endeks.DogrulamaDurumu = dto.DogrulamaDurumu.Value;
+
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
 
     [HttpDelete("{id}")]
 public async Task<IActionResult> SILME(long id)

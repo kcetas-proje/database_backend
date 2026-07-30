@@ -1,0 +1,12 @@
+{
+  "ilceId": 1,
+  "mahalle": "Erciyes",
+  "binaNo": "01",
+  "bagimsizBolumNo": "01",
+  "acikAdres": "Test adres",
+  "koordinatLat": null,
+  "koordinatLon": null,
+  "baglantiGucuKw": 10,
+  "tuketiciGrubu": "MESKEN",
+  "baglantiDurumu": 5
+}

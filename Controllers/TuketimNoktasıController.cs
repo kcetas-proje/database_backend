@@ -14,10 +14,12 @@ namespace KcetasAboneApi.Controllers;
 public class TuketimNoktasiController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<TuketimNoktasiController> _logger;
 
-    public TuketimNoktasiController(AppDbContext context)
+    public TuketimNoktasiController(AppDbContext context, ILogger<TuketimNoktasiController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     // GET
@@ -94,18 +96,49 @@ public class TuketimNoktasiController : ControllerBase
         if (!await _context.Ilces.AnyAsync(x => x.IlceId == dto.IlceId))
             return BadRequest(new { message = "Böyle bir ilçe bulunamadı." });
 
+        long nextVal = 0;
         string prefix = $"TK-{DateTime.UtcNow:yyyyMM}-";
-        var sonNokta = await _context.TuketimNoktasis
-            .Where(x => x.TekilKod.StartsWith(prefix))
-            .OrderByDescending(x => x.TekilKod)
-            .FirstOrDefaultAsync();
-
-        int sira = 1;
-        if (sonNokta != null && int.TryParse(sonNokta.TekilKod.Substring(sonNokta.TekilKod.Length - 4), out int sonSira))
+        
+        var connection = _context.Database.GetDbConnection();
+        await _context.Database.OpenConnectionAsync();
+        try
         {
-            sira = sonSira + 1;
+            using (var command = connection.CreateCommand())
+            {
+                // Sequence yoksa oluştur ve mevcut max değere set et
+                command.CommandText = @"
+                    DO $$
+                    DECLARE
+                        max_val integer;
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relkind = 'S' AND relname = 'tuketim_noktasi_seq') THEN
+                            CREATE SEQUENCE tuketim_noktasi_seq START 1;
+                            
+                            SELECT COALESCE(MAX(CAST(NULLIF(SUBSTRING(tekil_kod FROM '[0-9]+$'), '') AS integer)), 0) 
+                            INTO max_val 
+                            FROM tuketim_noktasi 
+                            WHERE tekil_kod LIKE 'TK-%';
+                            
+                            IF max_val > 0 THEN
+                                PERFORM setval('tuketim_noktasi_seq', max_val);
+                            END IF;
+                        END IF;
+                    END
+                    $$;";
+                await command.ExecuteNonQueryAsync();
+                
+                // Güvenli ve unique sequence değerini al
+                command.CommandText = "SELECT nextval('tuketim_noktasi_seq');";
+                var result = await command.ExecuteScalarAsync();
+                nextVal = Convert.ToInt64(result);
+            }
         }
-        string uretilenTekilKod = $"{prefix}{sira:D4}";
+        finally
+        {
+            await _context.Database.CloseConnectionAsync();
+        }
+
+        string uretilenTekilKod = $"{prefix}{nextVal:D4}";
 
         var yeniNokta = new TuketimNoktasi
         {
@@ -125,7 +158,21 @@ public class TuketimNoktasiController : ControllerBase
         };
 
         _context.TuketimNoktasis.Add(yeniNokta);
-        await _context.SaveChangesAsync();
+        
+        _logger.LogInformation("Yeni TuketimNoktasi kaydediliyor. Üretilen TekilKod: {TekilKod}, İlçe: {IlceId}", uretilenTekilKod, dto.IlceId);
+        
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            return StatusCode(500, new 
+            { 
+                message = "An error occurred while saving the entity changes. See the inner exception for details.", 
+                innerException = ex.InnerException?.Message ?? ex.Message 
+            });
+        }
 
         return CreatedAtAction(nameof(GetTuketimNoktasi), new { id = yeniNokta.TuketimNoktasiId }, yeniNokta);
     }

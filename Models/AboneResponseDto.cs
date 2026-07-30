@@ -17,4 +17,6 @@ public class AboneResponseDto
     public string? Telefon { get; set; }
 
     public string? EPosta { get; set; }
+    
+    public string Status { get; set; } = string.Empty;
 }

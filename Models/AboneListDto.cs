@@ -11,4 +11,5 @@ public class AboneListDto
     public string? Tckn { get; set; }
     public string? Vkn { get; set; }
     public string? Telefon { get; set; }
+    public string Status { get; set; } = string.Empty;
 }

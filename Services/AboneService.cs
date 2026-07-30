@@ -53,7 +53,8 @@ public class AboneService : IAboneService
                 Soyad = a.Soyad ?? "",
                 Unvan = a.Unvan ?? "",
                 Telefon = a.Telefon ?? "",
-                EPosta = a.EPosta ?? ""
+                EPosta = a.EPosta ?? "",
+                Status = a.Status
             })
             .ToListAsync();
 

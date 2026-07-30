@@ -73,7 +73,8 @@ public class AbonelerController : ControllerBase
                 Tckn = a.Tckn,
                 Vkn = a.Vkn,
                 Telefon = a.Telefon,
-                AboneTipi = a.AboneTipi
+                AboneTipi = a.AboneTipi,
+                Status = a.Status
             })
             .ToListAsync();
 

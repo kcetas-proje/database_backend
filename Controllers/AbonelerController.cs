@@ -29,6 +29,7 @@ public class AbonelerController : ControllerBase
     {
         return await _context.Abonelers
             .AsNoTracking()
+            .Where(a => a.Status == "AKTIF")
             .OrderBy(a => a.AboneId)
             .Take(500)
             .ToListAsync();
@@ -45,10 +46,10 @@ public class AbonelerController : ControllerBase
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 100) pageSize = 100; 
 
-        var totalCount = await _context.Abonelers.CountAsync();
+        var totalCount = await _context.Abonelers.CountAsync(a => a.Status == "AKTIF");
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-        var query = _context.Abonelers.AsNoTracking();
+        var query = _context.Abonelers.AsNoTracking().Where(a => a.Status == "AKTIF");
 
         if (lastId.HasValue && lastId.Value > 0)
         {
@@ -204,7 +205,8 @@ public class AbonelerController : ControllerBase
             });
         }
 
-        _context.Abonelers.Remove(abone);
+        abone.Status = "PASIF";
+        abone.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 

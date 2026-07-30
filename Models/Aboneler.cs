@@ -46,6 +46,9 @@ public partial class Aboneler
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 
+    [Column("status")]
+    public string Status { get; set; } = "AKTIF";
+
     [JsonIgnore]
     public virtual ICollection<Sozlesmeler> Sozlesmelers { get; set; } = new List<Sozlesmeler>();
 }

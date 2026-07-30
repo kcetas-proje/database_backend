@@ -76,6 +76,24 @@ public partial class AppDbContext : DbContext
             auditLog.EskiDeger = System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject());
         }
 
+        // 🔥 GIGACHAD FIX: Frontend'den CreatedAt/UpdatedAt gelmezse diye otomatik dolduruyoruz (500 Hatalarını Engellemek İçin)
+        if (entry.State == EntityState.Added)
+        {
+            var createdAtProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "CreatedAt");
+            if (createdAtProp != null && createdAtProp.CurrentValue is DateTime dt && dt == default)
+            {
+                createdAtProp.CurrentValue = DateTime.UtcNow;
+            }
+        }
+        if (entry.State == EntityState.Modified)
+        {
+            var updatedAtProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "UpdatedAt");
+            if (updatedAtProp != null)
+            {
+                updatedAtProp.CurrentValue = DateTime.UtcNow;
+            }
+        }
+
         auditListesi.Add((entry, auditLog));
     }
 

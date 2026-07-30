@@ -172,6 +172,10 @@ public class AbonelerController : ControllerBase
         mevcutAbone.Vkn = abone.Vkn;
         mevcutAbone.Telefon = abone.Telefon;
         mevcutAbone.EPosta = abone.EPosta;
+        if (!string.IsNullOrEmpty(abone.Status))
+        {
+            mevcutAbone.Status = abone.Status;
+        }
         mevcutAbone.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -208,6 +212,7 @@ public class AbonelerController : ControllerBase
         abone.Status = "PASIF";
         abone.UpdatedAt = DateTime.UtcNow;
 
+        _context.Abonelers.Update(abone);
         await _context.SaveChangesAsync();
 
         return NoContent();

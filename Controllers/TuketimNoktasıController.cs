@@ -34,6 +34,70 @@ public class TuketimNoktasiController : ControllerBase
             .ToListAsync();
     }
 
+    [HttpGet("Paged")]
+    public async Task<IActionResult> GetPaged(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? q = null,
+        [FromQuery] BaglantiDurumu? baglantiDurumu = null)
+    {
+        var query = _context.TuketimNoktasis
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (baglantiDurumu.HasValue)
+        {
+            query = query.Where(t => t.BaglantiDurumu == baglantiDurumu.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var qLower = q.ToLower();
+            bool isNumeric = long.TryParse(q, out long numQ);
+
+            query = query.Where(t => 
+                t.TekilKod.ToLower().Contains(qLower) || 
+                t.AcikAdres.ToLower().Contains(qLower) ||
+                t.Mahalle.ToLower().Contains(qLower) ||
+                (isNumeric && t.TuketimNoktasiId == numQ)
+            );
+        }
+
+        var total = await query.CountAsync();
+
+        var data = await query
+            .OrderByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(t => new
+            {
+                t.TuketimNoktasiId,
+                t.TekilKod,
+                t.IlceId,
+                t.Mahalle,
+                t.BinaNo,
+                t.BagimsizBolumNo,
+                t.AcikAdres,
+                t.KoordinatLat,
+                t.KoordinatLon,
+                t.BaglantiGucuKw,
+                t.TuketiciGrubu,
+                BaglantiDurumu = t.BaglantiDurumu.ToString(),
+                t.Status,
+                t.CreatedAt,
+                t.UpdatedAt
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize,
+            Data = data
+        });
+    }
+
     [HttpGet("GetWithDetails")]
     public async Task<ActionResult<IEnumerable<TuketimNoktasiDetailDto>>> GetWithDetails()
     {

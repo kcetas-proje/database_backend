@@ -33,7 +33,8 @@ public class SayaclarController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] string? seriNo = null,
-        [FromQuery] SayacDurumu? durum = null)
+        [FromQuery] SayacDurumu? durum = null,
+        [FromQuery] long? tuketimNoktasiId = null)
     {
         var query = _context.Sayaclars
             .Include(x => x.TuketimNoktasi)
@@ -48,6 +49,11 @@ public class SayaclarController : ControllerBase
         if (durum.HasValue)
         {
             query = query.Where(x => x.Durum == durum.Value);
+        }
+
+        if (tuketimNoktasiId.HasValue)
+        {
+            query = query.Where(x => x.TuketimNoktasiId == tuketimNoktasiId.Value);
         }
 
         var total = await query.CountAsync();

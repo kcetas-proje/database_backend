@@ -132,6 +132,70 @@ public class EndeksOkumaController : ControllerBase
         });
     }
 
+    [HttpGet("YeniOkumaSecimAra")]
+    public async Task<IActionResult> YeniOkumaSecimAra([FromQuery] string? q)
+    {
+        var query = _context.Sozlesmelers
+            .Include(s => s.TuketimNoktasi)
+                .ThenInclude(t => t.Sayaclars)
+            .Where(s => s.Durum == SozlesmeDurumu.AKTIF && 
+                        s.TuketimNoktasi != null && 
+                        s.TuketimNoktasi.Sayaclars.Any(sayac => sayac.Durum == SayacDurumu.TAKILI))
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var qLower = q.ToLower();
+            query = query.Where(s => 
+                s.SozlesmeNo.ToLower().Contains(qLower) ||
+                s.TuketimNoktasi.TekilKod.ToLower().Contains(qLower) ||
+                s.TuketimNoktasi.Sayaclars.Any(sayac => sayac.Durum == SayacDurumu.TAKILI && sayac.SeriNo.ToLower().Contains(qLower))
+            );
+        }
+
+        var results = await query
+            .Take(20)
+            .Select(s => new
+            {
+                s.SozlesmeId,
+                s.SozlesmeNo,
+                s.TuketimNoktasiId,
+                s.TuketimNoktasi.TekilKod,
+                Adres = $"{s.TuketimNoktasi.Mahalle}, {s.TuketimNoktasi.AcikAdres}",
+                Sayac = s.TuketimNoktasi.Sayaclars.FirstOrDefault(sayac => sayac.Durum == SayacDurumu.TAKILI)
+            })
+            .ToListAsync();
+
+        var sayacIds = results.Where(r => r.Sayac != null).Select(r => r.Sayac.SayacId).ToList();
+
+        var sonEndeksler = await _context.EndeksOkumas
+            .Where(e => sayacIds.Contains(e.SayacId))
+            .GroupBy(e => e.SayacId)
+            .Select(g => g.OrderByDescending(e => e.OkumaZamani).FirstOrDefault())
+            .ToListAsync();
+
+        var endeksDict = sonEndeksler.Where(e => e != null).ToDictionary(e => e!.SayacId, e => e);
+
+        var finalData = results.Select(r => 
+        {
+            var sonOkuma = r.Sayac != null && endeksDict.ContainsKey(r.Sayac.SayacId) ? endeksDict[r.Sayac.SayacId] : null;
+            return new YeniOkumaSecimDto
+            {
+                SozlesmeId = r.SozlesmeId,
+                SozlesmeNo = r.SozlesmeNo,
+                TuketimNoktasiId = r.TuketimNoktasiId,
+                TekilKod = r.TekilKod,
+                Adres = r.Adres,
+                SayacId = r.Sayac != null ? r.Sayac.SayacId : 0,
+                SayacSeriNo = r.Sayac != null ? r.Sayac.SeriNo : "-",
+                SonEndeks = sonOkuma != null ? sonOkuma.YeniEndeks : 0m,
+                Donem = sonOkuma != null ? sonOkuma.Donem : "-"
+            };
+        }).ToList();
+
+        return Ok(finalData);
+    }
+
     [HttpGet("Stats")]
     public async Task<IActionResult> GetStats([FromQuery] string? donem = null)
     {

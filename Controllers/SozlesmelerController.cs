@@ -41,6 +41,68 @@ public class SozlesmelerController : ControllerBase
         return sozlesme;
     }
 
+    [HttpGet("Paged")]
+    public async Task<IActionResult> GetPaged(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? q = null,
+        [FromQuery] SozlesmeDurumu? durum = null)
+    {
+        var query = _context.Sozlesmelers
+            .Include(s => s.TuketimNoktasi)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (durum.HasValue)
+        {
+            query = query.Where(s => s.Durum == durum.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var qLower = q.ToLower();
+            bool isNumeric = long.TryParse(q, out long numQ);
+
+            query = query.Where(s => 
+                s.SozlesmeNo.ToLower().Contains(qLower) || 
+                (s.TuketimNoktasi != null && s.TuketimNoktasi.TekilKod.ToLower().Contains(qLower)) ||
+                (isNumeric && (s.SozlesmeId == numQ || s.TuketimNoktasiId == numQ))
+            );
+        }
+
+        var total = await query.CountAsync();
+
+        var data = await query
+            .OrderByDescending(s => s.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(s => new
+            {
+                s.SozlesmeId,
+                s.SozlesmeNo,
+                s.AboneId,
+                s.TuketimNoktasiId,
+                s.TarifeId,
+                s.SozlesmeTipi,
+                s.GuvenceBedeli,
+                s.BaslangicTarihi,
+                s.BitisTarihi,
+                Durum = s.Durum.ToString(),
+                s.CreatedAt,
+                s.UpdatedAt,
+                TekilKod = s.TuketimNoktasi != null ? s.TuketimNoktasi.TekilKod : null
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize,
+            Data = data
+        });
+    }
+
     // POST: api/Sozlesmeler
     [HttpPost]
 public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)

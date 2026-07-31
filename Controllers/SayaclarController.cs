@@ -34,7 +34,10 @@ public class SayaclarController : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] string? seriNo = null,
         [FromQuery] SayacDurumu? durum = null,
-        [FromQuery] long? tuketimNoktasiId = null)
+        [FromQuery] long? tuketimNoktasiId = null,
+        [FromQuery] string? tuketimNoktasi = null,
+        [FromQuery] string? tarife = null,
+        [FromQuery] string? faz = null)
     {
         var query = _context.Sayaclars
             .Include(x => x.TuketimNoktasi)
@@ -54,6 +57,23 @@ public class SayaclarController : ControllerBase
         if (tuketimNoktasiId.HasValue)
         {
             query = query.Where(x => x.TuketimNoktasiId == tuketimNoktasiId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(tuketimNoktasi))
+        {
+            var lowerTn = tuketimNoktasi.ToLower();
+            query = query.Where(x => x.TuketimNoktasi != null && x.TuketimNoktasi.TekilKod.ToLower().Contains(lowerTn));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tarife))
+        {
+            var lowerTarife = tarife.ToLower();
+            query = query.Where(x => x.TuketimNoktasi != null && x.TuketimNoktasi.TuketiciGrubu != null && x.TuketimNoktasi.TuketiciGrubu.ToLower().Contains(lowerTarife));
+        }
+
+        if (!string.IsNullOrWhiteSpace(faz) && Enum.TryParse<Faz>(faz, true, out var parsedFaz))
+        {
+            query = query.Where(x => x.Faz == parsedFaz);
         }
 
         var total = await query.CountAsync();

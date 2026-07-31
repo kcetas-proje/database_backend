@@ -40,7 +40,6 @@ public class TuketimNoktasiController : ControllerBase
         [FromQuery] int pageSize = 20,
         [FromQuery] string? q = null,
         [FromQuery] BaglantiDurumu? baglantiDurumu = null,
-        [FromQuery] int? ilId = null,
         [FromQuery] int? ilceId = null,
         [FromQuery] string? tuketiciGrubu = null,
         [FromQuery] string? durum = null)
@@ -49,11 +48,6 @@ public class TuketimNoktasiController : ControllerBase
             .Include(t => t.Ilce)
             .AsNoTracking()
             .AsQueryable();
-
-        if (ilId.HasValue)
-        {
-            query = query.Where(t => t.Ilce != null && t.Ilce.IlId == ilId.Value);
-        }
 
         if (ilceId.HasValue)
         {

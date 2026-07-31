@@ -46,7 +46,8 @@ public class SozlesmelerController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? q = null,
-        [FromQuery] SozlesmeDurumu? durum = null)
+        [FromQuery] SozlesmeDurumu? durum = null,
+        [FromQuery] string? tekilKod = null)
     {
         var query = _context.Sozlesmelers
             .Include(s => s.TuketimNoktasi)
@@ -56,6 +57,12 @@ public class SozlesmelerController : ControllerBase
         if (durum.HasValue)
         {
             query = query.Where(s => s.Durum == durum.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(tekilKod))
+        {
+            var tkLower = tekilKod.ToLower();
+            query = query.Where(s => s.TuketimNoktasi != null && s.TuketimNoktasi.TekilKod.ToLower().Contains(tkLower));
         }
 
         if (!string.IsNullOrWhiteSpace(q))

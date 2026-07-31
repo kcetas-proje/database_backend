@@ -20,13 +20,65 @@ public class AuditLogController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<IActionResult> GetAuditLogs(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? q = null,
+        [FromQuery] string? kullanici = null,
+        [FromQuery] long? kayitId = null,
+        [FromQuery] string? islemTipi = null,
+        [FromQuery] string? tarih = null)
     {
-        var query = _context.AuditLogs.AsNoTracking();
+        var query = _context.AuditLogs
+            .Include(a => a.Kullanici)
+            .AsNoTracking()
+            .AsQueryable();
+
+        // 1. kayitId
+        if (kayitId.HasValue)
+        {
+            query = query.Where(a => a.VarlikId == kayitId.Value);
+        }
+
+        // 2. islemTipi
+        if (!string.IsNullOrWhiteSpace(islemTipi) && Enum.TryParse<IslemTipi>(islemTipi, true, out var parsedIslemTipi))
+        {
+            query = query.Where(a => a.IslemTipi == parsedIslemTipi);
+        }
+
+        // 3. tarih
+        if (!string.IsNullOrWhiteSpace(tarih) && DateTime.TryParse(tarih, out var parsedDate))
+        {
+            var baslangic = DateTime.SpecifyKind(parsedDate.Date, DateTimeKind.Utc);
+            var bitis = baslangic.AddDays(1).AddTicks(-1);
+            query = query.Where(a => a.IslemZamani >= baslangic && a.IslemZamani <= bitis);
+        }
+
+        // 4. q (VarlikTipi, IslemGerekcesi)
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var qLower = q.ToLower();
+            query = query.Where(a => 
+                a.VarlikTipi.ToLower().Contains(qLower) || 
+                (a.IslemGerekcesi != null && a.IslemGerekcesi.ToLower().Contains(qLower))
+            );
+        }
+
+        // 5. kullanici (AdSoyad, KullaniciAdi)
+        if (!string.IsNullOrWhiteSpace(kullanici))
+        {
+            var kullaniciLower = kullanici.ToLower();
+            query = query.Where(a => 
+                a.Kullanici != null && 
+                (a.Kullanici.AdSoyad.ToLower().Contains(kullaniciLower) || 
+                 a.Kullanici.KullaniciAdi.ToLower().Contains(kullaniciLower))
+            );
+        }
+
         var total = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(total / (double)pageSize);
 
         var loglar = await query
-            .Include(a => a.Kullanici)
             .OrderByDescending(a => a.IslemZamani)
             .Skip((page - 1) * pageSize)
             .Take(pageSize) 
@@ -46,10 +98,11 @@ public class AuditLogController : ControllerBase
 
         return Ok(new 
         {
-            TotalCount = total,
-            Page = page,
-            PageSize = pageSize,
-            Data = loglar
+            data = loglar,
+            currentPage = page,
+            pageSize = pageSize,
+            totalPages = totalPages,
+            totalCount = total
         });
     }
 

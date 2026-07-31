@@ -39,11 +39,38 @@ public class TuketimNoktasiController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? q = null,
-        [FromQuery] BaglantiDurumu? baglantiDurumu = null)
+        [FromQuery] BaglantiDurumu? baglantiDurumu = null,
+        [FromQuery] int? ilId = null,
+        [FromQuery] int? ilceId = null,
+        [FromQuery] string? tuketiciGrubu = null,
+        [FromQuery] string? durum = null)
     {
         var query = _context.TuketimNoktasis
+            .Include(t => t.Ilce)
             .AsNoTracking()
             .AsQueryable();
+
+        if (ilId.HasValue)
+        {
+            query = query.Where(t => t.Ilce != null && t.Ilce.IlId == ilId.Value);
+        }
+
+        if (ilceId.HasValue)
+        {
+            query = query.Where(t => t.IlceId == ilceId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(tuketiciGrubu))
+        {
+            var tgLower = tuketiciGrubu.ToLower();
+            query = query.Where(t => t.TuketiciGrubu != null && t.TuketiciGrubu.ToLower() == tgLower);
+        }
+
+        if (!string.IsNullOrWhiteSpace(durum))
+        {
+            var durumLower = durum.ToLower();
+            query = query.Where(t => t.Status != null && t.Status.ToLower() == durumLower);
+        }
 
         if (baglantiDurumu.HasValue)
         {

@@ -70,14 +70,41 @@ public class EndeksOkumaController : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] string? donem = null,
         [FromQuery] string? seriNo = null,
-        [FromQuery] DogrulamaDurumu? dogrulamaDurumu = null)
+        [FromQuery] DogrulamaDurumu? dogrulamaDurumu = null,
+        [FromQuery] long? okumaNo = null,
+        [FromQuery] string? tuketimNoktasi = null,
+        [FromQuery] string? abone = null)
     {
         var query = _context.EndeksOkumas
             .Include(e => e.Sayac)
                 .ThenInclude(s => s.TuketimNoktasi)
             .Include(e => e.Sozlesme)
+                .ThenInclude(s => s.Abone)
             .AsNoTracking()
             .AsQueryable();
+
+        if (okumaNo.HasValue)
+        {
+            query = query.Where(x => x.OkumaId == okumaNo.Value);
+        }
+
+        if (!string.IsNullOrEmpty(tuketimNoktasi))
+        {
+            var lowerTn = tuketimNoktasi.ToLower();
+            query = query.Where(x => x.Sayac != null && x.Sayac.TuketimNoktasi != null &&
+                (x.Sayac.TuketimNoktasi.TekilKod.ToLower().Contains(lowerTn) ||
+                 x.Sayac.TuketimNoktasi.AcikAdres.ToLower().Contains(lowerTn)));
+        }
+
+        if (!string.IsNullOrEmpty(abone))
+        {
+            var lowerAbone = abone.ToLower();
+            query = query.Where(x => x.Sozlesme != null && x.Sozlesme.Abone != null &&
+                ((x.Sozlesme.Abone.Ad != null && x.Sozlesme.Abone.Ad.ToLower().Contains(lowerAbone)) ||
+                 (x.Sozlesme.Abone.Soyad != null && x.Sozlesme.Abone.Soyad.ToLower().Contains(lowerAbone)) ||
+                 (x.Sozlesme.Abone.Tckn != null && x.Sozlesme.Abone.Tckn.Contains(lowerAbone)) ||
+                 (x.Sozlesme.Abone.Unvan != null && x.Sozlesme.Abone.Unvan.ToLower().Contains(lowerAbone))));
+        }
 
         if (!string.IsNullOrEmpty(donem))
         {

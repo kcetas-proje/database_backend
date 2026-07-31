@@ -27,9 +27,19 @@ namespace KcetasAboneApi.Controllers
             [FromQuery] int pageSize = 50,
             [FromQuery] OutboxDurumu? durum = null,
             [FromQuery] HedefSistem? hedefSistem = null,
-            [FromQuery] string? faturaNo = null)
+            [FromQuery] string? faturaNo = null,
+            [FromQuery] long? kayitNo = null,
+            [FromQuery] string? baslangic = null,
+            [FromQuery] string? bitis = null,
+            [FromQuery] string? sonDenemeTarihiStart = null,
+            [FromQuery] string? sonDenemeTarihiEnd = null)
         {
             var query = _context.EntegrasyonOutboxes.AsNoTracking().AsQueryable();
+
+            if (kayitNo.HasValue)
+            {
+                query = query.Where(x => x.OutboxId == kayitNo.Value);
+            }
 
             if (durum.HasValue)
             {
@@ -44,6 +54,30 @@ namespace KcetasAboneApi.Controllers
             if (!string.IsNullOrEmpty(faturaNo))
             {
                 query = query.Where(x => x.Fatura != null && x.Fatura.FaturaNo == faturaNo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(baslangic) && DateTime.TryParse(baslangic, out var baslangicDate))
+            {
+                var utcDate = DateTime.SpecifyKind(baslangicDate, DateTimeKind.Utc);
+                query = query.Where(x => x.CreatedAt >= utcDate);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(bitis) && DateTime.TryParse(bitis, out var bitisDate))
+            {
+                var utcDate = DateTime.SpecifyKind(bitisDate, DateTimeKind.Utc);
+                query = query.Where(x => x.CreatedAt <= utcDate);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sonDenemeTarihiStart) && DateTime.TryParse(sonDenemeTarihiStart, out var sonDenemeStart))
+            {
+                var utcDate = DateTime.SpecifyKind(sonDenemeStart, DateTimeKind.Utc);
+                query = query.Where(x => x.SonDenemeTarihi >= utcDate);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(sonDenemeTarihiEnd) && DateTime.TryParse(sonDenemeTarihiEnd, out var sonDenemeEnd))
+            {
+                var utcDate = DateTime.SpecifyKind(sonDenemeEnd, DateTimeKind.Utc);
+                query = query.Where(x => x.SonDenemeTarihi <= utcDate);
             }
 
             var total = await query.CountAsync();

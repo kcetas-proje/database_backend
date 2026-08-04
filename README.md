@@ -1,6 +1,6 @@
 # Abone Yönetim Sistemi API (KCETAS MVP)
 
-Bu proje, bir elektrik dağıtım/perakende satış şirketinin abone yönetimi süreçlerini dijitalleştirmek ve otomatize etmek amacıyla geliştirilmiş mevzuat referanslı bir **.NET 8** Web API projesidir.
+Bu proje, bir elektrik dağıtım/perakende satış şirketinin abone yönetimi süreçlerini dijitalleştirmek ve otomatize etmek amacıyla geliştirilmiş mevzuat referanslı bir **.NET 10** Web API projesidir.
 
 ## 🚀 Proje Hakkında
 Bu sistem, 1 milyondan fazla veriyi performans sorunu (Out of Memory) yaşamadan işleyebilen, PostgreSQL üzerinde koşan ve Entity Framework Core kullanan yüksek performanslı bir arka yüz (backend) uygulamasıdır. Tüm listeleme endpoint'leri IQueryable yapısıyla doğrudan SQL seviyesinde filtrelenerek **Server-Side Pagination (Sunucu Taraflı Sayfalama)** standartlarına tam uyumlu hale getirilmiştir.

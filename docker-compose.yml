@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kcetas_api
+    environment:
+      # Veritabanı da aynı server bilgisayarındaysa host makineye çıkmak için 'host.docker.internal' kullanılır.
+      # Eğer host.docker.internal çalışmazsa, buraya direkt Server'ın yerel IP adresini (örn: 192.168.1.x veya 127.0.0.1 yerine makine ipsi) yazabilirsiniz.
+      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=Proje;Username=postgres;Password=123456Cc!
+      - ASPNETCORE_ENVIRONMENT=Production
+    ports:
+      - "8080:8080" # Dışarıdan sunucunun IP'si ve 8080 portu ile API'ye erişebilirsiniz
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Linux/Ubuntu tabanlı sunucularda host.docker.internal adresinin ana makineye (server) yönlendirilmesi için gereklidir

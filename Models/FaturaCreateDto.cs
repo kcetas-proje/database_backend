@@ -6,7 +6,7 @@ public class FaturaCreateDto
     public long? OkumaId { get; set; }
     public long? IsEmriId { get; set; } 
     public FaturaTipi FaturaTipi { get; set; }
-    public string Donem { get; set; }
+    public string Donem { get; set; } = null!;
     public decimal IlkEndeks { get; set; }
     public decimal SonEndeks { get; set; }
     public decimal TuketimKwh { get; set; }

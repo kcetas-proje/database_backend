@@ -237,7 +237,7 @@ public class TuketimNoktasiController : ControllerBase
             KoordinatLon = dto.KoordinatLon,
             BaglantiGucuKw = dto.BaglantiGucuKw,
             TuketiciGrubu = dto.TuketiciGrubu,
-            BaglantiDurumu = dto.BaglantiDurumu == null ? BaglantiDurumu.PASIF : dto.BaglantiDurumu,
+            BaglantiDurumu = dto.BaglantiDurumu,
             Status = "AKTIF",
             CreatedAt = DateTime.UtcNow
         };

@@ -16,11 +16,11 @@ namespace KcetasAboneApi.Models
 
         [Required]
         [MaxLength(200)]
-        public string Baslik { get; set; }
+        public string Baslik { get; set; } = null!;
 
 
         [Required]
-        public string Icerik { get; set; }
+        public string Icerik { get; set; } = null!;
 
 
         public bool OkunduMu { get; set; } = false;

@@ -77,9 +77,9 @@ public class EndeksOkumaController : ControllerBase
     {
         var query = _context.EndeksOkumas
             .Include(e => e.Sayac)
-                .ThenInclude(s => s.TuketimNoktasi)
+                .ThenInclude(s => s!.TuketimNoktasi)
             .Include(e => e.Sozlesme)
-                .ThenInclude(s => s.Abone)
+                .ThenInclude(s => s!.Abone)
             .AsNoTracking()
             .AsQueryable();
 
@@ -164,7 +164,7 @@ public class EndeksOkumaController : ControllerBase
     {
         var query = _context.Sozlesmelers
             .Include(s => s.TuketimNoktasi)
-                .ThenInclude(t => t.Sayaclars)
+                .ThenInclude(t => t!.Sayaclars)
             .Where(s => s.Durum == SozlesmeDurumu.AKTIF && 
                         s.TuketimNoktasi != null && 
                         s.TuketimNoktasi.Sayaclars.Any(sayac => sayac.Durum == SayacDurumu.TAKILI))
@@ -175,7 +175,7 @@ public class EndeksOkumaController : ControllerBase
             var qLower = q.ToLower();
             query = query.Where(s => 
                 s.SozlesmeNo.ToLower().Contains(qLower) ||
-                s.TuketimNoktasi.TekilKod.ToLower().Contains(qLower) ||
+                s.TuketimNoktasi!.TekilKod.ToLower().Contains(qLower) ||
                 s.TuketimNoktasi.Sayaclars.Any(sayac => sayac.Durum == SayacDurumu.TAKILI && sayac.SeriNo.ToLower().Contains(qLower))
             );
         }
@@ -187,13 +187,13 @@ public class EndeksOkumaController : ControllerBase
                 s.SozlesmeId,
                 s.SozlesmeNo,
                 s.TuketimNoktasiId,
-                s.TuketimNoktasi.TekilKod,
+                s.TuketimNoktasi!.TekilKod,
                 Adres = $"{s.TuketimNoktasi.Mahalle}, {s.TuketimNoktasi.AcikAdres}",
                 Sayac = s.TuketimNoktasi.Sayaclars.FirstOrDefault(sayac => sayac.Durum == SayacDurumu.TAKILI)
             })
             .ToListAsync();
 
-        var sayacIds = results.Where(r => r.Sayac != null).Select(r => r.Sayac.SayacId).ToList();
+        var sayacIds = results.Where(r => r.Sayac != null).Select(r => r.Sayac!.SayacId).ToList();
 
         var sonEndeksler = await _context.EndeksOkumas
             .Where(e => sayacIds.Contains(e.SayacId))

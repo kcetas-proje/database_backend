@@ -20,6 +20,8 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
 });
 builder.Services.AddScoped<IAboneService, AboneService>();
+builder.Services.AddScoped<IFaturaService, FaturaService>();
+builder.Services.AddScoped<IIsEmiriService, IsEmiriService>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddSignalR();

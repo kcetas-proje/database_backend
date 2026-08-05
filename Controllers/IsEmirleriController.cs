@@ -2,6 +2,7 @@ using KcetasAboneApi.DTOs.IsEmirleri;
 using KcetasAboneApi.Hubs;
 using KcetasAboneApi.Models;
 using KcetasAboneApi.Models.Dtos;
+using KcetasAboneApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +14,14 @@ namespace KcetasAboneApi.Controllers;
 [ApiController]
 public class IsEmirleriController : ControllerBase
 {
-    private readonly AppDbContext _context; 
+    private readonly AppDbContext _context;
+    private readonly IIsEmiriService _isEmiriService;
     private readonly IHubContext<BildirimHub> _hubContext;
 
-    public IsEmirleriController(AppDbContext context, IHubContext<BildirimHub> hubContext) 
+    public IsEmirleriController(AppDbContext context, IIsEmiriService isEmiriService, IHubContext<BildirimHub> hubContext)
     {
         _context = context;
+        _isEmiriService = isEmiriService;
         _hubContext = hubContext;
     }
 
@@ -98,12 +101,12 @@ public class IsEmirleriController : ControllerBase
 
             AboneNo = _context.Sozlesmelers
                 .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
-                .Select(s => s.Abone.AboneNo)
+                .Select(s => s.Abone!.AboneNo)
                 .FirstOrDefault(),
 
             AboneAdi = _context.Sozlesmelers
                 .Where(s => s.TuketimNoktasiId == i.TuketimNoktasiId && s.Durum == SozlesmeDurumu.AKTIF)
-                .Select(s => string.IsNullOrEmpty(s.Abone.Ad) ? s.Abone.Unvan : (s.Abone.Ad + " " + s.Abone.Soyad))
+                .Select(s => string.IsNullOrEmpty(s.Abone!.Ad) ? s.Abone.Unvan : (s.Abone.Ad + " " + s.Abone.Soyad))
                 .FirstOrDefault()
         })
         .ToListAsync();
@@ -395,67 +398,21 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     [HttpPost("tamamla/{isEmriId}/sayac/{sayacId}")]
     public async Task<IActionResult> IsEmriTamamla(long isEmriId, long sayacId)
     {
-        var isEmri = await _context.IsEmirleris.FindAsync(isEmriId);
-        if (isEmri == null || isEmri.Durum != IsEmriDurumu.ACIK)
-            return BadRequest(new { message = "Böyle bir açık iş emri yok." });
+        var result = await _isEmiriService.IsEmriTamamlaAsync(isEmriId, sayacId);
+        if (!result.Success)
+            return BadRequest(new { message = result.Message });
 
-        var sayac = await _context.Sayaclars.FindAsync(sayacId);
-        if (sayac == null || sayac.Durum != SayacDurumu.DEPODA)
-            return BadRequest(new { message = "Bu sayaç depoda değil." });
-
-        isEmri.SayacId = sayac.SayacId; 
-        isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
-        
-        isEmri.UpdatedAt = DateTime.UtcNow; 
-
-        sayac.TuketimNoktasiId = isEmri.TuketimNoktasiId;
-        sayac.Durum = SayacDurumu.TAKILI;
-        sayac.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new 
-        { 
-            message = $"İş emri {isEmri.IsEmriNo} başarıyla tamamlandı ve sayaç {sayac.SeriNo} takıldı!", 
-        });
+        return Ok(new { message = result.Message });
     }
 
     [HttpPost("toplu-yeni-baglanti-onayla")]
     public async Task<IActionResult> TopluYeniBaglantiOnayla()
     {
+        var result = await _isEmiriService.TopluYeniBaglantiOnaylaAsync();
+        if (!result.Success)
+            return BadRequest(new { message = result.Message });
 
-        var acikIsEmirleri = await _context.IsEmirleris
-            .Where(i => i.Tip == IsEmriTipi.YENI_BAGLANTI && i.Durum == IsEmriDurumu.ACIK)
-            .ToListAsync();
-
-        var depodakiSayaclar = await _context.Sayaclars
-            .Where(s => s.Durum == SayacDurumu.DEPODA)
-            .ToListAsync();
-
-        int islemKapasitesi = Math.Min(acikIsEmirleri.Count, depodakiSayaclar.Count);
-
-        if (islemKapasitesi == 0)
-            return BadRequest(new { message = "Sahada açık iş emri yok ya da depoda sayaç kalmamış!" });
-
-        for (int i = 0; i < islemKapasitesi; i++)
-        {
-            var isEmri = acikIsEmirleri[i];
-            var sayac = depodakiSayaclar[i];
-
-            isEmri.SayacId = sayac.SayacId; 
-            isEmri.Durum = IsEmriDurumu.TAMAMLANDI;
-
-            sayac.TuketimNoktasiId = isEmri.TuketimNoktasiId;
-            sayac.Durum = SayacDurumu.TAKILI;
-        }
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new 
-        { 
-            message = $"{islemKapasitesi} adet YENI_BAGLANTI iş emri başarıyla tamamlandı ve sayaçlar mekanlara takıldı!",
-            onaylananSayi = islemKapasitesi
-        });
+        return Ok(new { message = result.Message, onaylananSayi = result.ProcessedCount });
     }
 
     [HttpPost("generate-random-is-emirleri")]
@@ -497,7 +454,7 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             var yeniIsEmri = new IsEmirleri
             {
                 IsEmriNo = $"{isEmriPrefix}{(isEmriSira + j):D4}",
-                TuketimNoktasiId = secilenSayac.TuketimNoktasiId.Value,
+                TuketimNoktasiId = secilenSayac.TuketimNoktasiId ?? 0,
                 SayacId = secilenSayac.SayacId, 
                 Tip = secilenTip,
 

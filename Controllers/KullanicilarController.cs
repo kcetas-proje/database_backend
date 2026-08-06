@@ -17,6 +17,9 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Sistemdeki tüm aktif kullanıcıları (personel vb.) liste halinde getirir.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetKullanicilar()
         {
@@ -28,6 +31,9 @@ namespace KcetasAboneApi.Controllers
             return Ok(kullanicilar);
         }
 
+        /// <summary>
+        /// Sisteme yeni bir kullanıcı ekler.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> YeniKullaniciEkle([FromBody] KullaniciCreateDto dto)
         {
@@ -56,6 +62,9 @@ namespace KcetasAboneApi.Controllers
         }
 
         
+        /// <summary>
+        /// Mevcut bir kullanıcının bilgilerini günceller.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> KullaniciGuncelle(long id, [FromBody] Kullanicilar guncelKullanici)
         {
@@ -83,6 +92,9 @@ namespace KcetasAboneApi.Controllers
         }
 
        
+        /// <summary>
+        /// Bir kullanıcıyı siler (sistemde pasif duruma çeker).
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> KullaniciSil(long id)
         {

@@ -19,6 +19,9 @@ public class AuditLogController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Sistemdeki tüm denetim (audit) loglarını filtrelenebilir ve sayfalanmış olarak getirir.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetAuditLogs(
         [FromQuery] int page = 1, 
@@ -106,6 +109,9 @@ public class AuditLogController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// ID'si verilen belirli bir denetim logunun (audit log) detaylarını (eski/yeni değer) getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAuditLog(long id)
     {

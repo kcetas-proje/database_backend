@@ -12,6 +12,9 @@ public class AboneService : IAboneService
         _context = context;
     }
 
+    /// <summary>
+    /// Aboneleri isme göre arar ve sayfalanmış (paged) olarak liste halinde döndürür.
+    /// </summary>
     public async Task<AboneListResponseDto> GetAboneler(
         string? isim,
         int page,
@@ -68,6 +71,9 @@ public class AboneService : IAboneService
         };
     }
 
+    /// <summary>
+    /// Belirtilen Abone ID'sine ait kesilmiş olan tüm faturaları sayfalanmış (paged) olarak döndürür.
+    /// </summary>
     public async Task<AboneFaturaResponseDto> GetAboneFaturalari(
     long aboneId,
     int page,

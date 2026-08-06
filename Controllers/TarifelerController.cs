@@ -19,6 +19,9 @@ public class TarifelerController : ControllerBase
     
 
     // GET: api/Tarifeler
+    /// <summary>
+    /// Sistemdeki tüm tarifeleri liste halinde getirir.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Tarifeler>>> GetTarifeler()
     {
@@ -28,6 +31,9 @@ public class TarifelerController : ControllerBase
     }
 
     // GET: api/Tarifeler/5
+    /// <summary>
+    /// ID'si verilen tarifenin detaylarını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<Tarifeler>> GetTarife(long id)
     {
@@ -45,6 +51,9 @@ public class TarifelerController : ControllerBase
     }
 
     // POST: api/Tarifeler
+    /// <summary>
+    /// Sisteme yeni bir elektrik tarifesi ekler.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<Tarifeler>> PostTarife(Tarifeler tarife)
     {
@@ -72,6 +81,9 @@ public class TarifelerController : ControllerBase
     }
 
     // PUT: api/Tarifeler/5
+    /// <summary>
+    /// Mevcut bir tarifenin birim fiyat, vergi ve oran bilgilerini günceller.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> PutTarife(long id, Tarifeler tarife)
     {
@@ -121,6 +133,9 @@ public class TarifelerController : ControllerBase
     }
 
     // SILME: api/Tarifeler/5
+    /// <summary>
+    /// Bir tarifeyi sistemden siler. Mevcut bir sözleşmede kullanılıyorsa silinemez.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> SILMETarife(long id)
     {

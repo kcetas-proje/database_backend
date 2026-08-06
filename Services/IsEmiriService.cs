@@ -12,6 +12,9 @@ public class IsEmiriService : IIsEmiriService
         _context = context;
     }
 
+    /// <summary>
+    /// Açık durumdaki bir iş emrini, depodaki belirtilen bir sayaçla eşleştirerek tamamlar. Sayacı ilgili tüketim noktasına takar.
+    /// </summary>
     public async Task<(bool Success, string Message, int ProcessedCount)> IsEmriTamamlaAsync(long isEmriId, long sayacId)
     {
         var isEmri = await _context.IsEmirleris.FindAsync(isEmriId);
@@ -35,6 +38,9 @@ public class IsEmiriService : IIsEmiriService
         return (true, $"İş emri {isEmri.IsEmriNo} başarıyla tamamlandı ve sayaç {sayac.SeriNo} takıldı!", 1);
     }
 
+    /// <summary>
+    /// AÇIK durumundaki YENİ_BAĞLANTI iş emirleriyle, DEPODA olan sayaçları eşleştirerek toplu bir şekilde bağlantı işlemini tamamlar.
+    /// </summary>
     public async Task<(bool Success, string Message, int ProcessedCount)> TopluYeniBaglantiOnaylaAsync()
     {
         var acikIsEmirleri = await _context.IsEmirleris

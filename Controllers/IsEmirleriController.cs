@@ -26,6 +26,9 @@ public class IsEmirleriController : ControllerBase
     }
 
     // GET: api/IsEmirleri/All
+    /// <summary>
+    /// Sistemdeki açık veya (seçeneğe bağlı olarak) tamamlanmış tüm saha iş emirlerini liste halinde getirir.
+    /// </summary>
     [HttpGet("All")]
     public async Task<ActionResult<IEnumerable<IsEmriListDto>>> GetAllIsEmirleri([FromQuery] bool includeCompleted = false)
     {
@@ -63,6 +66,9 @@ public class IsEmirleriController : ControllerBase
     .ToListAsync();
     }
     // GET: api/IsEmirleri/Kullanici/5
+    /// <summary>
+    /// Belirli bir saha personeline (kullanıcıya) atanmış olan iş emirlerini getirir.
+    /// </summary>
     [HttpGet("Kullanici/{kullaniciId}")]
     public async Task<ActionResult<IEnumerable<IsEmriListDto>>> GetKullaniciIsEmirleri(
         long kullaniciId,
@@ -115,6 +121,9 @@ public class IsEmirleriController : ControllerBase
     }
 
     // GET: api/IsEmirleri
+    /// <summary>
+    /// İş emirlerini sayfalanmış (paged) olarak getirir.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetIsEmirleri([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeCompleted = false)
     {
@@ -252,6 +261,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     // POST: api/IsEmirleri
+    /// <summary>
+    /// Belirtilen tüketici veya sayaç için sisteme yeni bir saha iş emri (açma, kesme vb.) ekler.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<IsEmirleri>> PostIsEmri(IsEmriCreateDto dto)
     {
@@ -395,6 +407,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return NoContent();
     }
 
+    /// <summary>
+    /// Sahadan dönen iş emrini ilgili sayaçla eşleştirerek tamamlandı statüsüne çeker (Basit tamamlama).
+    /// </summary>
     [HttpPost("tamamla/{isEmriId}/sayac/{sayacId}")]
     public async Task<IActionResult> IsEmriTamamla(long isEmriId, long sayacId)
     {
@@ -476,6 +491,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
             eklenenSayi = sahteIsEmirleri.Count 
         });
     }
+    /// <summary>
+    /// Genel bir iş emrini, sahadan gelen detaylı verilerle (son endeks, mühür no vb.) birlikte kapatır.
+    /// </summary>
     [HttpPost("CompleteJob")]
     public async Task<IActionResult> CompleteJob([FromBody] CompleteJobRequestDto request)
     {
@@ -585,6 +603,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         }
     }
 
+    /// <summary>
+    /// Borcu ödenmiş abonenin "Enerji Açma" iş emrini tamamlar ve sisteme ilk okuma (açılış endeksi) kaydını ekler.
+    /// </summary>
     [HttpPost("EnerjiAcma")]
     public async Task<IActionResult> EnerjiAcma([FromBody] EnerjiAcmaDto dto)
     {
@@ -632,6 +653,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     // 1. Sayaç Değişimi Operasyonu
+    /// <summary>
+    /// "Sayaç Değişimi" iş emrini tamamlar. Sökülen sayacın son endeksini alır ve yeni sayacın ilk endeksini sisteme kaydeder.
+    /// </summary>
     [HttpPost("SayacDegisimi")]
     public async Task<IActionResult> SayacDegisimi([FromBody] SayacDegisimiRequestDto dto)
     {
@@ -733,6 +757,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     // 2. Enerji Kesme Operasyonu
+    /// <summary>
+    /// Borcundan veya farklı sebeplerden dolayı kesilen "Enerji Kesme" iş emrini tamamlar ve kapanış endeksini kaydeder.
+    /// </summary>
     [HttpPost("EnerjiKesme")]
     public async Task<IActionResult> EnerjiKesme([FromBody] EnerjiKesmeRequestDto dto)
     {

@@ -26,6 +26,9 @@ namespace KcetasAboneApi.Controllers
             _faturaService = faturaService;
         }
 
+        /// <summary>
+        /// Sistemdeki tüm aktif faturaları liste halinde getirir.
+        /// </summary>
         [HttpGet("All")]
         public async Task<ActionResult<IEnumerable<Fatura>>> GetAllFaturalar()
         {
@@ -36,6 +39,9 @@ namespace KcetasAboneApi.Controllers
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Faturaları sayfalanmış (paged) ve filtrelenmiş (fatura no, durum, sözleşme) olarak getirir.
+        /// </summary>
         [HttpGet("Paged")]
         public async Task<IActionResult> GetPaged(
             [FromQuery] int page = 1, 
@@ -81,6 +87,9 @@ namespace KcetasAboneApi.Controllers
             });
         }
 
+        /// <summary>
+        /// Onaylanmış bir okuma kaydından (endeks) yola çıkarak yeni bir fatura keser ve kalemlerini hesaplar.
+        /// </summary>
         [HttpPost("FaturaKes")]
         public async Task<IActionResult> FaturaKes([FromBody] FaturaKesRequestDto request)
         {
@@ -177,6 +186,9 @@ namespace KcetasAboneApi.Controllers
         }
 
 
+        /// <summary>
+        /// Bekleyen (ödenmemiş) veya müşteriye gönderilmiş bir faturanın tahsilatını (ödeme işlemini) gerçekleştirir.
+        /// </summary>
         [HttpPost("{faturaId}/tahsil-et")]
         public async Task<IActionResult> FaturaTahsilEt(long faturaId)
         {
@@ -203,6 +215,9 @@ namespace KcetasAboneApi.Controllers
             });
         }
 
+        /// <summary>
+        /// Manuel olarak veya dış bir sistemden gelen verilerle sisteme yeni bir fatura (Dönem veya Ek fatura) ekler.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> YeniFaturaEkle([FromBody] FaturaCreateDto dto)
         {
@@ -358,6 +373,9 @@ namespace KcetasAboneApi.Controllers
             return Ok(new { mesaj = $"{dbFatura.FaturaNo} numaralı fatura başarıyla iptal duruma alındı." });
         }
 
+    /// <summary>
+    /// Hesaplanmış (taslak) durumdaki bir faturayı onaylar ve e-Fatura (GİB) kesimi için entegrasyon kuyruğuna (Outbox) gönderir.
+    /// </summary>
     [HttpPost("{faturaId}/onayla")]
     public async Task<IActionResult> FaturaOnayla(long faturaId)
     {
@@ -403,6 +421,9 @@ namespace KcetasAboneApi.Controllers
             return Ok(new { message = "Fatura iptal edildi!", faturaNo = fatura.FaturaNo });
         }
 
+        /// <summary>
+        /// Sistemde onay bekleyen tüm endeks okumalarını tarayarak toplu bir şekilde faturalandırma (toplu fatura kesim) işlemini başlatır.
+        /// </summary>
         [HttpPost("OnaylanmisEndeksleriFaturalandir")]
         public async Task<IActionResult> OnaylanmisEndeksleriFaturalandir()
         {

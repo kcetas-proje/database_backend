@@ -21,6 +21,9 @@ public class BildirimlerController : ControllerBase
     }
 
     // 1. ŞEFİN GÖREVİ: Bildirim Gönderme / Kaydetme Fonksiyonu
+    /// <summary>
+    /// Belirli bir kullanıcıya sistem içi yeni bir bildirim (ve SignalR üzerinden anlık ileti) gönderir.
+    /// </summary>
     [HttpPost("Send")]
     public async Task<IActionResult> SendNotification(
         [FromQuery] int userId, 
@@ -46,6 +49,9 @@ public class BildirimlerController : ControllerBase
         return Ok(new { mesaj = "Bildirim başarıyla kaydedildi ve gönderildi.", data = yeniBildirim });
     }
 
+    /// <summary>
+    /// Bir kullanıcının kendisine gelen tüm bildirimlerini getirir.
+    /// </summary>
     [HttpGet("MyNotifications/{userId}")]
     public async Task<IActionResult> GetMyNotifications(int userId)
     {
@@ -58,6 +64,9 @@ public class BildirimlerController : ControllerBase
         return Ok(bildirimler);
     }
 
+    /// <summary>
+    /// Belirli bir bildirimi 'Okundu' olarak işaretler.
+    /// </summary>
     [HttpPut("OkunduIsaretle/{bildirimId}")]
     public async Task<IActionResult> OkunduIsaretle(int bildirimId)
     {

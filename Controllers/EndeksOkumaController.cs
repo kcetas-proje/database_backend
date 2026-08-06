@@ -22,6 +22,9 @@ public class EndeksOkumaController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Sistemdeki tüm endeks okumalarını (sayaç bilgileriyle) liste halinde getirir.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EndeksOkuma>>> GetAll()
     {
@@ -29,6 +32,9 @@ public class EndeksOkumaController : ControllerBase
             .Include(x => x.Sayac)
             .ToListAsync();
     }
+    /// <summary>
+    /// Tüm endeks okumalarını abone, tüketim noktası ve adres gibi detaylı ilişkisel verilerle birlikte getirir.
+    /// </summary>
     [HttpGet("GetWithDetails")]
     public async Task<ActionResult<IEnumerable<EndeksOkumaDetailDto>>> GetWithDetails()
     {
@@ -64,6 +70,9 @@ public class EndeksOkumaController : ControllerBase
         return Ok(list);
     }
 
+    /// <summary>
+    /// Endeks okumalarını sayfalama (pagination) ve arama/filtreleme kriterlerine göre getirir.
+    /// </summary>
     [HttpGet("Paged")]
     public async Task<IActionResult> GetPaged(
         [FromQuery] int page = 1, 
@@ -159,6 +168,9 @@ public class EndeksOkumaController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Manuel endeks girişi veya iş emri oluşturmak için sistemdeki aktif sözleşmeleri ve takılı sayaçları arar.
+    /// </summary>
     [HttpGet("YeniOkumaSecimAra")]
     public async Task<IActionResult> YeniOkumaSecimAra([FromQuery] string? q)
     {
@@ -223,6 +235,9 @@ public class EndeksOkumaController : ControllerBase
         return Ok(finalData);
     }
 
+    /// <summary>
+    /// Endeks okuma işlemlerine ait temel istatistikleri (OSOS, Manuel, Düzeltme okuma sayıları) getirir.
+    /// </summary>
     [HttpGet("Stats")]
     public async Task<IActionResult> GetStats([FromQuery] string? donem = null)
     {
@@ -260,6 +275,9 @@ public class EndeksOkumaController : ControllerBase
         return okuma;
     }
 
+    /// <summary>
+    /// Sahadan veya uzaktan (OSOS) gelen yeni bir endeks okuma verisini sisteme kaydeder.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<EndeksOkuma>> Post([FromBody] EndeksOkumaCreateDto dto)
     {
@@ -320,6 +338,9 @@ public async Task<IActionResult> SILME(long id)
     return NoContent(); 
 }
 
+/// <summary>
+/// Geliştirme (Test) ortamları için rastgele sahte endeks okumaları (fake data) üretir.
+/// </summary>
 [HttpPost("generate-fake-endeksler")]
 public async Task<IActionResult> GenerateFakeEndeksler()
 {

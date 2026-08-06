@@ -19,6 +19,9 @@ public class SayaclarController : ControllerBase
     }
 
     // GET
+    /// <summary>
+    /// Sistemdeki tüm sayaçları getirir.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Sayaclar>>> GetSayaclar()
     {
@@ -28,6 +31,9 @@ public class SayaclarController : ControllerBase
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Sayaçları sayfalanmış ve filtrelenebilir olarak getirir.
+    /// </summary>
     [HttpGet("Paged")]
     public async Task<IActionResult> GetPaged(
         [FromQuery] int page = 1,
@@ -94,6 +100,9 @@ public class SayaclarController : ControllerBase
     }
 
     // GET: /api/Sayaclar/depodakiler
+    /// <summary>
+    /// Depoda bekleyen (kullanıma hazır) sayaçları listeler.
+    /// </summary>
     [HttpGet("depodakiler")]
     public async Task<ActionResult<IEnumerable<object>>> GetDepodakiSayaclar()
     {
@@ -119,6 +128,9 @@ public class SayaclarController : ControllerBase
     }
 
     // GET BY ID
+    /// <summary>
+    /// ID'si verilen sayacın detaylarını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<Sayaclar>> GetSayac(long id)
     {
@@ -136,6 +148,9 @@ public class SayaclarController : ControllerBase
     }
 
     // POST
+    /// <summary>
+    /// Sisteme yeni bir sayaç kaydeder (depoya veya tüketim noktasına).
+    /// </summary>
     [HttpPost]
 public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
 {
@@ -176,6 +191,9 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
     return CreatedAtAction(nameof(GetSayac), new { id = yeniSayac.SayacId }, yeniSayac);
 }
     // PUT
+    /// <summary>
+    /// Mevcut bir sayacın bilgilerini günceller.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> PutSayac(long id, Sayaclar sayac)
     {
@@ -203,6 +221,9 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
     }
 
     // SILME
+    /// <summary>
+    /// Bir sayacı sistemden tamamen siler. Endeks okuması varsa silinemez.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> SILMESayac(long id)
     {
@@ -227,7 +248,10 @@ public async Task<ActionResult<Sayaclar>> PostSayac(SayacCreateDto dto)
         return NoContent();
     }
 
-    [HttpPost("generate-fake-sayaclar")]
+    /// <summary>
+/// Geliştirme ortamı için rastgele (fake) sayaçlar üretir.
+/// </summary>
+[HttpPost("generate-fake-sayaclar")]
 public async Task<IActionResult> GenerateFakeSayaclar()
 {
 

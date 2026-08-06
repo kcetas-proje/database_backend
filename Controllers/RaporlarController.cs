@@ -15,6 +15,9 @@ public class RaporlarController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Yönetim paneli (dashboard) için özet istatistikleri ve grafikleri (aktif abone, kesme adayları, tahakkuklar) getirir.
+    /// </summary>
     [HttpGet("Dashboard")]
     public async Task<IActionResult> GetDashboardRaporu()
     {

@@ -20,6 +20,9 @@ public class FaturaKalemiController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Tüm fatura kalemlerini (detayları) getirir.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FaturaKalemi>>> Get()
     {
@@ -28,6 +31,9 @@ public class FaturaKalemiController : ControllerBase
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Belirli bir fatura kaleminin detaylarını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<FaturaKalemi>> Get(long id)
     {
@@ -41,6 +47,9 @@ public class FaturaKalemiController : ControllerBase
         return kalem;
     }
 
+    /// <summary>
+    /// Faturaya yeni bir kalem (tüketim, vergi, ceza vb.) ekler.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<FaturaKalemi>> Post([FromBody] FaturaKalemiCreateDto dto)
     {
@@ -61,6 +70,9 @@ public class FaturaKalemiController : ControllerBase
         return CreatedAtAction(nameof(Get), new { id = yeniKalem.FaturaKalemId }, yeniKalem);
     }
 
+    /// <summary>
+    /// Mevcut bir fatura kaleminin miktar, fiyat veya açıklama bilgisini günceller.
+    /// </summary>
     [HttpPut("{id}")]
 public async Task<IActionResult> Update(long id, [FromBody] FaturaKalemiUpdateDto dto)
 {
@@ -76,6 +88,9 @@ public async Task<IActionResult> Update(long id, [FromBody] FaturaKalemiUpdateDt
     return NoContent();
 }
 
+    /// <summary>
+    /// Bir fatura kalemini siler.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> SILME(long id)
     {

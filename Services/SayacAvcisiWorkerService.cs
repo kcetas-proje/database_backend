@@ -10,6 +10,10 @@ using Microsoft.Extensions.Logging;
 
 namespace KcetasAboneApi.Services
 {
+    /// <summary>
+    /// Arka planda periyodik olarak (her 5 dakikada bir) çalışan sistem servisidir. 
+    /// 5 yılını doldurmuş yaşlı sayaçları tespit edip, bunlar için otomatik 'Sayaç Değiştirme' iş emirleri oluşturur.
+    /// </summary>
     public class SayacAvcisiWorkerService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -21,6 +25,9 @@ namespace KcetasAboneApi.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Arka plan görevinin ana çalışma döngüsüdür. Veritabanını tarar ve gerekli iş emirlerini oluşturur.
+        /// </summary>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Yaşlı Sayaç Avcısı (Worker Service) başlatıldı. Her 5 dakikada bir kontrol yapacak.");

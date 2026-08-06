@@ -15,14 +15,18 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
-        // Tüm ilçeleri getir
+        /// <summary>
+        /// Sistemdeki tüm ilçeleri listeler.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Ilce>>> GetIlceler()
         {
             return await _context.Ilces.ToListAsync();
         }
 
-        // Id'ye göre ilçe getir
+        /// <summary>
+        /// ID'si verilen ilçenin bilgilerini getirir.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<Ilce>> GetIlce(int id)
         {
@@ -34,7 +38,9 @@ namespace KcetasAboneApi.Controllers
             return ilce;
         }
 
-        // İle göre ilçeleri getir
+        /// <summary>
+        /// Belirli bir ile ait olan ilçeleri listeler.
+        /// </summary>
         [HttpGet("il/{ilId}")]
         public async Task<ActionResult<IEnumerable<Ilce>>> GetIlcelerByIl(short ilId)
         {

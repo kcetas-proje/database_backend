@@ -23,6 +23,9 @@ public class TuketimNoktasiController : ControllerBase
     }
 
     // GET
+    /// <summary>
+    /// Sistemdeki tüm tüketim noktalarını ilçe ve sözleşme detaylarıyla getirir.
+    /// </summary>
    [HttpGet]
     public async Task<ActionResult<IEnumerable<TuketimNoktasi>>> GetTuketimNoktalari()
     {
@@ -34,6 +37,9 @@ public class TuketimNoktasiController : ControllerBase
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Tüketim noktalarını sayfalanmış ve filtrelenebilir olarak getirir.
+    /// </summary>
     [HttpGet("Paged")]
     public async Task<IActionResult> GetPaged(
         [FromQuery] int page = 1,
@@ -119,6 +125,9 @@ public class TuketimNoktasiController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Tüketim noktalarını sayaç ve sözleşme gibi ilişkisel detaylarıyla birlikte getirir.
+    /// </summary>
     [HttpGet("GetWithDetails")]
     public async Task<ActionResult<IEnumerable<TuketimNoktasiDetailDto>>> GetWithDetails()
     {
@@ -161,6 +170,9 @@ public class TuketimNoktasiController : ControllerBase
     }
 
     // GET BY ID
+    /// <summary>
+    /// ID'si verilen tüketim noktasını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<TuketimNoktasi>> GetTuketimNoktasi(long id)
     {
@@ -175,6 +187,9 @@ public class TuketimNoktasiController : ControllerBase
     }
 
     // POST
+    /// <summary>
+    /// Sisteme yeni bir tüketim noktası (tesisat) ekler.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<TuketimNoktasi>> PostTuketimNoktasi(TuketimNoktasiCreateDto dto)
     {
@@ -263,6 +278,9 @@ public class TuketimNoktasiController : ControllerBase
     }
 
     // PUT
+    /// <summary>
+    /// Mevcut bir tüketim noktasının adres veya teknik bilgilerini günceller.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> PutTuketimNoktasi(long id, TuketimNoktasi nokta)
     {
@@ -293,6 +311,9 @@ public class TuketimNoktasiController : ControllerBase
     }
 
     // SILME
+    /// <summary>
+    /// Bir tüketim noktasını siler. Sözleşmesi varsa silinemez.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> SILMETuketimNoktasi(long id)
     {
@@ -316,6 +337,9 @@ public class TuketimNoktasiController : ControllerBase
         return Ok(new { message = "Tüketim noktası başarıyla silindi." });
     }
 
+/// <summary>
+/// Geliştirme ortamı için rastgele (fake) tüketim noktaları üretir.
+/// </summary>
 [HttpPost("generate-fake-tuketim-noktalari")]
 public async Task<IActionResult> GenerateFakeTuketimNoktalari()
 {

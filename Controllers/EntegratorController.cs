@@ -9,6 +9,9 @@ namespace KcetasAboneApi.Controllers
     [Route("api/entegrator")]
     public class EntegratorController : ControllerBase
     {
+        /// <summary>
+        /// Bir faturanın GİB (Gelir İdaresi Başkanlığı) sistemine iletimini simüle eder (Test/Mock API).
+        /// </summary>
         [HttpPost("gib-gonder")]
         public IActionResult GibFaturaGonder([FromBody] object faturaPayload)
         {

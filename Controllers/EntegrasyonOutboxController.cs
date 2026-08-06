@@ -21,6 +21,9 @@ namespace KcetasAboneApi.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Dış sistemlere (GİB, Banka vb.) gönderilecek veya gönderilmiş mesajların (Outbox) kuyruk listesini sayfalanmış olarak getirir.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetEntegrasyonOutboxes(
             [FromQuery] int page = 1, 
@@ -98,6 +101,9 @@ namespace KcetasAboneApi.Controllers
             });
         }
 
+        /// <summary>
+        /// Kuyruktaki belirli bir mesajın (Outbox kaydı) detaylarını getirir.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<EntegrasyonOutbox>> GetEntegrasyonOutbox(long id)
         {
@@ -113,6 +119,9 @@ namespace KcetasAboneApi.Controllers
             return outbox;
         }
 
+        /// <summary>
+        /// Kuyruğa yeni bir entegrasyon mesajı ekler.
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<EntegrasyonOutbox>> PostEntegrasyonOutbox([FromBody] EntegrasyonOutboxCreateDto dto)
         {
@@ -136,6 +145,9 @@ namespace KcetasAboneApi.Controllers
             return CreatedAtAction(nameof(GetEntegrasyonOutbox), new { id = yeniMesaj.OutboxId }, yeniMesaj);
         }
 
+        /// <summary>
+        /// Kuyruktaki bir mesajın durumunu (örn: BEKLIYOR, BASARILI, HATALI) günceller.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, [FromBody] EntegrasyonOutboxUpdateDto dto)
         {
@@ -151,6 +163,9 @@ namespace KcetasAboneApi.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Kuyruktan bir mesajı tamamen siler.
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> SILMEEntegrasyonOutbox(long id)
         {

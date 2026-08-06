@@ -7,6 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace KcetasAboneApi.Services
 {
+    /// <summary>
+    /// Kimlik doğrulama işlemleri için JSON Web Token (JWT) üreten yardımcı servis.
+    /// </summary>
     public class JwtService
     {
         private readonly IConfiguration _config;
@@ -16,6 +19,9 @@ namespace KcetasAboneApi.Services
             _config = config;
         }
 
+        /// <summary>
+        /// Kullanıcı bilgileri ve rol id'si verilerek, belirlenen şifre ve süre ile geçerli bir JWT (Bearer Token) döndürür.
+        /// </summary>
         public string GenerateToken(string kullaniciAdi, short rolId)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:SecretKey"]));

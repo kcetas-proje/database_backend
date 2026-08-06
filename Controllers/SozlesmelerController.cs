@@ -17,6 +17,9 @@ public class SozlesmelerController : ControllerBase
     }
 
     // GET: api/Sozlesmeler
+    /// <summary>
+    /// Sistemdeki tüm sözleşmeleri getirir.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Sozlesmeler>>> GetSozlesmeler()
     {
@@ -25,6 +28,9 @@ public class SozlesmelerController : ControllerBase
     }
 
     // GET: api/Sozlesmeler/5
+    /// <summary>
+    /// ID'si verilen sözleşmenin detaylarını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<Sozlesmeler>> GetSozlesme(long id)
     {
@@ -41,6 +47,9 @@ public class SozlesmelerController : ControllerBase
         return sozlesme;
     }
 
+    /// <summary>
+    /// Sözleşmeleri sayfalanmış ve filtrelenebilir olarak getirir.
+    /// </summary>
     [HttpGet("Paged")]
     public async Task<IActionResult> GetPaged(
         [FromQuery] int page = 1,
@@ -118,6 +127,9 @@ public class SozlesmelerController : ControllerBase
     }
 
     // POST: api/Sozlesmeler
+    /// <summary>
+    /// Yeni bir sözleşme oluşturur ve otomatik olarak 'Açma' iş emri başlatır.
+    /// </summary>
     [HttpPost]
 public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
 {
@@ -191,6 +203,9 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
 }
 
     // PUT: api/Sozlesmeler/5
+    /// <summary>
+    /// Mevcut bir sözleşmenin bilgilerini günceller.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> PutSozlesme(long id, Sozlesmeler sozlesme)
     {
@@ -229,6 +244,9 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
     }
 
     // SILME: api/Sozlesmeler/5
+    /// <summary>
+    /// Bir sözleşmeyi iptal eder ve otomatik olarak 'Kesme' iş emri başlatır.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> SILMESozlesme(long id)
     {
@@ -275,7 +293,10 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
         });
     }
 
-    [HttpPost("generate-fake-sozlesmeler")]
+    /// <summary>
+/// Geliştirme ortamı için rastgele (fake) sözleşmeler üretir.
+/// </summary>
+[HttpPost("generate-fake-sozlesmeler")]
 public async Task<IActionResult> GenerateFakeSozlesmeler()
 {
 

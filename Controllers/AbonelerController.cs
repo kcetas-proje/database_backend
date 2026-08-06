@@ -24,6 +24,9 @@ public class AbonelerController : ControllerBase
         _aboneService = aboneService;
     }
 
+    /// <summary>
+    /// Sistemdeki tüm aktif aboneleri liste halinde getirir (En fazla 500 kayıt).
+    /// </summary>
     [HttpGet("All")]
     public async Task<ActionResult<IEnumerable<Aboneler>>> GetAllAboneler()
     {
@@ -35,6 +38,9 @@ public class AbonelerController : ControllerBase
             .ToListAsync();
     }
     // GET: api/Aboneler
+    /// <summary>
+    /// Aboneleri sayfalanmış (paged) olarak getirir. Limit ve sayfa numarası verilebilir.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetAboneler([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] long? lastId = null, [FromQuery] int? limit = null)
     {
@@ -95,6 +101,9 @@ public class AbonelerController : ControllerBase
     }
 
     // GET: api/Aboneler/5
+    /// <summary>
+    /// ID'si verilen abonenin detaylarını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<Aboneler>> GetAbone(long id)
     {
@@ -112,6 +121,9 @@ public class AbonelerController : ControllerBase
     }
 
     // POST: api/Aboneler
+    /// <summary>
+    /// Sisteme yeni bir abone ekler.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<Aboneler>> PostAbone(AboneCreateDto dto)
     {
@@ -143,6 +155,9 @@ public class AbonelerController : ControllerBase
         return Ok(new { message = "Abone başarıyla oluşturuldu!", aboneNo = yeniAboneNo });
     }
     // PUT: api/Aboneler/5
+    /// <summary>
+    /// Mevcut bir abonenin iletişim ve kimlik bilgilerini günceller.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> PutAbone(long id, Aboneler abone)
     {
@@ -185,6 +200,9 @@ public class AbonelerController : ControllerBase
     }
 
     // SILME: api/Aboneler/5
+    /// <summary>
+    /// Bir aboneyi siler (sistemde pasif duruma çeker). Üzerinde sözleşme varsa silinemez.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> SILMEAbone(long id)
     {
@@ -218,6 +236,9 @@ public class AbonelerController : ControllerBase
 
         return NoContent();
     }
+    /// <summary>
+    /// Geliştirme ortamı için rastgele (fake) aboneler üretir.
+    /// </summary>
     [HttpPost("generate-fake-aboneler")]
     public async Task<IActionResult> GenerateFakeAboneler()
     {
@@ -243,6 +264,9 @@ public class AbonelerController : ControllerBase
             eklenenSayi = sahteAboneler.Count 
         });
 } 
+    /// <summary>
+    /// Abone, Tüketim Noktası (tesisat) ve Sözleşmeyi tek bir işlemde (transaction) kaydeder.
+    /// </summary>
     [HttpPost("abone-ve-tesisat-kaydet")]
     public async Task<IActionResult> AboneVeTesisatKaydet([FromBody] AboneVeTesisatCreateDto dto)
     {
@@ -337,6 +361,9 @@ public class AbonelerController : ControllerBase
             return StatusCode(500, new { message = "Bir hata oluştu.", error = ex.Message });
         }
     }
+    /// <summary>
+    /// İsme göre abone araması yapar (sayfalanmış).
+    /// </summary>
     [HttpGet("arama")]
     public async Task<IActionResult> GetAboneler(
     [FromQuery] string? isim,
@@ -359,6 +386,9 @@ public class AbonelerController : ControllerBase
 
         return Ok(sonuc);
     }
+    /// <summary>
+    /// Belirli bir aboneye ait faturaları sayfalanmış olarak getirir.
+    /// </summary>
     [HttpGet("{aboneId}/faturalar")]
     public async Task<IActionResult> GetAboneFaturalari(
     long aboneId,

@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 
 namespace KcetasAboneApi.Services
 {
+    /// <summary>
+    /// Dış sistemlere (GİB, Banka vb.) gönderilmek üzere Outbox tablosunda bekleyen mesajları periyodik olarak okuyan ve ilgili dış uç noktalara asenkron olarak ileten arka plan servisidir.
+    /// </summary>
     public class OutboxWorkerService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -22,6 +25,9 @@ namespace KcetasAboneApi.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Arka plan görevinin ana çalışma döngüsüdür. 'BEKLIYOR' statüsündeki mesajları alır, API'ye HTTP POST yapar, sonucu 'GONDERILDI' veya hatalıysa 'MANUEL_MUDAHALE' olarak günceller.
+        /// </summary>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Outbox Worker entegrasyon servisi başlatıldı.");

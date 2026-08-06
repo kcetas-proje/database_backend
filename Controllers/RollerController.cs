@@ -15,6 +15,9 @@ public class RollerController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Sistemdeki yetki rollerini (Admin, Şef, Saha Elemanı vb.) listeler.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

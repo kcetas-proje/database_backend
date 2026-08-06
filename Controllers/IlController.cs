@@ -13,6 +13,9 @@ public class IlController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Sistemdeki tüm illeri listeler.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Il>>> GetIller()
     {

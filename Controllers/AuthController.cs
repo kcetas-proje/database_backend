@@ -19,6 +19,9 @@ namespace KcetasAboneApi.Controllers
             _jwtService = jwtService;
         }
 
+        /// <summary>
+        /// Kullanıcı girişi (login) işlemini yapar ve başarılı olursa JWT yetkilendirme token'ı döndürür.
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {

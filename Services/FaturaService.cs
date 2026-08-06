@@ -12,6 +12,10 @@ public class FaturaService : IFaturaService
         _context = context;
     }
 
+    /// <summary>
+    /// Sistemdeki tüm 'ONAYLANDI' durumundaki endeksleri tarar, her biri için tüketim/vergi/fon hesaplar ve yeni fatura oluşturarak 'HESAPLANDI' durumuna getirir.
+    /// İşlem başarılı olursa oluşturulan fatura sayısını ve toplam tutarı döndürür.
+    /// </summary>
     public async Task<(int FaturaSayisi, decimal ToplamTutar)> OnaylanmisEndeksleriFaturalandirAsync()
     {
         using var transaction = await _context.Database.BeginTransactionAsync();

@@ -419,32 +419,4 @@ public class AbonelerController : ControllerBase
 
         return Ok(sonuc);
     }
-
-    /// <summary>
-    /// Abonenin pasif olup sözleşmenin aktif olduğu durumları (anomalileri) bulur.
-    /// </summary>
-    [HttpGet("anomaliler/pasif-abone-aktif-sozlesme")]
-    public async Task<IActionResult> GetPasifAboneAktifSozlesmeler()
-    {
-        var anomalies = await _context.Abonelers
-            .AsNoTracking()
-            .Include(a => a.Sozlesmelers)
-            .Where(a => a.Status == "PASIF" && a.Sozlesmelers.Any(s => s.Durum == SozlesmeDurumu.AKTIF))
-            .Select(a => new
-            {
-                a.AboneId,
-                a.AboneNo,
-                a.Ad,
-                a.Soyad,
-                a.Unvan,
-                AktifSozlesmeler = a.Sozlesmelers.Where(s => s.Durum == SozlesmeDurumu.AKTIF).Select(s => s.SozlesmeNo).ToList()
-            })
-            .ToListAsync();
-
-        return Ok(new 
-        {
-            TotalCount = anomalies.Count,
-            Data = anomalies
-        });
-    }
 }

@@ -342,6 +342,9 @@ namespace KcetasAboneApi.Controllers
             }
         }
 
+        /// <summary>
+        /// Mevcut faturanın tutar, durum veya son ödeme tarihi bilgilerini günceller.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, [FromBody] FaturaUpdateDto dto)
         {
@@ -360,6 +363,9 @@ namespace KcetasAboneApi.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Bir faturayı siler (pasife alır).
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> FaturaSil(long id)
         {
@@ -404,6 +410,9 @@ namespace KcetasAboneApi.Controllers
             return Ok(new { message = "Fatura onaylandı ve GİB'e gönderildi!", faturaNo = fatura.FaturaNo });
         }
 
+        /// <summary>
+        /// Kesilmiş bir faturayı iptal eder (eğer GİB'e gönderilmemişse).
+        /// </summary>
         [HttpPost("{faturaId}/iptal")]
         public async Task<IActionResult> FaturaIptal(long faturaId)
         {

@@ -262,6 +262,9 @@ public class EndeksOkumaController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// ID'si verilen endeks okuma detaylarını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<EndeksOkuma>> Get(long id)
     {
@@ -307,6 +310,9 @@ public class EndeksOkumaController : ControllerBase
         return StatusCode(201, yeniEndeks);
     }
 
+    /// <summary>
+    /// Endeks okuma verisini veya durumunu günceller.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(long id, [FromBody] EndeksOkumaUpdateDto dto)
     {
@@ -326,6 +332,9 @@ public class EndeksOkumaController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Belirtilen endeks okumasını pasife çeker (siler).
+    /// </summary>
     [HttpDelete("{id}")]
 public async Task<IActionResult> SILME(long id)
 {

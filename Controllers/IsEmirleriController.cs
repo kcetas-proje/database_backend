@@ -181,6 +181,9 @@ public class IsEmirleriController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// İş Emri No (ör: IE-202310-0001) kullanılarak iş emri detaylarını getirir.
+    /// </summary>
     [HttpGet("by-no/{isEmriNo}")]
 public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
 {
@@ -223,7 +226,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     return Ok(isEmri);
 }
 
-    // GET: api/IsEmirleri/5
+    /// <summary>
+    /// ID'si verilen belirli bir iş emrinin detaylarını getirir.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<IsEmriListDto>> GetIsEmri(long id)
     {
@@ -334,7 +339,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return Ok(new { message = "İş emri oluşturuldu!", data = yeniIsEmri });
     }
 
-    // PUT: api/IsEmirleri/5
+    /// <summary>
+    /// İş emrinin bilgilerini (durum, atanmış kullanıcı, saha sonucu vb.) günceller.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> PutIsEmri(long id, IsEmirleri isEmri)
     {
@@ -374,7 +381,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return NoContent();
     }
 
-    // SILME: api/IsEmirleri/5
+    /// <summary>
+    /// Bir iş emrini tamamen sistemden siler (sadece eğer endeks okuması yapılmamışsa).
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> SILMEIsEmri(long id)
     {
@@ -420,6 +429,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return Ok(new { message = result.Message });
     }
 
+    /// <summary>
+    /// Sistemde bekleyen tüm "YENİ BAĞLANTI" iş emirlerini otomatik olarak tamamlar ve sayaçları atar.
+    /// </summary>
     [HttpPost("toplu-yeni-baglanti-onayla")]
     public async Task<IActionResult> TopluYeniBaglantiOnayla()
     {
@@ -430,6 +442,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return Ok(new { message = result.Message, onaylananSayi = result.ProcessedCount });
     }
 
+    /// <summary>
+    /// Geliştirme testleri için rastgele 30 adet sahte iş emri üretir.
+    /// </summary>
     [HttpPost("generate-random-is-emirleri")]
     public async Task<IActionResult> GenerateRandomIsEmirleri()
     {
@@ -819,6 +834,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     // 3. Sayaç Arıza Operasyonu
+    /// <summary>
+    /// Sahadaki sayacın arıza tespitini sisteme raporlar ve sayaç durumunu ARIZALI olarak günceller.
+    /// </summary>
     [HttpPost("SayacAriza")]
     public async Task<IActionResult> SayacAriza([FromBody] SayacArizaRequestDto dto)
     {
@@ -890,6 +908,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     // 4. Mühürleme Operasyonu
+    /// <summary>
+    /// Sahadaki sayaca takılan yeni mühür numarasını ve mühürleme endekslerini sisteme kaydeder.
+    /// </summary>
     [HttpPost("SayacMuhurleme")]
     public async Task<IActionResult> Muhurleme([FromBody] SayacMuhurlemeRequestDto dto)
     {
@@ -953,6 +974,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     // 5. Yeni Bağlantı Operasyonu
+    /// <summary>
+    /// Yeni abonelik veya şebeke bağlantısı durumunda, mekana sıfır sayaç takılmasını sisteme raporlar.
+    /// </summary>
     [HttpPost("SayacYeniBaglanti")]
     public async Task<IActionResult> YeniBaglanti([FromBody] SayacYeniBaglantiRequestDto dto)
     {
@@ -1015,6 +1039,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
     }
 
     // 6. Keşif Raporlama Operasyonu
+    /// <summary>
+    /// Saha ekipleri tarafından yapılan tesisat/şebeke keşif sonuçlarını sisteme kaydeder.
+    /// </summary>
     [HttpPost("KesifRaporlama")]
     public async Task<IActionResult> KesifRaporlama([FromBody] KesifRaporlamaRequestDto dto)
     {
@@ -1051,6 +1078,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         }
     }
 
+    /// <summary>
+    /// Açık durumdaki bir iş emrini, manuel olarak seçilen bir saha personeline atar.
+    /// </summary>
     [HttpPost("atama-yap")]
     public async Task<IActionResult> UstayaIsAta([FromBody] IsEmriAtamaRequestDto request)
     {
@@ -1085,6 +1115,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return Ok(new { message = "İş atandı, bildirim gönderildi.", isEmriNo = isEmri.IsEmriNo });
     }
 
+    /// <summary>
+    /// Sistemde bekleyen tüm açık iş emirlerini, müsait olan saha personellerine dengeli olarak (otomatik) dağıtır.
+    /// </summary>
     [HttpPost("otomatik-atama")]
     public async Task<IActionResult> OtomatikAtamaYap()
     {
@@ -1146,6 +1179,9 @@ public async Task<IActionResult> GetByIsEmriNo(string isEmriNo)
         return Ok(new { message = $"{atananSayisi} iş emri ekiplere dağıtıldı ve bildirim gönderildi." });
     }
 
+    /// <summary>
+    /// Test amaçlı olarak, atanmış iş emirlerinin planlanan tarihlerini önümüzdeki 7 güne rastgele dağıtır.
+    /// </summary>
     [HttpPost("planlanan-tarihleri-dagit")]
     public async Task<IActionResult> PlanlananTarihleriDagit()
     {

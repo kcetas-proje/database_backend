@@ -133,8 +133,12 @@ public class SozlesmelerController : ControllerBase
     [HttpPost]
 public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
 {
-    if (!await _context.Abonelers.AnyAsync(x => x.AboneId == dto.AboneId))
+    var abone = await _context.Abonelers.FirstOrDefaultAsync(x => x.AboneId == dto.AboneId);
+    if (abone == null)
         return BadRequest(new { message = "Abone bulunamadı." });
+
+    if (abone.Status != "AKTIF")
+        return BadRequest(new { message = "Pasif durumdaki aboneye yeni sözleşme oluşturulamaz." });
 
     if (!await _context.TuketimNoktasis.AnyAsync(x => x.TuketimNoktasiId == dto.TuketimNoktasiId))
         return BadRequest(new { message = "Tüketim noktası bulunamadı." });
@@ -225,6 +229,15 @@ public async Task<ActionResult<Sozlesmeler>> PostSozlesme(SozlesmeCreateDto dto)
             {
                 message = "Sözleşme bulunamadı."
             });
+        }
+
+        if (mevcut.AboneId != sozlesme.AboneId)
+        {
+            var yeniAbone = await _context.Abonelers.FirstOrDefaultAsync(a => a.AboneId == sozlesme.AboneId);
+            if (yeniAbone == null || yeniAbone.Status != "AKTIF")
+            {
+                return BadRequest(new { message = "Sözleşme sadece aktif abonelere atanabilir veya abone bulunamadı." });
+            }
         }
 
         mevcut.SozlesmeNo = sozlesme.SozlesmeNo;

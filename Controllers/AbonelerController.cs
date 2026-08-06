@@ -190,6 +190,14 @@ public class AbonelerController : ControllerBase
         mevcutAbone.EPosta = abone.EPosta;
         if (!string.IsNullOrEmpty(abone.Status))
         {
+            if (abone.Status == "PASIF" && mevcutAbone.Status != "PASIF")
+            {
+                bool sozlesmeVar = await _context.Sozlesmelers.AnyAsync(s => s.AboneId == id);
+                if (sozlesmeVar)
+                {
+                    return BadRequest(new { message = "Bu aboneye ait sözleşme bulunduğu için abone pasife alınamaz." });
+                }
+            }
             mevcutAbone.Status = abone.Status;
         }
         mevcutAbone.UpdatedAt = DateTime.UtcNow;
